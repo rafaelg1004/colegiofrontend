@@ -1,0 +1,151 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header h1 {
+  font-size: 1.875rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.filterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filterItem label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.filterItem input, .filterItem select {
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: white;
+  min-width: 150px;
+}
+
+.loadBtn {
+  padding: 0.6rem 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.listContainer {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.stats {
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  gap: 2rem;
+  font-size: 0.875rem;
+}
+
+.present { color: #10b981; }
+.absent { color: #ef4444; }
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.studentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.2s;
+}
+
+.studentItem:hover {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.studentName {
+  font-weight: 600;
+  margin: 0;
+}
+
+.studentDoc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+.attendanceActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stateBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.present { background: rgba(16, 185, 129, 0.2) !important; color: #10b981 !important; border-color: #10b981 !important; }
+.ausente { background: rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; border-color: #ef4444 !important; }
+.tardanza { background: rgba(245, 158, 11, 0.2) !important; color: #f59e0b !important; border-color: #f59e0b !important; }
+.excusa { background: rgba(139, 92, 246, 0.2) !important; color: #8b5cf6 !important; border-color: #8b5cf6 !important; }
+
+.footer {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveBtn {
+  padding: 0.8rem 2rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+
+.saveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+}
