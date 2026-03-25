@@ -8,6 +8,11 @@ export const FinanzasDashboard = () => {
   const [stats, setStats] = useState<any>(null);
   const [facturas, setFacturas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedFactura, setSelectedFactura] = useState<any>(null);
+  const [showPagar, setShowPagar] = useState(false);
+  const [showFacturacion, setShowFacturacion] = useState(false);
+  const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,7 +22,7 @@ export const FinanzasDashboard = () => {
           fetch('http://localhost:3005/api/v1/financiero/resumen', { headers: { 'Authorization': `Bearer ${token}` } }),
           fetch('http://localhost:3005/api/v1/financiero/facturas', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
-        
+
         setStats(await resStats.json());
         const dataFact = await resFact.json();
         setFacturas(dataFact.data || []);
@@ -29,6 +34,55 @@ export const FinanzasDashboard = () => {
     };
     fetchData();
   }, []);
+
+  const handleFacturacionMasiva = () => {
+    setShowFacturacion(true);
+  };
+
+  const handlePagar = (factura: any) => {
+    setSelectedFactura(factura);
+    setFormData({
+      monto: factura.total - (factura.monto_pagado || 0),
+      metodo_pago: 'Efectivo',
+      observacion: ''
+    });
+    setShowPagar(true);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
+  };
+
+  const submitPago = async () => {
+    setSaving(true);
+    try {
+      const token = getAuthToken();
+      const res = await fetch('http://localhost:3005/api/v1/financiero/pagos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          factura_id: selectedFactura.id,
+          monto: formData.monto,
+          metodo_pago: formData.metodo_pago,
+          observacion: formData.observacion
+        })
+      });
+
+      if (!res.ok) throw new Error('Error al registrar pago');
+
+      alert('Pago registrado correctamente');
+      setShowPagar(false);
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) return <div className={styles.loading}>Cargando datos financieros...</div>;
 
@@ -63,7 +117,7 @@ export const FinanzasDashboard = () => {
         <div className={styles.tableSection}>
           <div className={styles.sectionHeader}>
             <h3>Últimas Facturas</h3>
-            <button className={styles.actionBtn}>Facturación Masiva</button>
+            <button className={styles.actionBtn} onClick={handleFacturacionMasiva}>Facturación Masiva</button>
           </div>
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
@@ -88,7 +142,7 @@ export const FinanzasDashboard = () => {
                       </span>
                     </td>
                     <td>
-                      <button className={styles.payBtn}>Pagar</button>
+                      <button className={styles.payBtn} onClick={() => handlePagar(fac)}>Pagar</button>
                     </td>
                   </tr>
                 ))}

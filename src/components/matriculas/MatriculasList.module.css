@@ -19,10 +19,11 @@
 .titleSection h1 {
   font-size: 1.875rem;
   font-weight: 800;
+  color: #1e293b;
 }
 
 .titleSection p {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .addBtn {
@@ -30,16 +31,21 @@
   background: #10b981;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
 }
 
+.addBtn:hover {
+  background: #059669;
+}
+
 .tableContainer {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .table {
@@ -50,26 +56,33 @@
 .table th {
   text-align: left;
   padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.4);
+  background: #f8fafc;
+  color: #64748b;
   font-size: 0.75rem;
   text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .table td {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.table tr:hover {
+  background: #f8fafc;
 }
 
 .nameCell {
   display: flex;
   flex-direction: column;
   font-weight: 600;
+  color: #1e293b;
 }
 
 .nameCell small {
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
 }
 
 .badge {
@@ -79,27 +92,32 @@
   font-weight: 600;
 }
 
-.activa { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.pendiente { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.cancelada { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.activa { background: #dcfce7; color: #16a34a; }
+.pendiente { background: #fef3c7; color: #d97706; }
+.cancelada { background: #fee2e2; color: #dc2626; }
 
 .editBtn {
   padding: 0.4rem 0.8rem;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
-  border-radius: 8px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #4f46e5;
+  border-radius: 6px;
   cursor: pointer;
+}
+
+.editBtn:hover {
+  background: #4f46e5;
+  color: white;
 }
 
 .loading, .noData, .error {
   padding: 3rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: #64748b;
 }
 
 .error {
-  color: #ef4444;
+  color: #dc2626;
 }
 
 /* Filters */
@@ -110,22 +128,17 @@
 
 .filterSelect {
   padding: 0.75rem 1rem;
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: white;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #1e293b;
   cursor: pointer;
   min-width: 200px;
 }
 
-.filterSelect option {
-  background: #1a1a2e;
-  color: white;
-}
-
 .filterSelect:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4f46e5;
 }
 
 .actionsCell {
@@ -138,10 +151,6 @@
   gap: 0.5rem;
 }
 
-.addBtn:hover {
-  background: #059669;
-}
-
 /* Modal */
 .modalOverlay {
   position: fixed;
@@ -149,21 +158,20 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
   max-width: 600px;
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes slideIn {
@@ -176,24 +184,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .modalHeader h2 {
   font-size: 1.25rem;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .closeBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   font-size: 1.5rem;
   cursor: pointer;
 }
 
 .closeBtn:hover {
-  color: white;
+  color: #1e293b;
 }
 
 .modalBody {
@@ -215,34 +224,35 @@
 
 .formGroup label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #475569;
   font-weight: 500;
 }
 
 .formGroup input,
 .formGroup select {
   padding: 0.75rem 1rem;
-  background: #252540;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #1e293b;
   font-size: 0.95rem;
 }
 
 .formGroup select option {
-  background: #252540;
-  color: white;
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4f46e5;
 }
 
 .formGroup input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  background: #f1f5f9;
 }
 
 /* Dropdown para búsqueda */
@@ -251,23 +261,25 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: #252540;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   max-height: 200px;
   overflow-y: auto;
   z-index: 10;
   margin-top: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .dropdownItem {
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background 0.2s;
+  color: #334155;
 }
 
 .dropdownItem:hover {
-  background: rgba(59, 130, 246, 0.2);
+  background: #f1f5f9;
 }
 
 .modalFooter {
@@ -275,20 +287,20 @@
   justify-content: flex-end;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid #e2e8f0;
 }
 
 .cancelBtn {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #475569;
   cursor: pointer;
 }
 
 .cancelBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
 }
 
 .saveBtn {

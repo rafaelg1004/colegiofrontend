@@ -20,10 +20,11 @@
   font-size: 1.875rem;
   font-weight: 800;
   margin-bottom: 0.25rem;
+  color: #1e293b;
 }
 
 .titleSection p {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .searchSection {
@@ -38,20 +39,20 @@
 .searchInput {
   width: 100%;
   padding: 1rem 1.25rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: white;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #1e293b;
   font-size: 1rem;
 }
 
 .searchInput::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4f46e5;
 }
 
 .searchResults {
@@ -59,13 +60,14 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   margin-top: 0.5rem;
   max-height: 300px;
   overflow-y: auto;
   z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .searchItem {
@@ -77,15 +79,16 @@
 }
 
 .searchItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: #f8fafc;
 }
 
 .nombre {
   font-weight: 500;
+  color: #1e293b;
 }
 
 .doc {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
   font-size: 0.9rem;
 }
 
@@ -95,10 +98,11 @@
   align-items: center;
   justify-content: center;
   padding: 4rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .placeholderIcon {
@@ -109,17 +113,19 @@
 .placeholder h3 {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
+  color: #1e293b;
 }
 
 .placeholder p {
-  color: rgba(255, 255, 255, 0.4);
+  color: #64748b;
 }
 
 .estudiantePanel {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .estudianteHeader {
@@ -128,7 +134,7 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .estudianteInfo {
@@ -140,23 +146,25 @@
 .avatar {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 1.25rem;
+  color: white;
 }
 
 .estudianteInfo h2 {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
+  color: #1e293b;
 }
 
 .estudianteInfo p {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   font-size: 0.9rem;
 }
 
@@ -165,10 +173,9 @@
   background: #10b981;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .addBtn:hover {
@@ -184,7 +191,7 @@
 
 .resumenCard {
   padding: 1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   text-align: center;
 }
 
@@ -201,34 +208,34 @@
 }
 
 .resumenTotal {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background: #eef2ff;
+  color: #4f46e5;
 }
 
 .resumenPositiva {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  background: #dcfce7;
+  color: #16a34a;
 }
 
 .resumenNegativa {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .resumenInfo {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  background: #fef3c7;
+  color: #d97706;
 }
 
 .resumenCompromiso {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
+  background: #ede9fe;
+  color: #7c3aed;
 }
 
 .loading, .empty {
   padding: 2rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: #64748b;
 }
 
 .observacionesList {
@@ -238,9 +245,9 @@
 }
 
 .observacionCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   padding: 1.25rem;
 }
 
@@ -259,43 +266,44 @@
 }
 
 .tipoPositiva {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  background: #dcfce7;
+  color: #16a34a;
 }
 
 .tipoNegativa {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .tipoInformativa {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  background: #fef3c7;
+  color: #d97706;
 }
 
 .tipoCompromiso {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
+  background: #ede9fe;
+  color: #7c3aed;
 }
 
 .fecha {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
   font-size: 0.85rem;
 }
 
 .descripcion {
-  color: rgba(255, 255, 255, 0.9);
+  color: #334155;
   line-height: 1.6;
   margin-bottom: 0.75rem;
 }
 
 .compromiso {
-  background: rgba(139, 92, 246, 0.1);
-  border-left: 3px solid #8b5cf6;
+  background: #ede9fe;
+  border-left: 3px solid #7c3aed;
   padding: 0.75rem;
   border-radius: 0 8px 8px 0;
   margin-bottom: 0.75rem;
   font-size: 0.9rem;
+  color: #5b21b6;
 }
 
 .obsFooter {
@@ -303,12 +311,52 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .registradoPor {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
+}
+
+.obsActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.firmarBtn {
+  padding: 0.25rem 0.5rem;
+  background: #fef3c7;
+  color: #d97706;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.firmarBtn:hover {
+  background: #fde68a;
+}
+
+.editarBtn, .eliminarBtn {
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-radius: 4px;
+}
+
+.editarBtn:hover {
+  background: #e0e7ff;
+}
+
+.eliminarBtn:hover {
+  background: #fee2e2;
 }
 
 .firmaTag {
@@ -319,13 +367,13 @@
 }
 
 .firmado {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  background: #dcfce7;
+  color: #16a34a;
 }
 
 .pendiente {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  background: #fef3c7;
+  color: #d97706;
 }
 
 /* Modal */
@@ -335,21 +383,20 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
   max-width: 550px;
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes slideIn {
@@ -362,24 +409,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .modalHeader h2 {
   font-size: 1.25rem;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .closeBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   font-size: 1.5rem;
   cursor: pointer;
 }
 
 .closeBtn:hover {
-  color: white;
+  color: #1e293b;
 }
 
 .modalBody {
@@ -397,7 +445,7 @@
 
 .formGroup label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #475569;
   font-weight: 500;
 }
 
@@ -405,25 +453,25 @@
 .formGroup select,
 .formGroup textarea {
   padding: 0.75rem 1rem;
-  background: #252540;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #1e293b;
   font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
 }
 
 .formGroup select option {
-  background: #252540;
-  color: white;
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .formGroup input:focus,
 .formGroup select:focus,
 .formGroup textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4f46e5;
 }
 
 .modalFooter {
@@ -431,20 +479,20 @@
   justify-content: flex-end;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid #e2e8f0;
 }
 
 .cancelBtn {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #475569;
   cursor: pointer;
 }
 
 .cancelBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
 }
 
 .saveBtn {

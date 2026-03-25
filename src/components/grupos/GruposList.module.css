@@ -20,10 +20,11 @@
   font-size: 1.875rem;
   font-weight: 800;
   margin-bottom: 0.25rem;
+  color: #1e293b;
 }
 
 .titleSection p {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .addBtn {
@@ -31,15 +32,13 @@
   background: #10b981;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .addBtn:hover {
   background: #059669;
-  transform: translateY(-2px);
 }
 
 .filters {
@@ -49,23 +48,23 @@
 
 .filterSelect {
   padding: 0.75rem 1rem;
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  color: white;
+  color: #1e293b;
   min-width: 200px;
   cursor: pointer;
 }
 
-.filterSelect option {
-  background: #1a1a2e;
-  color: white;
+.filterSelect:focus {
+  outline: none;
+  border-color: #4f46e5;
 }
 
 .loading, .empty {
   padding: 3rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .nivelesContainer {
@@ -75,10 +74,11 @@
 }
 
 .nivelSection {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .nivelTitle {
@@ -86,8 +86,8 @@
   font-weight: 700;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #a78bfa;
+  border-bottom: 1px solid #e2e8f0;
+  color: #7c3aed;
 }
 
 .gruposGrid {
@@ -97,8 +97,8 @@
 }
 
 .grupoCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1rem;
   cursor: pointer;
@@ -106,9 +106,9 @@
 }
 
 .grupoCard:hover {
-  border-color: rgba(59, 130, 246, 0.4);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: #4f46e5;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
 }
 
 .grupoHeader {
@@ -118,8 +118,8 @@
 }
 
 .gradoTag {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background: #eef2ff;
+  color: #4f46e5;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -127,8 +127,8 @@
 }
 
 .jornadaTag {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  background: #fef3c7;
+  color: #d97706;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.7rem;
@@ -138,6 +138,7 @@
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
+  color: #1e293b;
 }
 
 .grupoInfo {
@@ -154,15 +155,15 @@
 }
 
 .label {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
 }
 
 .verEstudiantes {
   text-align: center;
   padding: 0.5rem;
-  background: rgba(59, 130, 246, 0.1);
+  background: #eef2ff;
   border-radius: 6px;
-  color: #60a5fa;
+  color: #4f46e5;
   font-size: 0.85rem;
   font-weight: 500;
 }
@@ -174,32 +175,31 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .modalLarge {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
   overflow-y: auto;
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes slideIn {
@@ -212,24 +212,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .modalHeader h2 {
   font-size: 1.1rem;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .closeBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   font-size: 1.5rem;
   cursor: pointer;
 }
 
 .closeBtn:hover {
-  color: white;
+  color: #1e293b;
 }
 
 .modalBody {
@@ -250,29 +251,29 @@
 
 .formGroup label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #475569;
   font-weight: 500;
 }
 
 .formGroup input,
 .formGroup select {
   padding: 0.75rem 1rem;
-  background: #252540;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #1e293b;
   font-size: 0.95rem;
 }
 
 .formGroup select option {
-  background: #252540;
-  color: white;
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4f46e5;
 }
 
 .modalFooter {
@@ -281,25 +282,25 @@
   align-items: center;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid #e2e8f0;
 }
 
 .totalEstudiantes {
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   font-size: 0.9rem;
 }
 
 .cancelBtn {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #475569;
   cursor: pointer;
 }
 
 .cancelBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
 }
 
 .saveBtn {
@@ -333,15 +334,15 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: #f8fafc;
   border-radius: 8px;
 }
 
 .numero {
   width: 28px;
   height: 28px;
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background: #eef2ff;
+  color: #4f46e5;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -358,11 +359,12 @@
 
 .estudianteNombre {
   font-weight: 500;
+  color: #1e293b;
 }
 
 .estudianteDoc {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
 }
 
 .generoTag {
@@ -377,13 +379,13 @@
 }
 
 .generoM {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background: #eef2ff;
+  color: #4f46e5;
 }
 
 .generoF {
-  background: rgba(236, 72, 153, 0.15);
-  color: #f472b6;
+  background: #fce7f3;
+  color: #db2777;
 }
 
 @media (max-width: 768px) {

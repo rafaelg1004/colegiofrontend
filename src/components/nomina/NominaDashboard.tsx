@@ -2,12 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
 import styles from './NominaDashboard.module.css';
 
 export const NominaDashboard = () => {
+  const router = useRouter();
   const [nominas, setNominas] = useState<any[]>([]);
   const [resumen, setResumen] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedNomina, setSelectedNomina] = useState<any>(null);
+  const [showDetalle, setShowDetalle] = useState(false);
 
   // Filtros por defecto periodo actual
   const currentMonth = new Date().getMonth() + 1;
@@ -36,6 +41,42 @@ export const NominaDashboard = () => {
     fetchData();
   }, []);
 
+  const goToEmpleados = () => {
+    router.push('/dashboard/empleados');
+  };
+
+  const liquidarMasiva = async () => {
+    if (!confirm('¿Está seguro de liquidar la nómina masiva para el período actual?')) return;
+
+    setSaving(true);
+    try {
+      const token = getAuthToken();
+      const res = await fetch('http://localhost:3005/api/v1/nomina/liquidar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ mes: currentMonth, anio: currentYear })
+      });
+
+      if (!res.ok) throw new Error('Error al liquidar nómina');
+
+      alert('Nómina liquidada correctamente');
+      // Recargar datos
+      window.location.reload();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const viewDetalle = (nomina: any) => {
+    setSelectedNomina(nomina);
+    setShowDetalle(true);
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -44,8 +85,10 @@ export const NominaDashboard = () => {
           <p>Periodo actual: {currentMonth}/{currentYear}</p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.secondaryBtn}>Ver Empleados</button>
-          <button className={styles.primaryBtn}>Liquidar Nómina Masiva</button>
+          <button className={styles.secondaryBtn} onClick={goToEmpleados}>Ver Empleados</button>
+          <button className={styles.primaryBtn} onClick={liquidarMasiva} disabled={saving}>
+            {saving ? 'Liquidando...' : 'Liquidar Nómina Masiva'}
+          </button>
         </div>
       </header>
 
@@ -98,7 +141,7 @@ export const NominaDashboard = () => {
                       </span>
                     </td>
                     <td>
-                      <button className={styles.viewBtn}>Detalle</button>
+                      <button className={styles.viewBtn} onClick={() => viewDetalle(nom)}>Detalle</button>
                     </td>
                   </tr>
                 ))

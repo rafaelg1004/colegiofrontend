@@ -98,12 +98,24 @@ export default function ReportesPage() {
     setBoletin(null);
     const token = getAuthToken();
     try {
-      // Sin periodo_id para obtener todos los datos
       const res = await fetch(`${API}/reportes/boletin/${estudianteId}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) return;
-      const data = await res.json();
+      if (!res.ok) {
+        console.error('Error Response:', res.status, res.statusText);
+        alert(`Error ${res.status}: ${res.statusText}`);
+        return;
+      }
+      const text = await res.text();
+      console.log('Response text:', text.substring(0, 500));
+      if (!text) {
+        setBoletin({ estudiante: { primer_nombre: '', primer_apellido: '' }, calificaciones: [] });
+        return;
+      }
+      const data = JSON.parse(text);
       setBoletin(data);
-    } catch (err) { console.error('Error cargando boletin:', err); }
+    } catch (err) {
+      console.error('Error cargando boletin:', err);
+      alert('Error al parsear respuesta del servidor');
+    }
     setLoading(false);
   };
 
@@ -112,6 +124,14 @@ export default function ReportesPage() {
       loadGrupoStats(grupoId);
     }
   };
+
+  // Auto-load stats when switching to grupos tab
+  useEffect(() => {
+    if (activeTab === 'grupos' && grupos.length > 0 && Object.keys(grupoStats).length === 0) {
+      // Load stats for first few groups
+      grupos.slice(0, 5).forEach(g => loadGrupoStats(g.id));
+    }
+  }, [activeTab]);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -234,6 +254,9 @@ export default function ReportesPage() {
       {activeTab === 'grupos' && (
         <div>
           <h3>Estadísticas por Grupo</h3>
+          <p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+            Haz clic en "Cargar" para ver las estadísticas de cada grupo
+          </p>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f3f4f6' }}>
@@ -248,15 +271,21 @@ export default function ReportesPage() {
               {grupos.map(grupo => (
                 <tr key={grupo.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '10px' }}>{grupo.grado?.nombre} - {grupo.nombre}</td>
-                  <td style={{ padding: '10px', textAlign: 'center' }}>{grupoStats[grupo.id]?.cantidad_estudiantes || '-'}</td>
-                  <td style={{ padding: '10px', textAlign: 'center' }}>{grupoStats[grupo.id]?.promedio_notas?.toFixed(2) || '-'}</td>
-                  <td style={{ padding: '10px', textAlign: 'center' }}>{grupoStats[grupo.id]?.promedio_asistencia?.toFixed(1) || '-'}%</td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>
+                    {grupoStats[grupo.id] !== undefined ? (grupoStats[grupo.id]?.cantidad_estudiantes || 0) : '-'}
+                  </td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>
+                    {grupoStats[grupo.id] !== undefined ? (grupoStats[grupo.id]?.promedio_notas?.toFixed(2) || '0.00') : '-'}
+                  </td>
+                  <td style={{ padding: '10px', textAlign: 'center' }}>
+                    {grupoStats[grupo.id] !== undefined ? `${grupoStats[grupo.id]?.promedio_asistencia?.toFixed(1) || '0'}%` : '-'}
+                  </td>
                   <td style={{ padding: '10px', textAlign: 'center' }}>
                     <button
                       onClick={() => handleVerEstadisticasGrupo(grupo.id)}
                       style={{ padding: '5px 10px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer' }}
                     >
-                      Ver Detalle
+                      {grupoStats[grupo.id] ? 'Actualizar' : 'Cargar'}
                     </button>
                   </td>
                 </tr>

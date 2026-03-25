@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { getAuthToken, clearAuthCookie } from '@/utils/auth';
+import { getAuthToken, clearAuthCookie, isTokenExpired } from '@/utils/auth';
 import styles from './DashboardLayout.module.css';
 
 export default function DashboardLayout({
@@ -28,6 +28,17 @@ export default function DashboardLayout({
         return;
       }
 
+      // Check if token is expired
+      if (isTokenExpired(token)) {
+        console.warn('🚫 Token expirado, redirigiendo...');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token_expiration');
+        clearAuthCookie();
+        router.replace('/login');
+        return;
+      }
+
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
@@ -47,6 +58,7 @@ export default function DashboardLayout({
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('token_expiration');
     clearAuthCookie();
     router.push('/login');
   };

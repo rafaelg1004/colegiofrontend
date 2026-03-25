@@ -33,6 +33,8 @@ interface Resumen {
   compromisos: number;
 }
 
+const API = 'http://localhost:3005/api/v1';
+
 export const ObservadorView = () => {
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [estudianteSeleccionado, setEstudianteSeleccionado] = useState<Estudiante | null>(null);
@@ -43,16 +45,26 @@ export const ObservadorView = () => {
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [editandoObs, setEditandoObs] = useState<Observacion | null>(null);
 
   const fetchEstudiantes = useCallback(async () => {
-    if (!buscar || buscar.length < 2) return;
+    if (!buscar || buscar.length < 2) {
+      setEstudiantes([]);
+      return;
+    }
     const token = getAuthToken();
-    const res = await fetch(`http://localhost:3005/api/v1/estudiantes?buscar=${encodeURIComponent(buscar)}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setEstudiantes(Array.isArray(data) ? data.slice(0, 10) : []);
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API}/estudiantes?buscar=${encodeURIComponent(buscar)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEstudiantes(Array.isArray(data.data) ? data.data.slice(0, 10) : (Array.isArray(data) ? data.slice(0, 10) : []));
+      }
+    } catch (err) {
+      console.error('Error fetching estudiantes:', err);
     }
   }, [buscar]);
 
@@ -68,35 +80,61 @@ export const ObservadorView = () => {
     setLoading(true);
 
     const token = getAuthToken();
-
-    const [obsRes, resumenRes] = await Promise.all([
-      fetch(`http://localhost:3005/api/v1/observador/estudiante/${est.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }),
-      fetch(`http://localhost:3005/api/v1/observador/resumen/${est.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-    ]);
-
-    if (obsRes.ok) {
-      const data = await obsRes.json();
-      setObservaciones(Array.isArray(data) ? data : []);
+    if (!token) {
+      setLoading(false);
+      return;
     }
 
-    if (resumenRes.ok) {
-      setResumen(await resumenRes.json());
+    try {
+      const [obsRes, resumenRes] = await Promise.all([
+        fetch(`${API}/observador/estudiante/${est.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API}/observador/resumen/${est.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      if (obsRes.ok) {
+        const data = await obsRes.json();
+        setObservaciones(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Error fetching observaciones:', obsRes.status);
+        setObservaciones([]);
+      }
+
+      if (resumenRes.ok) {
+        setResumen(await resumenRes.json());
+      } else {
+        setResumen({ total: 0, positivas: 0, negativas: 0, informativas: 0, compromisos: 0 });
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setObservaciones([]);
     }
 
     setLoading(false);
   };
 
-  const openModal = () => {
-    setFormData({
-      estudiante_id: estudianteSeleccionado?.id,
-      tipo: 'Informativa',
-      descripcion: '',
-      compromiso: ''
-    });
+  const openModal = (obs?: Observacion) => {
+    if (obs) {
+      setEditandoObs(obs);
+      setFormData({
+        id: obs.id,
+        estudiante_id: estudianteSeleccionado?.id,
+        tipo: obs.tipo,
+        descripcion: obs.descripcion,
+        compromiso: obs.compromiso || ''
+      });
+    } else {
+      setEditandoObs(null);
+      setFormData({
+        estudiante_id: estudianteSeleccionado?.id,
+        tipo: 'Informativa',
+        descripcion: '',
+        compromiso: ''
+      });
+    }
     setShowModal(true);
   };
 
@@ -105,11 +143,19 @@ export const ObservadorView = () => {
   };
 
   const handleSubmit = async () => {
+    if (!formData.descripcion?.trim()) {
+      alert('La descripción es obligatoria');
+      return;
+    }
+
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/observador', {
-        method: 'POST',
+      const url = editandoObs ? `${API}/observador/${editandoObs.id}` : `${API}/observador`;
+      const method = editandoObs ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -123,13 +169,58 @@ export const ObservadorView = () => {
       }
 
       setShowModal(false);
+      setEditandoObs(null);
       if (estudianteSeleccionado) {
-        seleccionarEstudiante(estudianteSeleccionado);
+        await seleccionarEstudiante(estudianteSeleccionado);
       }
     } catch (err: any) {
       alert(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEliminar = async (obsId: string) => {
+    if (!confirm('¿Estás seguro de eliminar esta observación?')) return;
+
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API}/observador/${obsId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al eliminar');
+      }
+
+      if (estudianteSeleccionado) {
+        await seleccionarEstudiante(estudianteSeleccionado);
+      }
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleFirmar = async (obsId: string) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API}/observador/${obsId}/firmar`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al firmar');
+      }
+
+      if (estudianteSeleccionado) {
+        await seleccionarEstudiante(estudianteSeleccionado);
+      }
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -190,7 +281,7 @@ export const ObservadorView = () => {
                 <p>Doc: {estudianteSeleccionado.numero_documento}</p>
               </div>
             </div>
-            <button className={styles.addBtn} onClick={openModal}>
+            <button className={styles.addBtn} onClick={() => openModal()}>
               + Nueva Observacion
             </button>
           </div>
@@ -243,6 +334,31 @@ export const ObservadorView = () => {
                         ({obs.registrado_por_empleado.cargo})
                       </span>
                     )}
+                    <div className={styles.obsActions}>
+                      {!obs.firma_acudiente && (
+                        <button
+                          className={styles.firmarBtn}
+                          onClick={() => handleFirmar(obs.id)}
+                          title="Firmar observación"
+                        >
+                          ✍️ Firmar
+                        </button>
+                      )}
+                      <button
+                        className={styles.editarBtn}
+                        onClick={() => openModal(obs)}
+                        title="Editar observación"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className={styles.eliminarBtn}
+                        onClick={() => handleEliminar(obs.id)}
+                        title="Eliminar observación"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                     <span className={`${styles.firmaTag} ${obs.firma_acudiente ? styles.firmado : styles.pendiente}`}>
                       {obs.firma_acudiente ? 'Firmado' : 'Pendiente firma'}
                     </span>
@@ -266,15 +382,15 @@ export const ObservadorView = () => {
       )}
 
       {showModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+        <div className={styles.modalOverlay}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>Nueva Observacion</h2>
+              <h2>{editandoObs ? 'Editar Observación' : 'Nueva Observación'}</h2>
               <button className={styles.closeBtn} onClick={() => setShowModal(false)}>x</button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGroup}>
-                <label>Tipo de Observacion *</label>
+                <label>Tipo de Observación *</label>
                 <select name="tipo" value={formData.tipo || 'Informativa'} onChange={handleChange}>
                   <option value="Positiva">Positiva</option>
                   <option value="Negativa">Negativa</option>
@@ -283,13 +399,13 @@ export const ObservadorView = () => {
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Descripcion *</label>
+                <label>Descripción *</label>
                 <textarea
                   name="descripcion"
                   value={formData.descripcion || ''}
                   onChange={handleChange}
                   rows={4}
-                  placeholder="Describa la observacion..."
+                  placeholder="Describa la observación..."
                   required
                 />
               </div>

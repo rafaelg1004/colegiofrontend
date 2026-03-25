@@ -20,10 +20,11 @@
   font-size: 1.875rem;
   font-weight: 800;
   margin-bottom: 0.25rem;
+  color: #1e293b;
 }
 
 .titleSection p {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .addBtn {
@@ -31,10 +32,9 @@
   background: #10b981;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .addBtn:hover {
@@ -48,23 +48,23 @@
 
 .filterSelect {
   padding: 0.75rem 1rem;
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  color: white;
+  color: #1e293b;
   min-width: 200px;
   cursor: pointer;
 }
 
-.filterSelect option {
-  background: #1a1a2e;
-  color: white;
+.filterSelect:focus {
+  outline: none;
+  border-color: #4f46e5;
 }
 
 .loading, .empty {
   padding: 3rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .circularesList {
@@ -76,23 +76,24 @@
 .circularCard {
   display: flex;
   gap: 1.25rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   padding: 1.25rem;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .circularCard:hover {
-  border-color: rgba(59, 130, 246, 0.3);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: #4f46e5;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
 }
 
 .circularIcon {
   width: 56px;
   height: 56px;
-  background: rgba(59, 130, 246, 0.1);
+  background: #eef2ff;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -117,16 +118,17 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-right: 1rem;
+  color: #1e293b;
 }
 
 .fecha {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
   font-size: 0.85rem;
   white-space: nowrap;
 }
 
 .preview {
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   font-size: 0.9rem;
   line-height: 1.5;
   margin-bottom: 0.75rem;
@@ -139,8 +141,8 @@
 }
 
 .destinatario {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
+  background: #ede9fe;
+  color: #7c3aed;
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -148,7 +150,7 @@
 }
 
 .autor {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
   font-size: 0.8rem;
 }
 
@@ -159,32 +161,31 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
   max-width: 600px;
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .modalLarge {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
   max-width: 700px;
   max-height: 85vh;
   overflow-y: auto;
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes slideIn {
@@ -197,24 +198,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .modalHeader h2 {
   font-size: 1.25rem;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .closeBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   font-size: 1.5rem;
   cursor: pointer;
 }
 
 .closeBtn:hover {
-  color: white;
+  color: #1e293b;
 }
 
 .modalBody {
@@ -232,7 +234,7 @@
 
 .formGroup label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #475569;
   font-weight: 500;
 }
 
@@ -240,25 +242,25 @@
 .formGroup select,
 .formGroup textarea {
   padding: 0.75rem 1rem;
-  background: #252540;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #1e293b;
   font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
 }
 
 .formGroup select option {
-  background: #252540;
-  color: white;
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .formGroup input:focus,
 .formGroup select:focus,
 .formGroup textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4f46e5;
 }
 
 .modalFooter {
@@ -266,20 +268,20 @@
   justify-content: flex-end;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid #e2e8f0;
 }
 
 .cancelBtn {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #475569;
   cursor: pointer;
 }
 
 .cancelBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
 }
 
 .saveBtn {
@@ -308,12 +310,12 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .destinatarioTag {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
+  background: #ede9fe;
+  color: #7c3aed;
   padding: 0.3rem 0.8rem;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -321,26 +323,26 @@
 }
 
 .fechaDetalle {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   font-size: 0.9rem;
 }
 
 .contenidoFull {
-  color: rgba(255, 255, 255, 0.9);
+  color: #334155;
   line-height: 1.8;
   white-space: pre-wrap;
   margin-bottom: 1.5rem;
 }
 
 .firma {
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 3px solid #3b82f6;
+  background: #f8fafc;
+  border-left: 3px solid #4f46e5;
   padding: 1rem;
   border-radius: 0 8px 8px 0;
 }
 
 .firma strong {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   font-size: 0.8rem;
   display: block;
   margin-bottom: 0.25rem;
@@ -349,10 +351,11 @@
 .firma p {
   font-weight: 600;
   margin-bottom: 0.15rem;
+  color: #1e293b;
 }
 
 .firma span {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   font-size: 0.85rem;
 }
 

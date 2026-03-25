@@ -4,13 +4,18 @@
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --primary-light: #818cf8;
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --card-border: rgba(255, 255, 255, 0.1);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
   --error: #ef4444;
   --success: #10b981;
+  --warning: #f59e0b;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #cbd5e1;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 * {
@@ -32,6 +37,6 @@ a {
   text-decoration: none;
 }
 
-input, button {
+input, button, select, textarea {
   font-family: inherit;
 }

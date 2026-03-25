@@ -20,10 +20,11 @@
   font-size: 1.875rem;
   font-weight: 800;
   margin-bottom: 0.25rem;
+  color: #1e293b;
 }
 
 .header p {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .actions {
@@ -33,22 +34,30 @@
 
 .primaryBtn {
   padding: 0.75rem 1.5rem;
-  background: #3b82f6;
+  background: #4f46e5;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
 }
 
+.primaryBtn:hover {
+  background: #4338ca;
+}
+
 .secondaryBtn {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  background: #f1f5f9;
 }
 
 .summaryGrid {
@@ -58,16 +67,17 @@
 }
 
 .summaryCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   padding: 2rem;
-  border-radius: 20px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .label {
   display: block;
   font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: #64748b;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
@@ -75,22 +85,25 @@
 .value {
   font-size: 1.75rem;
   font-weight: 800;
+  color: #1e293b;
 }
 
 .tableSection {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .tableHeader {
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .tableHeader h3 {
   font-size: 1.125rem;
+  color: #1e293b;
 }
 
 .table {
@@ -101,24 +114,31 @@
 .table th {
   text-align: left;
   padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.01);
-  color: rgba(255, 255, 255, 0.4);
+  background: #f8fafc;
+  color: #64748b;
   font-size: 0.75rem;
   text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .table td {
   padding: 1.25rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.table tr:hover {
+  background: #f8fafc;
 }
 
 .empName {
   font-weight: 600;
+  color: #1e293b;
 }
 
 .neto {
   font-weight: 700;
-  color: #10b981;
+  color: #16a34a;
 }
 
 .badge {
@@ -128,20 +148,24 @@
   font-weight: 600;
 }
 
-.liquidada { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-.pagada { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.liquidada { background: #eef2ff; color: #4f46e5; }
+.pagada { background: #dcfce7; color: #16a34a; }
 
 .viewBtn {
   padding: 0.4rem 0.8rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  border-radius: 6px;
   cursor: pointer;
+}
+
+.viewBtn:hover {
+  background: #f1f5f9;
 }
 
 .empty {
   padding: 4rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.3);
+  color: #94a3b8;
 }

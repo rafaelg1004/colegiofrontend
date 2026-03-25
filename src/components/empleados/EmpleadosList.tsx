@@ -188,7 +188,7 @@ export const EmpleadosList = () => {
       </div>
 
       {showModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+        <div className={styles.modalOverlay}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>{modalMode === 'create' ? 'Nuevo Empleado' : 'Editar Empleado'}</h2>

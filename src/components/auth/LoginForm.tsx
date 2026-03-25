@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { setAuthCookie, clearAuthCookie } from '@/utils/auth';
+import { setAuthCookie, clearAuthCookie, saveTokenWithExpiration, isTokenExpired } from '@/utils/auth';
 import styles from './LoginForm.module.css';
 
 export const LoginForm = () => {
@@ -19,7 +19,7 @@ export const LoginForm = () => {
     const user = localStorage.getItem('user');
 
     // Si ya hay una sesión válida, redirigir al dashboard
-    if (token && token !== 'undefined' && token !== 'null' && user) {
+    if (token && token !== 'undefined' && token !== 'null' && user && !isTokenExpired(token)) {
       router.replace('/dashboard');
       return;
     }
@@ -27,6 +27,7 @@ export const LoginForm = () => {
     // Solo limpiar si no hay sesión válida
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('token_expiration');
     clearAuthCookie();
   }, [router]);
 
@@ -51,6 +52,7 @@ export const LoginForm = () => {
 
       localStorage.setItem('token', data.session.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      saveTokenWithExpiration(data.session.access_token);
 
       setAuthCookie(data.session.access_token);
 

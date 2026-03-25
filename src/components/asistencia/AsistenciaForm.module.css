@@ -14,16 +14,17 @@
   font-size: 1.875rem;
   font-weight: 800;
   margin-bottom: 1.5rem;
+  color: #1e293b;
 }
 
 .filters {
   display: flex;
   gap: 1.5rem;
   align-items: flex-end;
-  background: rgba(255, 255, 255, 0.02);
+  background: #ffffff;
   padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .filterItem {
@@ -34,23 +35,28 @@
 
 .filterItem label {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: #64748b;
   text-transform: uppercase;
   font-weight: 600;
 }
 
 .filterItem input, .filterItem select {
   padding: 0.6rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  color: white;
+  color: #1e293b;
   min-width: 150px;
+}
+
+.filterItem input:focus, .filterItem select:focus {
+  outline: none;
+  border-color: #4f46e5;
 }
 
 .loadBtn {
   padding: 0.6rem 1.5rem;
-  background: #3b82f6;
+  background: #4f46e5;
   color: white;
   border: none;
   border-radius: 10px;
@@ -58,23 +64,30 @@
   cursor: pointer;
 }
 
+.loadBtn:hover {
+  background: #4338ca;
+}
+
 .listContainer {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .stats {
   padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: #f8fafc;
   display: flex;
   gap: 2rem;
   font-size: 0.875rem;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.present { color: #10b981; }
-.absent { color: #ef4444; }
+.present { color: #16a34a; }
+.absent { color: #dc2626; }
 
 .list {
   display: flex;
@@ -87,22 +100,23 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid #f1f5f9;
   transition: background 0.2s;
 }
 
 .studentItem:hover {
-  background: rgba(255, 255, 255, 0.01);
+  background: #f8fafc;
 }
 
 .studentName {
   font-weight: 600;
   margin: 0;
+  color: #1e293b;
 }
 
 .studentDoc {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
   margin: 0;
 }
 
@@ -115,18 +129,22 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.4);
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.present { background: rgba(16, 185, 129, 0.2) !important; color: #10b981 !important; border-color: #10b981 !important; }
-.ausente { background: rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; border-color: #ef4444 !important; }
-.tardanza { background: rgba(245, 158, 11, 0.2) !important; color: #f59e0b !important; border-color: #f59e0b !important; }
-.excusa { background: rgba(139, 92, 246, 0.2) !important; color: #8b5cf6 !important; border-color: #8b5cf6 !important; }
+.stateBtn:hover {
+  background: #f1f5f9;
+}
+
+.present { background: #dcfce7 !important; color: #16a34a !important; border-color: #16a34a !important; }
+.ausente { background: #fee2e2 !important; color: #dc2626 !important; border-color: #dc2626 !important; }
+.tardanza { background: #fef3c7 !important; color: #d97706 !important; border-color: #d97706 !important; }
+.excusa { background: #ede9fe !important; color: #7c3aed !important; border-color: #7c3aed !important; }
 
 .footer {
   padding: 1.5rem;
@@ -139,13 +157,11 @@
   background: #10b981;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
 
 .saveBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+  background: #059669;
 }

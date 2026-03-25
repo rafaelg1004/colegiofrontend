@@ -20,10 +20,11 @@
   font-size: 1.875rem;
   font-weight: 800;
   margin-bottom: 0.25rem;
+  color: #1e293b;
 }
 
 .titleSection p {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .addBtn {
@@ -31,10 +32,9 @@
   background: #10b981;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .addBtn:hover {
@@ -45,10 +45,11 @@
 .tabs {
   display: flex;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: #ffffff;
   padding: 0.5rem;
-  border-radius: 14px;
+  border-radius: 12px;
   width: fit-content;
+  border: 1px solid #e2e8f0;
 }
 
 .tabBtn {
@@ -58,22 +59,26 @@
   padding: 0.75rem 1.25rem;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: #64748b;
   font-weight: 600;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tabBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 .activeTab {
-  background: #3b82f6 !important;
+  background: #4f46e5 !important;
   color: white !important;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+.activeTab:hover {
+  background: #4338ca !important;
+  color: white !important;
 }
 
 .tabIcon {
@@ -82,11 +87,12 @@
 
 /* Content */
 .content {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   padding: 1.5rem;
   min-height: 400px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 /* Filter Bar */
@@ -96,17 +102,17 @@
 
 .filterSelect {
   padding: 0.75rem 1rem;
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  color: white;
+  color: #1e293b;
   min-width: 200px;
   cursor: pointer;
 }
 
-.filterSelect option {
-  background: #1a1a2e;
-  color: white;
+.filterSelect:focus {
+  outline: none;
+  border-color: #4f46e5;
 }
 
 /* Data Grid */
@@ -118,10 +124,10 @@
 
 /* Cards */
 .card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   padding: 1.25rem;
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   gap: 1rem;
   align-items: flex-start;
@@ -129,13 +135,13 @@
 }
 
 .card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: #4f46e5;
+  background: #f1f5f9;
 }
 
 .cardActive {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: rgba(16, 185, 129, 0.05);
+  border-color: #16a34a;
+  background: #dcfce7;
 }
 
 .cardIcon {
@@ -145,7 +151,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: #eef2ff;
   border-radius: 12px;
 }
 
@@ -157,17 +163,18 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
+  color: #1e293b;
 }
 
 .cardInfo p {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   margin-bottom: 0.5rem;
 }
 
 .meta {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
 }
 
 .metaRow {
@@ -187,13 +194,13 @@
 }
 
 .badgeActive {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: #dcfce7;
+  color: #16a34a;
 }
 
 .badgeInactive {
-  background: rgba(107, 114, 128, 0.15);
-  color: #9ca3af;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 /* Areas Section */
@@ -204,9 +211,9 @@
 }
 
 .areaCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -215,8 +222,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .areaHeader h3 {
@@ -225,22 +232,22 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: #1e293b;
 }
 
 .addSmallBtn {
   padding: 0.4rem 0.8rem;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #4f46e5;
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .addSmallBtn:hover {
-  background: #3b82f6;
+  background: #4f46e5;
   color: white;
 }
 
@@ -256,30 +263,33 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 0.875rem;
+  color: #334155;
 }
 
 .codigo {
   font-size: 0.7rem;
   padding: 0.15rem 0.4rem;
-  background: rgba(139, 92, 246, 0.2);
-  color: #a78bfa;
+  background: #ede9fe;
+  color: #7c3aed;
   border-radius: 4px;
 }
 
 .noAsignaturas {
-  color: rgba(255, 255, 255, 0.3);
+  color: #94a3b8;
   font-size: 0.875rem;
   font-style: italic;
+  padding: 1rem 1.25rem;
 }
 
 /* Loading & Empty */
 .loading, .empty {
   padding: 3rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.3);
+  color: #64748b;
 }
 
 /* Modal */
@@ -289,21 +299,20 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: #1a1a2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
-  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes slideIn {
@@ -316,24 +325,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .modalHeader h2 {
   font-size: 1.25rem;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .closeBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   font-size: 1.5rem;
   cursor: pointer;
 }
 
 .closeBtn:hover {
-  color: white;
+  color: #1e293b;
 }
 
 .modalBody {
@@ -354,29 +364,29 @@
 
 .formGroup label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #475569;
   font-weight: 500;
 }
 
 .formGroup input,
 .formGroup select {
   padding: 0.75rem 1rem;
-  background: #252540;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #1e293b;
   font-size: 0.95rem;
 }
 
 .formGroup select option {
-  background: #252540;
-  color: white;
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #4f46e5;
 }
 
 .formGroupCheck {
@@ -389,7 +399,7 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: #334155;
   cursor: pointer;
 }
 
@@ -405,20 +415,20 @@
   justify-content: flex-end;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid #e2e8f0;
 }
 
 .cancelBtn {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  color: white;
+  color: #475569;
   cursor: pointer;
 }
 
 .cancelBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
 }
 
 .saveBtn {

@@ -242,7 +242,7 @@ export const GruposList = () => {
 
       {/* Modal Crear Grupo */}
       {showModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+        <div className={styles.modalOverlay}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Nuevo Grupo</h2>
