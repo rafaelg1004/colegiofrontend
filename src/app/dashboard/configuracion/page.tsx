@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import styles from './Configuracion.module.css';
 
 interface Institucion {
   id?: string;
@@ -37,6 +38,15 @@ interface TipoActividad {
   nombre: string;
 }
 
+interface Usuario {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: string;
+  activo: boolean;
+  created_at: string;
+}
+
 const API = 'http://localhost:3005/api/v1';
 
 export default function ConfiguracionPage() {
@@ -46,8 +56,10 @@ export default function ConfiguracionPage() {
   // Datos
   const [institucion, setInstitucion] = useState<Institucion | null>(null);
   const [niveles, setNiveles] = useState<Nivel[]>([]);
-  const [grados, setGrados] = useState<Grado[]>([]);
+  const [ grados, setGrados] = useState<Grado[]>([]);
   const [tiposActividad, setTiposActividad] = useState<TipoActividad[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [rolFiltro, setRolFiltro] = useState('');
 
   // Forms
   const [formInstitucion, setFormInstitucion] = useState<Institucion>({
@@ -56,6 +68,7 @@ export default function ConfiguracionPage() {
   const [formNivel, setFormNivel] = useState({ nombre: '' });
   const [formGrado, setFormGrado] = useState({ nombre: '', codigo: '', orden: 1, nivel_id: '' });
   const [formTipoActividad, setFormTipoActividad] = useState({ nombre: '' });
+  const [formUsuario, setFormUsuario] = useState({ nombre: '', email: '', password: '', rol: 'docente' });
 
   useEffect(() => {
     loadData();
@@ -66,260 +79,540 @@ export default function ConfiguracionPage() {
     if (!token) return;
 
     try {
-      const [resInst, resNiveles, resGrados, resTipos] = await Promise.all([
+      setLoading(true);
+      const [resInst, resNiveles, resGrados, resTipos, resUsuarios] = await Promise.all([
         fetch(`${API}/configuracion/institucion`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/configuracion/niveles`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/configuracion/grados`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API}/configuracion/tipos-actividad`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${API}/configuracion/tipos-actividad`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/auth/users`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
+
+      if (!resInst.ok || !resNiveles.ok || !resGrados.ok || !resTipos.ok) {
+        console.error('Error cargando datos de configuración');
+        alert('Error al cargar datos de configuración');
+        return;
+      }
 
       const instData = await resInst.json();
       const nivelesData = await resNiveles.json();
       const gradosData = await resGrados.json();
       const tiposData = await resTipos.json();
+      const usuariosData = resUsuarios.ok ? await resUsuarios.json() : [];
 
-      if (instData) setInstitucion(instData);
+      if (instData) {
+        setInstitucion(instData);
+        setFormInstitucion({
+          nombre: instData.nombre || '',
+          nit: instData.nit || '',
+          direccion: instData.direccion || '',
+          telefono: instData.telefono || '',
+          correo_electronico: instData.correo_electronico || '',
+          rector: instData.rector || '',
+          dane: instData.dane || '',
+          resolucion_aprobacion: instData.resolucion_aprobacion || '',
+          jornadas: instData.jornadas || ['Mañana']
+        });
+      }
       setNiveles(nivelesData || []);
-      setGrados(gradosData || []);
+      setGrados( gradosData || []);
       setTiposActividad(tiposData || []);
+      setUsuarios(usuariosData || []);
     } catch (err) {
       console.error('Error cargando datos:', err);
+      alert('Error de conexión al cargar datos');
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ======================
+  // INSTITUCIÓN
+  // ======================
   const handleSaveInstitucion = async () => {
     setLoading(true);
     const token = getAuthToken();
     try {
+      let res;
       if (institucion?.id) {
-        await fetch(`${API}/configuracion/institucion/${institucion.id}`, {
+        res = await fetch(`${API}/configuracion/institucion/${institucion.id}`, {
           method: 'PATCH',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(formInstitucion)
         });
       } else {
-        await fetch(`${API}/configuracion/institucion`, {
+        res = await fetch(`${API}/configuracion/institucion`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(formInstitucion)
         });
       }
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al guardar');
+      }
       loadData();
-      alert('Institución guardada');
-    } catch (err) { alert('Error guardando'); }
+      alert('Institución guardada correctamente');
+    } catch (err: any) { alert(err.message || 'Error guardando'); }
     setLoading(false);
   };
 
+  // ======================
+  // NIVELES
+  // ======================
   const handleSaveNivel = async () => {
     if (!formNivel.nombre) return;
     setLoading(true);
     const token = getAuthToken();
     try {
-      await fetch(`${API}/configuracion/niveles`, {
+      const res = await fetch(`${API}/configuracion/niveles`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(formNivel)
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al crear nivel');
+      }
       setFormNivel({ nombre: '' });
       loadData();
-    } catch (err) { alert('Error guardando'); }
+      alert('Nivel creado correctamente');
+    } catch (err: any) { alert(err.message || 'Error guardando'); }
     setLoading(false);
   };
 
+  // ======================
+  // GRADOS
+  // ======================
   const handleSaveGrado = async () => {
-    if (!formGrado.nombre || !formGrado.nivel_id) return;
+    if (!formGrado.nombre || !formGrado.nivel_id) {
+      alert('Complete el nombre y seleccione un nivel');
+      return;
+    }
     setLoading(true);
     const token = getAuthToken();
     try {
-      await fetch(`${API}/configuracion/grados`, {
+      const res = await fetch(`${API}/configuracion/grados`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(formGrado)
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al crear grado');
+      }
       setFormGrado({ nombre: '', codigo: '', orden: 1, nivel_id: '' });
       loadData();
-    } catch (err) { alert('Error guardando'); }
+      alert('Grado creado correctamente');
+    } catch (err: any) { alert(err.message || 'Error guardando'); }
     setLoading(false);
   };
 
   const handleDeleteGrado = async (id: string) => {
     if (!confirm('¿Eliminar grado?')) return;
     const token = getAuthToken();
-    await fetch(`${API}/configuracion/grados/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    loadData();
+    try {
+      const res = await fetch(`${API}/configuracion/grados/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al eliminar');
+      }
+      loadData();
+      alert('Grado eliminado correctamente');
+    } catch (err: any) { alert(err.message || 'Error al eliminar'); }
   };
 
+  // ======================
+  // TIPOS DE ACTIVIDAD
+  // ======================
   const handleSaveTipoActividad = async () => {
     if (!formTipoActividad.nombre) return;
     setLoading(true);
     const token = getAuthToken();
     try {
-      await fetch(`${API}/configuracion/tipos-actividad`, {
+      const res = await fetch(`${API}/configuracion/tipos-actividad`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(formTipoActividad)
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al crear tipo');
+      }
       setFormTipoActividad({ nombre: '' });
       loadData();
-    } catch (err) { alert('Error guardando'); }
+      alert('Tipo de actividad creado correctamente');
+    } catch (err: any) { alert(err.message || 'Error guardando'); }
     setLoading(false);
   };
 
   const handleDeleteTipoActividad = async (id: string) => {
     if (!confirm('¿Eliminar tipo de actividad?')) return;
     const token = getAuthToken();
-    await fetch(`${API}/configuracion/tipos-actividad/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    loadData();
+    try {
+      const res = await fetch(`${API}/configuracion/tipos-actividad/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al eliminar');
+      }
+      loadData();
+      alert('Tipo de actividad eliminado correctamente');
+    } catch (err: any) { alert(err.message || 'Error al eliminar'); }
   };
+
+  // ======================
+  // USUARIOS
+  // ======================
+  const handleCreateUsuario = async () => {
+    if (!formUsuario.nombre || !formUsuario.email || !formUsuario.password) {
+      alert('Complete todos los campos');
+      return;
+    }
+    setLoading(true);
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(formUsuario)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al crear usuario');
+      }
+      setFormUsuario({ nombre: '', email: '', password: '', rol: 'docente' });
+      loadData();
+      alert('Usuario creado correctamente');
+    } catch (err: any) { alert(err.message || 'Error guardando'); }
+    setLoading(false);
+  };
+
+  const handleToggleUsuario = async (userId: string, activo: boolean) => {
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`${API}/auth/toggle-active`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, activo: !activo })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Error al cambiar estado');
+      }
+      loadData();
+      alert(activo ? 'Usuario desactivado' : 'Usuario activado');
+    } catch (err: any) { alert(err.message || 'Error al cambiar estado'); }
+  };
+
+  const usuariosFiltrados = rolFiltro ? usuarios.filter(u => u.rol === rolFiltro) : usuarios;
+
+  const rolesDisponibles = [
+    { value: 'docente', label: 'Docente' },
+    { value: 'estudiante', label: 'Estudiante' },
+    { value: 'padre', label: 'Padre/Acudiente' },
+    { value: 'coordinador', label: 'Coordinador' },
+    { value: 'rector', label: 'Rector' },
+    { value: 'admin', label: 'Administrador' }
+  ];
 
   const tabs = [
     { id: 'institucion', label: 'Institución' },
+    { id: 'usuarios', label: 'Usuarios' },
     { id: 'niveles', label: 'Niveles' },
     { id: 'grados', label: 'Grados' },
     { id: 'tipos-actividad', label: 'Tipos de Actividad' }
   ];
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1 style={{ marginBottom: '20px' }}>Configuración del Sistema</h1>
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.titleSection}>
+          <h1>Configuración del Sistema</h1>
+          <p>Administrar usuarios, niveles, grados y tipos de actividad</p>
+        </div>
+      </header>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #ccc' }}>
+      <div className={styles.tabsContainer}>
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '10px 20px',
-              border: 'none',
-              background: activeTab === tab.id ? '#3b82f6' : '#e5e7eb',
-              color: activeTab === tab.id ? 'white' : 'black',
-              cursor: 'pointer',
-              borderRadius: '4px 4px 0 0'
-            }}
+            className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {activeTab === 'institucion' && (
-        <div style={{ maxWidth: '600px' }}>
-          <h3>Datos de la Institución</h3>
-          <div style={{ display: 'grid', gap: '15px' }}>
-            <input placeholder="Nombre*" value={formInstitucion.nombre} onChange={e => setFormInstitucion({...formInstitucion, nombre: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <input placeholder="NIT*" value={formInstitucion.nit} onChange={e => setFormInstitucion({...formInstitucion, nit: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <input placeholder="Dirección" value={formInstitucion.direccion} onChange={e => setFormInstitucion({...formInstitucion, direccion: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <input placeholder="Teléfono" value={formInstitucion.telefono} onChange={e => setFormInstitucion({...formInstitucion, telefono: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <input placeholder="Correo" value={formInstitucion.correo_electronico} onChange={e => setFormInstitucion({...formInstitucion, correo_electronico: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <input placeholder="Rector" value={formInstitucion.rector} onChange={e => setFormInstitucion({...formInstitucion, rector: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <input placeholder="Código DANE" value={formInstitucion.dane} onChange={e => setFormInstitucion({...formInstitucion, dane: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <input placeholder="Resolución" value={formInstitucion.resolucion_aprobacion} onChange={e => setFormInstitucion({...formInstitucion, resolucion_aprobacion: e.target.value})} style={{ padding: '8px', width: '100%' }} />
-            <button onClick={handleSaveInstitucion} disabled={loading} style={{ padding: '10px', background: '#22c55e', color: 'white', border: 'none', cursor: 'pointer' }}>
-              {loading ? 'Guardando...' : 'Guardar'}
-            </button>
+      <div className={styles.content}>
+        {/* INSTITUCIÓN */}
+        {activeTab === 'institucion' && (
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Datos de la Institución</h3>
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label>Nombre *</label>
+                <input placeholder="Nombre de la institución" value={formInstitucion.nombre} onChange={e => setFormInstitucion({...formInstitucion, nombre: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>NIT *</label>
+                <input placeholder="NIT" value={formInstitucion.nit} onChange={e => setFormInstitucion({...formInstitucion, nit: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Dirección</label>
+                <input placeholder="Dirección" value={formInstitucion.direccion} onChange={e => setFormInstitucion({...formInstitucion, direccion: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Teléfono</label>
+                <input placeholder="Teléfono" value={formInstitucion.telefono} onChange={e => setFormInstitucion({...formInstitucion, telefono: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Correo Electrónico</label>
+                <input placeholder="correo@institucion.edu" value={formInstitucion.correo_electronico} onChange={e => setFormInstitucion({...formInstitucion, correo_electronico: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Rector</label>
+                <input placeholder="Nombre del rector" value={formInstitucion.rector} onChange={e => setFormInstitucion({...formInstitucion, rector: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Código DANE</label>
+                <input placeholder="Código DANE" value={formInstitucion.dane} onChange={e => setFormInstitucion({...formInstitucion, dane: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Resolución de Aprobación</label>
+                <input placeholder="Resolución" value={formInstitucion.resolucion_aprobacion} onChange={e => setFormInstitucion({...formInstitucion, resolucion_aprobacion: e.target.value})} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <button onClick={handleSaveInstitucion} disabled={loading} className={styles.btnPrimary}>
+                  {loading ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {activeTab === 'niveles' && (
-        <div>
-          <h3>Niveles Educativos</h3>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <input placeholder="Nombre del nivel" value={formNivel.nombre} onChange={e => setFormNivel({ nombre: e.target.value })} style={{ padding: '8px', flex: 1 }} />
-            <button onClick={handleSaveNivel} disabled={loading} style={{ padding: '8px 20px', background: '#22c55e', color: 'white', border: 'none' }}>Agregar</button>
-          </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Nombre</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Grados</th>
-              </tr>
-            </thead>
-            <tbody>
-              {niveles.map(nivel => (
-                <tr key={nivel.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '10px' }}>{nivel.nombre}</td>
-                  <td style={{ padding: '10px' }}>{nivel.grado?.length || 0}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+        {/* USUARIOS */}
+        {activeTab === 'usuarios' && (
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Crear Nuevo Usuario</h3>
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label>Nombre Completo *</label>
+                <input placeholder="Nombre del usuario" value={formUsuario.nombre} onChange={e => setFormUsuario({...formUsuario, nombre: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Correo Electrónico *</label>
+                <input type="email" placeholder="correo@colegio.edu" value={formUsuario.email} onChange={e => setFormUsuario({...formUsuario, email: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Contraseña *</label>
+                <input type="password" placeholder="Contraseña" value={formUsuario.password} onChange={e => setFormUsuario({...formUsuario, password: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Rol *</label>
+                <select value={formUsuario.rol} onChange={e => setFormUsuario({...formUsuario, rol: e.target.value})}>
+                  {rolesDisponibles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <button onClick={handleCreateUsuario} disabled={loading} className={styles.btnPrimary}>
+                  {loading ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </div>
 
-      {activeTab === 'grados' && (
-        <div>
-          <h3>Grados</h3>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <input placeholder="Nombre" value={formGrado.nombre} onChange={e => setFormGrado({...formGrado, nombre: e.target.value})} style={{ padding: '8px' }} />
-            <input placeholder="Código" value={formGrado.codigo} onChange={e => setFormGrado({...formGrado, codigo: e.target.value})} style={{ padding: '8px' }} />
-            <input type="number" placeholder="Orden" value={formGrado.orden} onChange={e => setFormGrado({...formGrado, orden: parseInt(e.target.value)})} style={{ padding: '8px', width: '80px' }} />
-            <select value={formGrado.nivel_id} onChange={e => setFormGrado({...formGrado, nivel_id: e.target.value})} style={{ padding: '8px' }}>
-              <option value="">Seleccionar nivel</option>
-              {niveles.map(n => <option key={n.id} value={n.id}>{n.nombre}</option>)}
-            </select>
-            <button onClick={handleSaveGrado} disabled={loading} style={{ padding: '8px 20px', background: '#22c55e', color: 'white', border: 'none' }}>Agregar</button>
+            <h3 className={styles.cardTitle} style={{ marginTop: '2rem' }}>Usuarios Registrados</h3>
+            <div style={{ marginBottom: '1rem' }}>
+              <select value={rolFiltro} onChange={e => setRolFiltro(e.target.value)} style={{ padding: '0.5rem' }}>
+                <option value="">Todos los roles</option>
+                {rolesDisponibles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </div>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usuariosFiltrados.map(usuario => (
+                    <tr key={usuario.id}>
+                      <td>{usuario.nombre}</td>
+                      <td>{usuario.email}</td>
+                      <td>
+                        <span className={styles.badge} style={{
+                          background: usuario.rol === 'admin' ? '#fee2e2' : usuario.rol === 'rector' ? '#fef3c7' : '#dbeafe',
+                          color: usuario.rol === 'admin' ? '#991b1b' : usuario.rol === 'rector' ? '#92400e' : '#1e40af'
+                        }}>
+                          {rolesDisponibles.find(r => r.value === usuario.rol)?.label || usuario.rol}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`${styles.badge} ${usuario.activo ? styles.badgeActivo : styles.badgeInactivo}`}>
+                          {usuario.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => handleToggleUsuario(usuario.id, usuario.activo)}
+                          className={styles.btnDanger}
+                          style={{ background: usuario.activo ? '#f59e0b' : '#10b981' }}
+                        >
+                          {usuario.activo ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {usuariosFiltrados.length === 0 && (
+                    <tr><td colSpan={5} className={styles.empty}>No hay usuarios</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Nombre</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Código</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Nivel</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Orden</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {grados.map(grado => (
-                <tr key={grado.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '10px' }}>{grado.nombre}</td>
-                  <td style={{ padding: '10px' }}>{grado.codigo}</td>
-                  <td style={{ padding: '10px' }}>{grado.nivel?.nombre}</td>
-                  <td style={{ padding: '10px' }}>{grado.orden}</td>
-                  <td style={{ padding: '10px' }}>
-                    <button onClick={() => handleDeleteGrado(grado.id)} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}>Eliminar</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+        )}
 
-      {activeTab === 'tipos-actividad' && (
-        <div>
-          <h3>Tipos de Actividad Evaluativa</h3>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <input placeholder="Nombre del tipo" value={formTipoActividad.nombre} onChange={e => setFormTipoActividad({ nombre: e.target.value })} style={{ padding: '8px', flex: 1 }} />
-            <button onClick={handleSaveTipoActividad} disabled={loading} style={{ padding: '8px 20px', background: '#22c55e', color: 'white', border: 'none' }}>Agregar</button>
+        {/* NIVELES */}
+        {activeTab === 'niveles' && (
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Niveles Educativos</h3>
+            <div className={styles.formGridColumns}>
+              <div className={styles.formGroup} style={{ flex: 1 }}>
+                <label>Nombre del nivel</label>
+                <input placeholder="Ej: Preescolar, Primaria, Secundaria" value={formNivel.nombre} onChange={e => setFormNivel({ nombre: e.target.value })} />
+              </div>
+              <button onClick={handleSaveNivel} disabled={loading} className={styles.btnPrimary}>Agregar</button>
+            </div>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Grados</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {niveles.map(nivel => (
+                    <tr key={nivel.id}>
+                      <td>{nivel.nombre}</td>
+                      <td>{nivel.grado?.length || 0}</td>
+                    </tr>
+                  ))}
+                  {niveles.length === 0 && (
+                    <tr><td colSpan={2} className={styles.empty}>No hay niveles registrados</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Nombre</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tiposActividad.map(tipo => (
-                <tr key={tipo.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '10px' }}>{tipo.nombre}</td>
-                  <td style={{ padding: '10px' }}>
-                    <button onClick={() => handleDeleteTipoActividad(tipo.id)} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}>Eliminar</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+        )}
+
+        {/* GRADOS */}
+        {activeTab === 'grados' && (
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Grados</h3>
+            <div className={styles.formGridColumns}>
+              <div className={styles.formGroup}>
+                <label>Nombre</label>
+                <input placeholder="Ej: Primero" value={formGrado.nombre} onChange={e => setFormGrado({...formGrado, nombre: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Código</label>
+                <input placeholder="Código" value={formGrado.codigo} onChange={e => setFormGrado({...formGrado, codigo: e.target.value})} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Orden</label>
+                <input type="number" placeholder="1" value={formGrado.orden} onChange={e => setFormGrado({...formGrado, orden: parseInt(e.target.value)})} style={{ width: '80px' }} />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Nivel</label>
+                <select value={formGrado.nivel_id} onChange={e => setFormGrado({...formGrado, nivel_id: e.target.value})}>
+                  <option value="">Seleccionar nivel</option>
+                  {niveles.map(n => <option key={n.id} value={n.id}>{n.nombre}</option>)}
+                </select>
+              </div>
+              <button onClick={handleSaveGrado} disabled={loading} className={styles.btnPrimary}>Agregar</button>
+            </div>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Código</th>
+                    <th>Nivel</th>
+                    <th>Orden</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  { grados.map(grado => (
+                    <tr key={grado.id}>
+                      <td>{grado.nombre}</td>
+                      <td className={styles.mono}>{grado.codigo}</td>
+                      <td>{grado.nivel?.nombre}</td>
+                      <td>{grado.orden}</td>
+                      <td>
+                        <button onClick={() => handleDeleteGrado(grado.id)} className={styles.btnDanger}>Eliminar</button>
+                      </td>
+                    </tr>
+                  ))}
+                  { grados.length === 0 && (
+                    <tr><td colSpan={5} className={styles.empty}>No hay grados registrados</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TIPOS DE ACTIVIDAD */}
+        {activeTab === 'tipos-actividad' && (
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Tipos de Actividad Evaluativa</h3>
+            <div className={styles.formGridColumns}>
+              <div className={styles.formGroup} style={{ flex: 1 }}>
+                <label>Nombre del tipo</label>
+                <input placeholder="Ej: Tarea, Examen, Quiz" value={formTipoActividad.nombre} onChange={e => setFormTipoActividad({ nombre: e.target.value })} />
+              </div>
+              <button onClick={handleSaveTipoActividad} disabled={loading} className={styles.btnPrimary}>Agregar</button>
+            </div>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tiposActividad.map(tipo => (
+                    <tr key={tipo.id}>
+                      <td>{tipo.nombre}</td>
+                      <td>
+                        <button onClick={() => handleDeleteTipoActividad(tipo.id)} className={styles.btnDanger}>Eliminar</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {tiposActividad.length === 0 && (
+                    <tr><td colSpan={2} className={styles.empty}>No hay tipos de actividad registrados</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
