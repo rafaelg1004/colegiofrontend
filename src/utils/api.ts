@@ -6,7 +6,7 @@ interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
-export const apiClient = async (endpoint: string, options: FetchOptions = {} => {
+export const apiClient = async (endpoint: string, options: FetchOptions = {}) => {
   const { skipAuth = false, ...fetchOptions } = options;
 
   const headers: HeadersInit = {
