@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './FinanzasDashboard.module.css';
 
 export const FinanzasDashboard = () => {
@@ -19,8 +20,8 @@ export const FinanzasDashboard = () => {
       try {
         const token = getAuthToken();
         const [resStats, resFact] = await Promise.all([
-          fetch('http://localhost:3005/api/v1/financiero/resumen', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch('http://localhost:3005/api/v1/financiero/facturas', { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch('${API_URL}/financiero/resumen', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch('${API_URL}/financiero/facturas', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         setStats(await resStats.json());
@@ -58,7 +59,7 @@ export const FinanzasDashboard = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/financiero/pagos', {
+      const res = await fetch('${API_URL}/financiero/pagos', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

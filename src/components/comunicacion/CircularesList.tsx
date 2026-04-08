@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './CircularesList.module.css';
 
 interface Circular {
@@ -38,7 +39,7 @@ export const CircularesList = () => {
     try {
       const token = getAuthToken();
       const params = filtro ? `?dirigida_a=${encodeURIComponent(filtro)}` : '';
-      const res = await fetch(`http://localhost:3005/api/v1/comunicacion/circulares${params}`, {
+      const res = await fetch(`${API_URL}/comunicacion/circulares${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -71,7 +72,7 @@ export const CircularesList = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/comunicacion/circulares', {
+      const res = await fetch('${API_URL}/comunicacion/circulares', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

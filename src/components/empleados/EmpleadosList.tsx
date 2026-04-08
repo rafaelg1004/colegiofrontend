@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './EmpleadosList.module.css';
 
 interface Empleado {
@@ -36,7 +37,7 @@ export const EmpleadosList = () => {
       if (buscar) params.append('buscar', buscar);
       if (cargoFiltro) params.append('cargo', cargoFiltro);
 
-      const res = await fetch(`http://localhost:3005/api/v1/nomina/empleados?${params}`, {
+      const res = await fetch(`${API_URL}/nomina/empleados?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -83,8 +84,8 @@ export const EmpleadosList = () => {
     try {
       const token = getAuthToken();
       const url = modalMode === 'create'
-        ? 'http://localhost:3005/api/v1/nomina/empleados'
-        : `http://localhost:3005/api/v1/nomina/empleados/${selectedEmpleado?.id}`;
+        ? '${API_URL}/nomina/empleados'
+        : `${API_URL}/nomina/empleados/${selectedEmpleado?.id}`;
       
       const res = await fetch(url, {
         method: modalMode === 'create' ? 'POST' : 'PATCH',

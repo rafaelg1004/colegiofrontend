@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/utils/api';
 import styles from './NominaDashboard.module.css';
 
 export const NominaDashboard = () => {
@@ -23,8 +24,8 @@ export const NominaDashboard = () => {
       try {
         const token = getAuthToken();
         const [resNom, resRes] = await Promise.all([
-          fetch(`http://localhost:3005/api/v1/nomina/listado?mes=${currentMonth}&anio=${currentYear}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`http://localhost:3005/api/v1/nomina/resumen/${currentMonth}/${currentYear}`, { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(`${API_URL}/nomina/listado?mes=${currentMonth}&anio=${currentYear}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`${API_URL}/nomina/resumen/${currentMonth}/${currentYear}`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         const nominasData = await resNom.json();
@@ -51,7 +52,7 @@ export const NominaDashboard = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/nomina/liquidar', {
+      const res = await fetch('${API_URL}/nomina/liquidar', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

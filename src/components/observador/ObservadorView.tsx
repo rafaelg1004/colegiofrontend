@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './ObservadorView.module.css';
 
 interface Estudiante {
@@ -33,7 +34,7 @@ interface Resumen {
   compromisos: number;
 }
 
-const API = 'http://localhost:3005/api/v1';
+const API = '${API_URL}';
 
 export const ObservadorView = () => {
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);

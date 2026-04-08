@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './GruposList.module.css';
 
 interface Grado {
@@ -61,7 +62,7 @@ export const GruposList = () => {
 
   const fetchAnios = useCallback(async () => {
     const token = getAuthToken();
-    const res = await fetch('http://localhost:3005/api/v1/academico/anios-lectivos', {
+    const res = await fetch('${API_URL}/academico/anios-lectivos', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) {
@@ -74,7 +75,7 @@ export const GruposList = () => {
 
   const fetchGrados = useCallback(async () => {
     const token = getAuthToken();
-    const res = await fetch('http://localhost:3005/api/v1/grupos/grados', {
+    const res = await fetch('${API_URL}/grupos/grados', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) {
@@ -88,7 +89,7 @@ export const GruposList = () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/grupos?anio_lectivo_id=${anioFiltro}`, {
+      const res = await fetch(`${API_URL}/grupos?anio_lectivo_id=${anioFiltro}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -112,7 +113,7 @@ export const GruposList = () => {
   const fetchEstudiantes = async (grupo: Grupo) => {
     setGrupoSeleccionado(grupo);
     const token = getAuthToken();
-    const res = await fetch(`http://localhost:3005/api/v1/grupos/${grupo.id}/estudiantes`, {
+    const res = await fetch(`${API_URL}/grupos/${grupo.id}/estudiantes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) {
@@ -142,7 +143,7 @@ export const GruposList = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/grupos', {
+      const res = await fetch('${API_URL}/grupos', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

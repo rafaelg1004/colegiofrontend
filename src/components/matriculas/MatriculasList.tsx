@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './MatriculasList.module.css';
 
 interface Matricula {
@@ -86,7 +87,7 @@ export const MatriculasList = () => {
 
       try {
         // Cargar años lectivos
-        const resAnios = await fetch('http://localhost:3005/api/v1/academico/anios-lectivos', {
+        const resAnios = await fetch('${API_URL}/academico/anios-lectivos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (resAnios.ok) {
@@ -97,7 +98,7 @@ export const MatriculasList = () => {
         }
 
         // Cargar grupos
-        const resGrupos = await fetch('http://localhost:3005/api/v1/grupos', {
+        const resGrupos = await fetch('${API_URL}/grupos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (resGrupos.ok) {
@@ -122,7 +123,7 @@ export const MatriculasList = () => {
       if (anioFiltro) params.append('anio_lectivo_id', anioFiltro);
       if (grupoFiltro) params.append('grupo_id', grupoFiltro);
 
-      const response = await fetch(`http://localhost:3005/api/v1/matriculas?${params}`, {
+      const response = await fetch(`${API_URL}/matriculas?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -153,7 +154,7 @@ export const MatriculasList = () => {
       }
 
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/estudiantes?buscar=${searchEstudiante}&limit=10`, {
+      const res = await fetch(`${API_URL}/estudiantes?buscar=${searchEstudiante}&limit=10`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -201,7 +202,7 @@ export const MatriculasList = () => {
       const token = getAuthToken();
 
       if (modalMode === 'create') {
-        const res = await fetch('http://localhost:3005/api/v1/matriculas', {
+        const res = await fetch('${API_URL}/matriculas', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -220,7 +221,7 @@ export const MatriculasList = () => {
           throw new Error(err.message || 'Error al crear matrícula');
         }
       } else {
-        const res = await fetch(`http://localhost:3005/api/v1/matriculas/${selectedMatricula?.id}`, {
+        const res = await fetch(`${API_URL}/matriculas/${selectedMatricula?.id}`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${token}`,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './GruposView.module.css';
 
 interface Grupo {
@@ -24,7 +25,7 @@ export const GruposView = () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/grupos', {
+      const res = await fetch('${API_URL}/grupos', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

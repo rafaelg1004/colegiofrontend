@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { setAuthCookie, clearAuthCookie, saveTokenWithExpiration, isTokenExpired } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './LoginForm.module.css';
 
 export const LoginForm = () => {
@@ -38,7 +39,7 @@ export const LoginForm = () => {
 
     try {
       // Usamos el puerto del backend definido anteriormente (3001)
-      const response = await fetch('http://localhost:3005/api/v1/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, password }),

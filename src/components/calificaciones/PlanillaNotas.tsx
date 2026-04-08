@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getAuthToken, clearAuthCookie, isTokenExpired, logout } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './PlanillaNotas.module.css';
 
 // Helper to check auth before making requests
@@ -80,28 +81,28 @@ export const PlanillaNotas = () => {
         return;
       }
 
-      const resGrupos = await fetch('http://localhost:3005/api/v1/grupos', { headers: { 'Authorization': `Bearer ${token}` } });
+      const resGrupos = await fetch('${API_URL}/grupos', { headers: { 'Authorization': `Bearer ${token}` } });
       if (resGrupos.status === 401) { logout(); return; }
       const dataGrupos = await resGrupos.json();
       setGrupos(Array.isArray(dataGrupos) ? dataGrupos : dataGrupos.data || []);
 
-      const resAnios = await fetch('http://localhost:3005/api/v1/academico/anios-lectivos', { headers: { 'Authorization': `Bearer ${token}` } });
+      const resAnios = await fetch('${API_URL}/academico/anios-lectivos', { headers: { 'Authorization': `Bearer ${token}` } });
       if (resAnios.status === 401) { logout(); return; }
       const anios = await resAnios.json();
       if (anios && anios.length > 0) {
-        const resPeriodos = await fetch(`http://localhost:3005/api/v1/academico/periodos?anio_lectivo_id=${anios[0].id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const resPeriodos = await fetch(`${API_URL}/academico/periodos?anio_lectivo_id=${anios[0].id}`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (resPeriodos.status === 401) { logout(); return; }
         const periodosData = await resPeriodos.json();
         setPeriodos(Array.isArray(periodosData) ? periodosData : []);
       }
 
-      const resAreas = await fetch('http://localhost:3005/api/v1/academico/areas', { headers: { 'Authorization': `Bearer ${token}` } });
+      const resAreas = await fetch('${API_URL}/academico/areas', { headers: { 'Authorization': `Bearer ${token}` } });
       if (resAreas.status === 401) { logout(); return; }
       const areas = await resAreas.json();
       const allAsig = Array.isArray(areas) ? areas.flatMap((a: any) => a.asignatura || []) : [];
       setAsignaturas(allAsig);
 
-      const resTipos = await fetch('http://localhost:3005/api/v1/calificaciones/tipos-actividad', { headers: { 'Authorization': `Bearer ${token}` } });
+      const resTipos = await fetch('${API_URL}/calificaciones/tipos-actividad', { headers: { 'Authorization': `Bearer ${token}` } });
       if (resTipos.status === 401) { logout(); return; }
       const tipos = await resTipos.json();
       setTiposActividad(Array.isArray(tipos) ? tipos : []);
@@ -116,7 +117,7 @@ export const PlanillaNotas = () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/calificaciones/planilla?grupo_id=${selectedGrupo}&asignatura_id=${selectedAsignatura}&periodo_id=${selectedPeriodo}`, {
+      const res = await fetch(`${API_URL}/calificaciones/planilla?grupo_id=${selectedGrupo}&asignatura_id=${selectedAsignatura}&periodo_id=${selectedPeriodo}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) { logout(); return; }
@@ -170,7 +171,7 @@ export const PlanillaNotas = () => {
           });
 
         if (calificaciones.length > 0) {
-          const res = await fetch('http://localhost:3005/api/v1/calificaciones/registrar', {
+          const res = await fetch('${API_URL}/calificaciones/registrar', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -205,7 +206,7 @@ export const PlanillaNotas = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/calificaciones/actividades', {
+      const res = await fetch('${API_URL}/calificaciones/actividades', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -240,7 +241,7 @@ export const PlanillaNotas = () => {
 
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/calificaciones/actividades/${id}`, {
+      const res = await fetch(`${API_URL}/calificaciones/actividades/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });

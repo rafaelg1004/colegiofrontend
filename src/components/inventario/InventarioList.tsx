@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './InventarioList.module.css';
 
 export const InventarioList = () => {
@@ -18,7 +19,7 @@ export const InventarioList = () => {
   const fetchInventario = async () => {
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/inventario/articulos`, {
+      const res = await fetch(`${API_URL}/inventario/articulos`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -33,7 +34,7 @@ export const InventarioList = () => {
   const fetchCategorias = async () => {
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/inventario/categorias`, {
+      const res = await fetch(`${API_URL}/inventario/categorias`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -99,7 +100,7 @@ export const InventarioList = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('http://localhost:3005/api/v1/inventario/articulos', {
+      const res = await fetch('${API_URL}/inventario/articulos', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './EstudiantesList.module.css';
 
 interface Estudiante {
@@ -110,7 +111,7 @@ export const EstudiantesList = () => {
       params.append('page', page.toString());
       params.append('limit', '20');
 
-      const response = await fetch(`http://localhost:3005/api/v1/estudiantes?${params}`, {
+      const response = await fetch(`${API_URL}/estudiantes?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -151,7 +152,7 @@ export const EstudiantesList = () => {
   const openEdit = async (id: string) => {
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/estudiantes/${id}`, {
+      const res = await fetch(`${API_URL}/estudiantes/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar estudiante');
@@ -169,7 +170,7 @@ export const EstudiantesList = () => {
   const openView = async (id: string) => {
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/estudiantes/${id}`, {
+      const res = await fetch(`${API_URL}/estudiantes/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar estudiante');
@@ -190,8 +191,8 @@ export const EstudiantesList = () => {
     try {
       const token = getAuthToken();
       const url = modalMode === 'edit'
-        ? `http://localhost:3005/api/v1/estudiantes/${selectedId}`
-        : 'http://localhost:3005/api/v1/estudiantes';
+        ? `${API_URL}/estudiantes/${selectedId}`
+        : '${API_URL}/estudiantes';
 
       const res = await fetch(url, {
         method: modalMode === 'edit' ? 'PATCH' : 'POST',
@@ -221,7 +222,7 @@ export const EstudiantesList = () => {
 
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/estudiantes/${id}`, {
+      const res = await fetch(`${API_URL}/estudiantes/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

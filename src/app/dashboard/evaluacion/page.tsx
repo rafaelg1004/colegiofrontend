@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 
 interface Actividad {
   id: string;
@@ -38,7 +39,7 @@ interface NotaPeriodo {
   periodo?: { nombre: string; numero: number };
 }
 
-const API = 'http://localhost:3005/api/v1';
+const API = '${API_URL}';
 
 export default function EvaluacionPage() {
   const [activeTab, setActiveTab] = useState('actividades');

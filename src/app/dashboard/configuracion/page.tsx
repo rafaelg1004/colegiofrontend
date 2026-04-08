@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './Configuracion.module.css';
 
 interface Institucion {
@@ -47,7 +48,7 @@ interface Usuario {
   created_at: string;
 }
 
-const API = 'http://localhost:3005/api/v1';
+const API = '${API_URL}';
 
 export default function ConfiguracionPage() {
   const [activeTab, setActiveTab] = useState('institucion');

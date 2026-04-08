@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './AcudientesList.module.css';
 
 interface Estudiante {
@@ -48,7 +49,7 @@ export const AcudientesList = () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/acudientes?buscar=${buscar}`, {
+      const res = await fetch(`${API_URL}/acudientes?buscar=${buscar}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -74,7 +75,7 @@ export const AcudientesList = () => {
       }
 
       const token = getAuthToken();
-      const res = await fetch(`http://localhost:3005/api/v1/estudiantes?buscar=${searchEstudiante}&limit=10`, {
+      const res = await fetch(`${API_URL}/estudiantes?buscar=${searchEstudiante}&limit=10`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -129,7 +130,7 @@ export const AcudientesList = () => {
       const token = getAuthToken();
 
       // Primero crear el acudiente
-      const res = await fetch('http://localhost:3005/api/v1/acudientes', {
+      const res = await fetch('${API_URL}/acudientes', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -143,7 +144,7 @@ export const AcudientesList = () => {
 
         // Si hay estudiante seleccionado, asociarlo desde el estudiante
         if (selectedEstudiante) {
-          await fetch(`http://localhost:3005/api/v1/estudiantes/${selectedEstudiante.id}/acudiente`, {
+          await fetch(`${API_URL}/estudiantes/${selectedEstudiante.id}/acudiente`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

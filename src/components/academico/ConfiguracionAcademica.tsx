@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './ConfiguracionAcademica.module.css';
 
 // Interfaces
@@ -68,7 +69,7 @@ export const ConfiguracionAcademica = () => {
   // Fetch functions
   const fetchSedes = useCallback(async () => {
     const token = getAuthToken();
-    const res = await fetch('http://localhost:3005/api/v1/academico/sedes', {
+    const res = await fetch('${API_URL}/academico/sedes', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) setSedes(await res.json());
@@ -76,7 +77,7 @@ export const ConfiguracionAcademica = () => {
 
   const fetchAnios = useCallback(async () => {
     const token = getAuthToken();
-    const res = await fetch('http://localhost:3005/api/v1/academico/anios-lectivos', {
+    const res = await fetch('${API_URL}/academico/anios-lectivos', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) {
@@ -90,7 +91,7 @@ export const ConfiguracionAcademica = () => {
   const fetchPeriodos = useCallback(async () => {
     if (!anioSeleccionado) return;
     const token = getAuthToken();
-    const res = await fetch(`http://localhost:3005/api/v1/academico/periodos?anio_lectivo_id=${anioSeleccionado}`, {
+    const res = await fetch(`${API_URL}/academico/periodos?anio_lectivo_id=${anioSeleccionado}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) setPeriodos(await res.json());
@@ -98,7 +99,7 @@ export const ConfiguracionAcademica = () => {
 
   const fetchAreas = useCallback(async () => {
     const token = getAuthToken();
-    const res = await fetch('http://localhost:3005/api/v1/academico/areas', {
+    const res = await fetch('${API_URL}/academico/areas', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) setAreas(await res.json());
@@ -184,7 +185,7 @@ export const ConfiguracionAcademica = () => {
           break;
       }
 
-      const res = await fetch(`http://localhost:3005/api/v1/academico/${endpoint}`, {
+      const res = await fetch(`${API_URL}/academico/${endpoint}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

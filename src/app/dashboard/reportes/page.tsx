@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 
 interface Estudiante {
   id: string;
@@ -29,7 +30,7 @@ interface GrupoStats {
   promedio_asistencia?: number;
 }
 
-const API = 'http://localhost:3005/api/v1';
+const API = '${API_URL}';
 
 export default function ReportesPage() {
   const [activeTab, setActiveTab] = useState('dashboard');

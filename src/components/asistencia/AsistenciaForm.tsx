@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { getAuthToken } from '@/utils/auth';
+import { API_URL } from '@/utils/api';
 import styles from './AsistenciaForm.module.css';
 
 export const AsistenciaForm = () => {
@@ -22,13 +23,13 @@ export const AsistenciaForm = () => {
         console.warn('No hay token de autenticación');
         return;
       }
-      const resGrupos = await fetch('http://localhost:3005/api/v1/grupos', {
+      const resGrupos = await fetch('${API_URL}/grupos', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const gruposData = await resGrupos.json();
       setGrupos(Array.isArray(gruposData) ? gruposData : gruposData.data || []);
 
-      const resAreas = await fetch('http://localhost:3005/api/v1/academico/areas', {
+      const resAreas = await fetch('${API_URL}/academico/areas', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const areas = await resAreas.json();
@@ -43,7 +44,7 @@ export const AsistenciaForm = () => {
     try {
       const token = getAuthToken();
       // Primero intentamos ver si ya hay asistencia para esa fecha
-      const resExistente = await fetch(`http://localhost:3005/api/v1/asistencia/fecha?grupo_id=${selectedGrupo}&fecha=${fecha}${selectedAsignatura ? `&asignatura_id=${selectedAsignatura}` : ''}`, {
+      const resExistente = await fetch(`${API_URL}/asistencia/fecha?grupo_id=${selectedGrupo}&fecha=${fecha}${selectedAsignatura ? `&asignatura_id=${selectedAsignatura}` : ''}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const dataExistente = await resExistente.json();
@@ -57,7 +58,7 @@ export const AsistenciaForm = () => {
         })));
       } else {
         // Si no hay, cargamos los estudiantes del grupo para crearla
-        const resEst = await fetch(`http://localhost:3005/api/v1/grupos/${selectedGrupo}/estudiantes`, {
+        const resEst = await fetch(`${API_URL}/grupos/${selectedGrupo}/estudiantes`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const dataEst = await resEst.json();
@@ -93,7 +94,7 @@ export const AsistenciaForm = () => {
         }))
       };
 
-      const res = await fetch('http://localhost:3005/api/v1/asistencia', {
+      const res = await fetch('${API_URL}/asistencia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
