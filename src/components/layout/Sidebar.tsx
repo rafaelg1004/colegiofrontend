@@ -8,29 +8,160 @@ interface SidebarProps {
   userRole?: string;
 }
 
+// Menú completo solo para admin/rector/coordinador
+const fullMenu = [
+  {
+    name: "Inicio",
+    path: "/dashboard",
+    icon: "🏠",
+    roles: [
+      "admin",
+      "rector",
+      "coordinador",
+      "secretaria",
+      "docente",
+      "estudiante",
+      "acudiente",
+    ],
+  },
+  {
+    name: "Estudiantes",
+    path: "/dashboard/estudiantes",
+    icon: "🎓",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
+    name: "Matrículas",
+    path: "/dashboard/matriculas",
+    icon: "📝",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
+    name: "Calificaciones",
+    path: "/dashboard/calificaciones",
+    icon: "📊",
+    roles: [
+      "admin",
+      "rector",
+      "coordinador",
+      "docente",
+      "estudiante",
+      "acudiente",
+    ],
+  },
+  {
+    name: "Asistencia",
+    path: "/dashboard/asistencia",
+    icon: "⏱️",
+    roles: [
+      "admin",
+      "rector",
+      "coordinador",
+      "docente",
+      "estudiante",
+      "acudiente",
+    ],
+  },
+  {
+    name: "Observador",
+    path: "/dashboard/observador",
+    icon: "📋",
+    roles: ["admin", "rector", "coordinador", "docente"],
+  },
+  {
+    name: "Circulares",
+    path: "/dashboard/circulares",
+    icon: "📢",
+    roles: [
+      "admin",
+      "rector",
+      "coordinador",
+      "secretaria",
+      "docente",
+      "estudiante",
+      "acudiente",
+    ],
+  },
+  {
+    name: "Docentes/Emp.",
+    path: "/dashboard/empleados",
+    icon: "👨‍🏫",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
+    name: "Acudientes",
+    path: "/dashboard/acudientes",
+    icon: "👨‍👩‍👧",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
+    name: "Grupos",
+    path: "/dashboard/grupos",
+    icon: "👥",
+    roles: ["admin", "rector", "coordinador", "docente"],
+  },
+  {
+    name: "Nómina",
+    path: "/dashboard/nomina",
+    icon: "💸",
+    roles: ["admin", "rector", "coordinador"],
+  },
+  {
+    name: "Finanzas",
+    path: "/dashboard/financiero",
+    icon: "🏦",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
+    name: "Inventario",
+    path: "/dashboard/inventario",
+    icon: "📦",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
+    name: "Caja",
+    path: "/dashboard/caja",
+    icon: "💰",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
+    name: "Usuarios",
+    path: "/dashboard/usuarios",
+    icon: "👤",
+    roles: ["admin", "rector", "coordinador"],
+  },
+  {
+    name: "Evaluación",
+    path: "/dashboard/evaluacion",
+    icon: "📑",
+    roles: ["admin", "rector", "coordinador", "docente"],
+  },
+  {
+    name: "Reportes",
+    path: "/dashboard/reportes",
+    icon: "📈",
+    roles: ["admin", "rector", "coordinador"],
+  },
+  {
+    name: "Configuración",
+    path: "/dashboard/configuracion",
+    icon: "⚙️",
+    roles: ["admin", "rector", "coordinador"],
+  },
+  {
+    name: "Académico",
+    path: "/dashboard/academico",
+    icon: "🎓",
+    roles: ["admin", "rector", "coordinador", "docente"],
+  },
+];
+
 export const Sidebar = ({ onLogout, userRole }: SidebarProps) => {
   const pathname = usePathname();
+  const role = userRole || "estudiante";
 
-  const menuItems = [
-    { name: "Inicio", path: "/dashboard", icon: "🏠" },
-    { name: "Estudiantes", path: "/dashboard/estudiantes", icon: "🎓" },
-    { name: "Matrículas", path: "/dashboard/matriculas", icon: "📝" },
-    { name: "Calificaciones", path: "/dashboard/calificaciones", icon: "📊" },
-    { name: "Asistencia", path: "/dashboard/asistencia", icon: "⏱️" },
-    { name: "Observador", path: "/dashboard/observador", icon: "📋" },
-    { name: "Circulares", path: "/dashboard/circulares", icon: "📢" },
-    { name: "Docentes/Emp.", path: "/dashboard/empleados", icon: "👨‍🏫" },
-    { name: "Acudientes", path: "/dashboard/acudientes", icon: "👨‍👩‍👧" },
-    { name: "Grupos", path: "/dashboard/grupos", icon: "👥" },
-    { name: "Nómina", path: "/dashboard/nomina", icon: "💸" },
-    { name: "Finanzas", path: "/dashboard/financiero", icon: "🏦" },
-    { name: "Inventario", path: "/dashboard/inventario", icon: "📦" },
-    { name: "Caja", path: "/dashboard/caja", icon: "�" },
-    { name: "Evaluación", path: "/dashboard/evaluacion", icon: "📑" },
-    { name: "Reportes", path: "/dashboard/reportes", icon: "📈" },
-    { name: "Configuración", path: "/dashboard/configuracion", icon: "⚙️" },
-    { name: "Académico", path: "/dashboard/academico", icon: "🎓" },
-  ];
+  // Filtrar menú según rol
+  const menuItems = fullMenu.filter((item) => item.roles.includes(role));
 
   return (
     <aside className={styles.sidebar}>
