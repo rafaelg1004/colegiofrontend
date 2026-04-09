@@ -46,9 +46,9 @@ export default function UsuariosPage() {
   const [filtroRol, setFiltroRol] = useState("");
 
   // Formulario crear usuario
-  const [tipoUsuario, setTipoUsuario] = useState<"docente" | "estudiante">(
-    "docente",
-  );
+  const [tipoUsuario, setTipoUsuario] = useState<
+    "docente" | "estudiante" | "admin"
+  >("docente");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [empleadoId, setEmpleadoId] = useState("");
@@ -84,14 +84,25 @@ export default function UsuariosPage() {
     if (!token) return;
 
     try {
+      console.log("🔍 Cargando empleados desde:", `${API}/empleados`);
       const res = await fetch(`${API}/empleados`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Error al cargar empleados");
+      console.log("📡 Respuesta empleados status:", res.status);
+      if (!res.ok) throw new Error(`Error al cargar empleados: ${res.status}`);
       const data = await res.json();
-      setEmpleados(data || []);
+      console.log("📦 Datos empleados crudos:", data);
+      // El endpoint de empleados devuelve un array directo
+      const empleadosArray = Array.isArray(data) ? data : data.data || [];
+      console.log(
+        "✅ Empleados procesados:",
+        empleadosArray.length,
+        empleadosArray,
+      );
+      setEmpleados(empleadosArray);
     } catch (err) {
-      console.error("Error cargando empleados:", err);
+      console.error("❌ Error cargando empleados:", err);
+      setEmpleados([]);
     }
   };
 
@@ -100,14 +111,29 @@ export default function UsuariosPage() {
     if (!token) return;
 
     try {
+      console.log(
+        "🔍 Cargando estudiantes desde:",
+        `${API}/estudiantes?limit=100`,
+      );
       const res = await fetch(`${API}/estudiantes?limit=100`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Error al cargar estudiantes");
+      console.log("📡 Respuesta estudiantes status:", res.status);
+      if (!res.ok)
+        throw new Error(`Error al cargar estudiantes: ${res.status}`);
       const data = await res.json();
-      setEstudiantes(data.data || []);
+      console.log("📦 Datos estudiantes crudos:", data);
+      // El endpoint de estudiantes devuelve { data: [], meta: {} }
+      const estudiantesArray = Array.isArray(data) ? data : data.data || [];
+      console.log(
+        "✅ Estudiantes procesados:",
+        estudiantesArray.length,
+        estudiantesArray,
+      );
+      setEstudiantes(estudiantesArray);
     } catch (err) {
-      console.error("Error cargando estudiantes:", err);
+      console.error("❌ Error cargando estudiantes:", err);
+      setEstudiantes([]);
     }
   };
 
@@ -127,6 +153,8 @@ export default function UsuariosPage() {
       return;
     }
 
+    // Admin no requiere vinculación
+
     setLoading(true);
     const token = getAuthToken();
 
@@ -134,12 +162,12 @@ export default function UsuariosPage() {
       const body: any = {
         email,
         password,
-        rol: tipoUsuario === "docente" ? "docente" : "estudiante",
+        rol: tipoUsuario,
       };
 
-      if (tipoUsuario === "docente") {
+      if (tipoUsuario === "docente" && empleadoId) {
         body.empleado_id = empleadoId;
-      } else {
+      } else if (tipoUsuario === "estudiante" && estudianteId) {
         body.estudiante_id = estudianteId;
       }
 
@@ -300,6 +328,13 @@ export default function UsuariosPage() {
             <label>Tipo de Usuario:</label>
             <div className={styles.tipoButtons}>
               <button
+                className={tipoUsuario === "admin" ? styles.activeTipo : ""}
+                onClick={() => setTipoUsuario("admin")}
+                type="button"
+              >
+                🔐 Admin
+              </button>
+              <button
                 className={tipoUsuario === "docente" ? styles.activeTipo : ""}
                 onClick={() => setTipoUsuario("docente")}
                 type="button"
@@ -339,20 +374,39 @@ export default function UsuariosPage() {
             />
           </div>
 
+          {tipoUsuario === "admin" && (
+            <div className={styles.formGroup}>
+              <div className={styles.info}>
+                ℹ️ El usuario <strong>Admin</strong> no requiere vinculación con
+                empleado ni estudiante. Tendrá acceso completo al sistema.
+              </div>
+            </div>
+          )}
+
           {tipoUsuario === "docente" && (
             <div className={styles.formGroup}>
               <label>Seleccionar Docente/Empleado</label>
-              <select
-                value={empleadoId}
-                onChange={(e) => setEmpleadoId(e.target.value)}
-              >
-                <option value="">Seleccione...</option>
-                {empleados.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.primer_nombre} {emp.primer_apellido} - {emp.cargo}
-                  </option>
-                ))}
-              </select>
+              {empleados.length === 0 ? (
+                <div className={styles.alert}>
+                  ⚠️ No hay empleados registrados.
+                  <a href="/dashboard/empleados">
+                    Cree un empleado primero
+                  </a>{" "}
+                  para poder vincularlo.
+                </div>
+              ) : (
+                <select
+                  value={empleadoId}
+                  onChange={(e) => setEmpleadoId(e.target.value)}
+                >
+                  <option value="">Seleccione...</option>
+                  {empleados.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.primer_nombre} {emp.primer_apellido} - {emp.cargo}
+                    </option>
+                  ))}
+                </select>
+              )}
               <small className={styles.help}>
                 El empleado debe estar registrado previamente en el módulo de
                 Docentes/Empleados
@@ -363,18 +417,28 @@ export default function UsuariosPage() {
           {tipoUsuario === "estudiante" && (
             <div className={styles.formGroup}>
               <label>Seleccionar Estudiante</label>
-              <select
-                value={estudianteId}
-                onChange={(e) => setEstudianteId(e.target.value)}
-              >
-                <option value="">Seleccione...</option>
-                {estudiantes.map((est) => (
-                  <option key={est.id} value={est.id}>
-                    {est.primer_nombre} {est.primer_apellido} - Doc:{" "}
-                    {est.numero_documento}
-                  </option>
-                ))}
-              </select>
+              {estudiantes.length === 0 ? (
+                <div className={styles.alert}>
+                  ⚠️ No hay estudiantes registrados.
+                  <a href="/dashboard/estudiantes">
+                    Cree un estudiante primero
+                  </a>{" "}
+                  para poder vincularlo.
+                </div>
+              ) : (
+                <select
+                  value={estudianteId}
+                  onChange={(e) => setEstudianteId(e.target.value)}
+                >
+                  <option value="">Seleccione...</option>
+                  {estudiantes.map((est) => (
+                    <option key={est.id} value={est.id}>
+                      {est.primer_nombre} {est.primer_apellido} - Doc:{" "}
+                      {est.numero_documento}
+                    </option>
+                  ))}
+                </select>
+              )}
               <small className={styles.help}>
                 El estudiante debe estar registrado previamente en el módulo de
                 Estudiantes
