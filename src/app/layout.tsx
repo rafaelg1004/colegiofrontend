@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ApiDebug from "@/components/debug/ApiDebug";
 
 export const metadata: Metadata = {
   title: "EduGestion - Portal Institucional",
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         {children}
+        <ApiDebug />
       </body>
     </html>
   );
