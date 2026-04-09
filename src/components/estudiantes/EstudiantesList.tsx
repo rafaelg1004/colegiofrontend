@@ -5,6 +5,19 @@ import { getAuthToken, logout } from "@/utils/auth";
 import { API_URL } from "@/utils/api";
 import styles from "./EstudiantesList.module.css";
 
+interface AcudienteRel {
+  es_principal: boolean;
+  autorizado_recoger: boolean;
+  acudiente: {
+    id: string;
+    primer_nombre: string;
+    primer_apellido: string;
+    celular?: string;
+    correo_electronico?: string;
+    parentesco?: string;
+  };
+}
+
 interface Estudiante {
   id: string;
   primer_nombre: string;
@@ -34,6 +47,7 @@ interface Estudiante {
     };
     anio_lectivo?: { anio: number; activo: boolean };
   }[];
+  estudiante_acudiente?: AcudienteRel[];
 }
 
 interface Meta {
@@ -68,6 +82,14 @@ const STEPS = [
   { id: 1, title: "Datos Básicos" },
   { id: 2, title: "Ubicación" },
   { id: 3, title: "Salud" },
+];
+
+// Pasos incluyendo acudientes para modo view
+const STEPS_WITH_ACUDIENTES = [
+  { id: 1, title: "Datos Básicos" },
+  { id: 2, title: "Ubicación" },
+  { id: 3, title: "Salud" },
+  { id: 4, title: "Acudientes" },
 ];
 
 export const EstudiantesList = () => {
@@ -261,7 +283,9 @@ export const EstudiantesList = () => {
   };
 
   const nextStep = () => {
-    if (currentStep < STEPS.length) setCurrentStep(currentStep + 1);
+    const maxStep =
+      modalMode === "view" ? STEPS_WITH_ACUDIENTES.length : STEPS.length;
+    if (currentStep < maxStep) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -274,9 +298,14 @@ export const EstudiantesList = () => {
         formData.primer_nombre &&
         formData.primer_apellido &&
         formData.tipo_documento &&
-        formData.numero_documento &&
-        formData.fecha_nacimiento
+        formData.numero_documento
       );
+    }
+    if (currentStep === 2 || currentStep === 3) {
+      return true;
+    }
+    if (currentStep === 4 && modalMode === "view") {
+      return true;
     }
     return true;
   };
@@ -446,16 +475,18 @@ export const EstudiantesList = () => {
 
             {/* Indicador de pasos */}
             <div className={styles.stepsIndicator}>
-              {STEPS.map((step) => (
-                <div
-                  key={step.id}
-                  className={`${styles.step} ${currentStep === step.id ? styles.stepActive : ""} ${currentStep > step.id ? styles.stepCompleted : ""}`}
-                  onClick={() => setCurrentStep(step.id)}
-                >
-                  <span className={styles.stepNumber}>{step.id}</span>
-                  <span className={styles.stepTitle}>{step.title}</span>
-                </div>
-              ))}
+              {(modalMode === "view" ? STEPS_WITH_ACUDIENTES : STEPS).map(
+                (step) => (
+                  <div
+                    key={step.id}
+                    className={`${styles.step} ${currentStep === step.id ? styles.stepActive : ""} ${currentStep > step.id ? styles.stepCompleted : ""}`}
+                    onClick={() => setCurrentStep(step.id)}
+                  >
+                    <span className={styles.stepNumber}>{step.id}</span>
+                    <span className={styles.stepTitle}>{step.title}</span>
+                  </div>
+                ),
+              )}
             </div>
 
             <div className={styles.modalBody}>
@@ -681,6 +712,73 @@ export const EstudiantesList = () => {
                   </div>
                 </div>
               )}
+
+              {/* Paso 4: Acudientes (solo en modo view) */}
+              {currentStep === 4 && modalMode === "view" && (
+                <div className={styles.acudientesSection}>
+                  <div className={styles.sectionHeader}>
+                    <h3>👨‍👩‍👧 Acudientes / Representantes</h3>
+                    <a
+                      href={`/dashboard/acudientes?estudiante=${formData.id}`}
+                      className={styles.linkBtn}
+                    >
+                      + Agregar Acudiente
+                    </a>
+                  </div>
+
+                  {formData.estudiante_acudiente &&
+                  formData.estudiante_acudiente.length > 0 ? (
+                    <div className={styles.acudientesList}>
+                      {formData.estudiante_acudiente.map((rel, idx) => (
+                        <div key={idx} className={styles.acudienteCard}>
+                          <div className={styles.acudienteHeader}>
+                            <span className={styles.acudienteNombre}>
+                              {rel.acudiente.primer_nombre}{" "}
+                              {rel.acudiente.primer_apellido}
+                            </span>
+                            {rel.es_principal && (
+                              <span className={styles.badgePrincipal}>
+                                Principal ⭐
+                              </span>
+                            )}
+                            {rel.autorizado_recoger && (
+                              <span className={styles.badgeAutorizado}>
+                                ✓ Autorizado recoger
+                              </span>
+                            )}
+                          </div>
+                          <div className={styles.acudienteInfo}>
+                            <span>
+                              📞 {rel.acudiente.celular || "Sin teléfono"}
+                            </span>
+                            <span>
+                              📧{" "}
+                              {rel.acudiente.correo_electronico || "Sin email"}
+                            </span>
+                            <span>
+                              🧑‍🤝‍🧑{" "}
+                              {rel.acudiente.parentesco ||
+                                "Parentesco no especificado"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.noAcudientes}>
+                      <p>
+                        ⚠️ No hay acudientes registrados para este estudiante.
+                      </p>
+                      <a
+                        href={`/dashboard/acudientes?estudiante=${formData.id}`}
+                        className={styles.linkBtn}
+                      >
+                        Ir a Acudientes para vincular
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Footer con navegación */}
@@ -706,17 +804,23 @@ export const EstudiantesList = () => {
                   >
                     Siguiente →
                   </button>
+                ) : modalMode !== "view" ? (
+                  <button
+                    type="button"
+                    className={styles.saveBtn}
+                    onClick={handleSubmit}
+                    disabled={saving}
+                  >
+                    {saving ? "Guardando..." : "Guardar"}
+                  </button>
                 ) : (
-                  modalMode !== "view" && (
-                    <button
-                      type="button"
-                      className={styles.saveBtn}
-                      onClick={handleSubmit}
-                      disabled={saving}
-                    >
-                      {saving ? "Guardando..." : "Guardar"}
-                    </button>
-                  )
+                  <button
+                    type="button"
+                    className={styles.closeBtn2}
+                    onClick={() => setShowModal(false)}
+                  >
+                    Cerrar
+                  </button>
                 )}
               </div>
             </div>
