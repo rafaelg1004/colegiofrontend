@@ -39,14 +39,23 @@ interface Estudiante {
   condicion_especial?: string;
   codigo_simat?: string;
   estado: string;
-  matricula?: {
-    id: string;
-    grupo?: {
-      nombre: string;
-      grado?: { nombre: string; nivel?: { nombre: string } };
-    };
-    anio_lectivo?: { anio: number; activo: boolean };
-  }[];
+  matricula?:
+    | {
+        id: string;
+        grupo?: {
+          nombre: string;
+          grado?: { nombre: string; nivel?: { nombre: string } };
+        };
+        anio_lectivo?: { anio: number; activo: boolean };
+      }
+    | {
+        id: string;
+        grupo?: {
+          nombre: string;
+          grado?: { nombre: string; nivel?: { nombre: string } };
+        };
+        anio_lectivo?: { anio: number; activo: boolean };
+      }[];
   estudiante_acudiente?: AcudienteRel[];
 }
 
@@ -165,7 +174,13 @@ export const EstudiantesList = () => {
   }, [fetchEstudiantes]);
 
   const getGrupoActual = (est: Estudiante) => {
-    const matriculaActiva = est.matricula?.find((m) => m.anio_lectivo?.activo);
+    // Manejar tanto array como objeto (backend ahora devuelve objeto único)
+    const matriculas = Array.isArray(est.matricula)
+      ? est.matricula
+      : est.matricula
+        ? [est.matricula]
+        : [];
+    const matriculaActiva = matriculas.find((m) => m.anio_lectivo?.activo);
     if (matriculaActiva?.grupo) {
       const g = matriculaActiva.grupo;
       return `${g.grado?.nivel?.nombre || ""} ${g.grado?.nombre || ""} - ${g.nombre}`.trim();

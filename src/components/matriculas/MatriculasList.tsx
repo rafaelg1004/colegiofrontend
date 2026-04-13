@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { getAuthToken } from '@/utils/auth';
-import { API_URL } from '@/utils/api';
-import styles from './MatriculasList.module.css';
+import { useEffect, useState, useCallback } from "react";
+import { getAuthToken } from "@/utils/auth";
+import { API_URL } from "@/utils/api";
+import styles from "./MatriculasList.module.css";
 
 interface Matricula {
   id: string;
@@ -54,29 +54,31 @@ interface Estudiante {
 export const MatriculasList = () => {
   const [matriculas, setMatriculas] = useState<Matricula[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Filtros
   const [aniosLectivos, setAniosLectivos] = useState<AnioLectivo[]>([]);
   const [grupos, setGrupos] = useState<Grupo[]>([]);
-  const [anioFiltro, setAnioFiltro] = useState('');
-  const [grupoFiltro, setGrupoFiltro] = useState('');
+  const [anioFiltro, setAnioFiltro] = useState("");
+  const [grupoFiltro, setGrupoFiltro] = useState("");
 
   // Modal
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [saving, setSaving] = useState(false);
-  const [selectedMatricula, setSelectedMatricula] = useState<Matricula | null>(null);
+  const [selectedMatricula, setSelectedMatricula] = useState<Matricula | null>(
+    null,
+  );
 
   // Form para crear
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
-  const [searchEstudiante, setSearchEstudiante] = useState('');
+  const [searchEstudiante, setSearchEstudiante] = useState("");
   const [formData, setFormData] = useState({
-    estudiante_id: '',
-    grupo_id: '',
-    anio_lectivo_id: '',
-    observaciones: '',
-    estado: 'Activa'
+    estudiante_id: "",
+    grupo_id: "",
+    anio_lectivo_id: "",
+    observaciones: "",
+    estado: "Activa",
   });
 
   // Cargar datos iniciales
@@ -87,8 +89,8 @@ export const MatriculasList = () => {
 
       try {
         // Cargar años lectivos
-        const resAnios = await fetch('${API_URL}/academico/anios-lectivos', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const resAnios = await fetch(`${API_URL}/academico/anios-lectivos`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (resAnios.ok) {
           const anios = await resAnios.json();
@@ -98,15 +100,15 @@ export const MatriculasList = () => {
         }
 
         // Cargar grupos
-        const resGrupos = await fetch('${API_URL}/grupos', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const resGrupos = await fetch(`${API_URL}/grupos`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (resGrupos.ok) {
           const data = await resGrupos.json();
           setGrupos(Array.isArray(data) ? data : data.data || []);
         }
       } catch (err) {
-        console.error('Error cargando datos iniciales:', err);
+        console.error("Error cargando datos iniciales:", err);
       }
     };
     fetchInitialData();
@@ -115,19 +117,19 @@ export const MatriculasList = () => {
   const fetchMatriculas = useCallback(async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
       const token = getAuthToken();
       if (!token) return;
 
       const params = new URLSearchParams();
-      if (anioFiltro) params.append('anio_lectivo_id', anioFiltro);
-      if (grupoFiltro) params.append('grupo_id', grupoFiltro);
+      if (anioFiltro) params.append("anio_lectivo_id", anioFiltro);
+      if (grupoFiltro) params.append("grupo_id", grupoFiltro);
 
       const response = await fetch(`${API_URL}/matriculas?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error('Error al cargar matrículas');
+      if (!response.ok) throw new Error("Error al cargar matrículas");
 
       const data = await response.json();
       setMatriculas(Array.isArray(data) ? data : []);
@@ -154,9 +156,12 @@ export const MatriculasList = () => {
       }
 
       const token = getAuthToken();
-      const res = await fetch(`${API_URL}/estudiantes?buscar=${searchEstudiante}&limit=10`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `${API_URL}/estudiantes?buscar=${searchEstudiante}&limit=10`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (res.ok) {
         const result = await res.json();
@@ -169,17 +174,17 @@ export const MatriculasList = () => {
   }, [searchEstudiante]);
 
   const openCreate = () => {
-    const anioActivo = aniosLectivos.find(a => a.activo);
+    const anioActivo = aniosLectivos.find((a) => a.activo);
     setFormData({
-      estudiante_id: '',
-      grupo_id: '',
-      anio_lectivo_id: anioActivo?.id || '',
-      observaciones: '',
-      estado: 'Activa'
+      estudiante_id: "",
+      grupo_id: "",
+      anio_lectivo_id: anioActivo?.id || "",
+      observaciones: "",
+      estado: "Activa",
     });
-    setSearchEstudiante('');
+    setSearchEstudiante("");
     setEstudiantes([]);
-    setModalMode('create');
+    setModalMode("create");
     setShowModal(true);
   };
 
@@ -189,10 +194,10 @@ export const MatriculasList = () => {
       estudiante_id: mat.estudiante.id,
       grupo_id: mat.grupo.id,
       anio_lectivo_id: mat.anio_lectivo.id,
-      observaciones: mat.observaciones || '',
-      estado: mat.estado
+      observaciones: mat.observaciones || "",
+      estado: mat.estado,
     });
-    setModalMode('edit');
+    setModalMode("edit");
     setShowModal(true);
   };
 
@@ -201,42 +206,45 @@ export const MatriculasList = () => {
     try {
       const token = getAuthToken();
 
-      if (modalMode === 'create') {
-        const res = await fetch('${API_URL}/matriculas', {
-          method: 'POST',
+      if (modalMode === "create") {
+        const res = await fetch("${API_URL}/matriculas", {
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             estudiante_id: formData.estudiante_id,
             grupo_id: formData.grupo_id,
             anio_lectivo_id: formData.anio_lectivo_id,
-            observaciones: formData.observaciones || undefined
-          })
+            observaciones: formData.observaciones || undefined,
+          }),
         });
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.message || 'Error al crear matrícula');
+          throw new Error(err.message || "Error al crear matrícula");
         }
       } else {
-        const res = await fetch(`${API_URL}/matriculas/${selectedMatricula?.id}`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const res = await fetch(
+          `${API_URL}/matriculas/${selectedMatricula?.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              grupo_id: formData.grupo_id,
+              estado: formData.estado,
+              observaciones: formData.observaciones || undefined,
+            }),
           },
-          body: JSON.stringify({
-            grupo_id: formData.grupo_id,
-            estado: formData.estado,
-            observaciones: formData.observaciones || undefined
-          })
-        });
+        );
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.message || 'Error al actualizar matrícula');
+          throw new Error(err.message || "Error al actualizar matrícula");
         }
       }
 
@@ -251,7 +259,9 @@ export const MatriculasList = () => {
 
   const selectEstudiante = (est: Estudiante) => {
     setFormData({ ...formData, estudiante_id: est.id });
-    setSearchEstudiante(`${est.primer_nombre} ${est.primer_apellido} - ${est.numero_documento}`);
+    setSearchEstudiante(
+      `${est.primer_nombre} ${est.primer_apellido} - ${est.numero_documento}`,
+    );
     setEstudiantes([]);
   };
 
@@ -262,10 +272,15 @@ export const MatriculasList = () => {
       <header className={styles.header}>
         <div className={styles.titleSection}>
           <h1>Control de Matrículas</h1>
-          <p>Estado de inscripciones y cupos por grupo ({matriculas.length} registros)</p>
+          <p>
+            Estado de inscripciones y cupos por grupo ({matriculas.length}{" "}
+            registros)
+          </p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.addBtn} onClick={openCreate}>+ Nueva Matrícula</button>
+          <button className={styles.addBtn} onClick={openCreate}>
+            + Nueva Matrícula
+          </button>
         </div>
       </header>
 
@@ -276,8 +291,10 @@ export const MatriculasList = () => {
           className={styles.filterSelect}
         >
           <option value="">Seleccionar año...</option>
-          {aniosLectivos.map(a => (
-            <option key={a.id} value={a.id}>{a.anio} {a.activo ? '(Activo)' : ''}</option>
+          {aniosLectivos.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.anio} {a.activo ? "(Activo)" : ""}
+            </option>
           ))}
         </select>
 
@@ -287,7 +304,7 @@ export const MatriculasList = () => {
           className={styles.filterSelect}
         >
           <option value="">Todos los grupos</option>
-          {grupos.map(g => (
+          {grupos.map((g) => (
             <option key={g.id} value={g.id}>
               {g.grado?.nivel?.nombre} {g.grado?.nombre} - {g.nombre}
             </option>
@@ -315,26 +332,37 @@ export const MatriculasList = () => {
                 matriculas.map((mat) => (
                   <tr key={mat.id}>
                     <td className={styles.nameCell}>
-                      {mat.estudiante?.primer_nombre} {mat.estudiante?.primer_apellido}
+                      {mat.estudiante?.primer_nombre}{" "}
+                      {mat.estudiante?.primer_apellido}
                     </td>
                     <td>{mat.estudiante?.numero_documento}</td>
                     <td>
-                      {mat.grupo?.grado?.nivel?.nombre} {mat.grupo?.grado?.nombre} - {mat.grupo?.nombre}
+                      {mat.grupo?.grado?.nivel?.nombre}{" "}
+                      {mat.grupo?.grado?.nombre} - {mat.grupo?.nombre}
                     </td>
                     <td>{mat.anio_lectivo?.anio}</td>
                     <td>
-                      <span className={`${styles.badge} ${styles[mat.estado?.toLowerCase() || 'activa']}`}>
+                      <span
+                        className={`${styles.badge} ${styles[mat.estado?.toLowerCase() || "activa"]}`}
+                      >
                         {mat.estado}
                       </span>
                     </td>
                     <td className={styles.actionsCell}>
-                      <button className={styles.editBtn} onClick={() => openEdit(mat)}>Editar</button>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => openEdit(mat)}
+                      >
+                        Editar
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className={styles.noData}>No hay registros de matrícula</td>
+                  <td colSpan={6} className={styles.noData}>
+                    No hay registros de matrícula
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -347,13 +375,22 @@ export const MatriculasList = () => {
         <div className={styles.modalOverlay}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{modalMode === 'create' ? 'Nueva Matrícula' : 'Editar Matrícula'}</h2>
-              <button className={styles.closeBtn} onClick={() => setShowModal(false)}>×</button>
+              <h2>
+                {modalMode === "create"
+                  ? "Nueva Matrícula"
+                  : "Editar Matrícula"}
+              </h2>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setShowModal(false)}
+              >
+                ×
+              </button>
             </div>
 
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
-                {modalMode === 'create' ? (
+                {modalMode === "create" ? (
                   <>
                     <div className={styles.formGroup}>
                       <label>Buscar Estudiante *</label>
@@ -365,13 +402,14 @@ export const MatriculasList = () => {
                       />
                       {estudiantes.length > 0 && (
                         <div className={styles.dropdown}>
-                          {estudiantes.map(est => (
+                          {estudiantes.map((est) => (
                             <div
                               key={est.id}
                               className={styles.dropdownItem}
                               onClick={() => selectEstudiante(est)}
                             >
-                              {est.primer_nombre} {est.primer_apellido} - {est.numero_documento}
+                              {est.primer_nombre} {est.primer_apellido} -{" "}
+                              {est.numero_documento}
                             </div>
                           ))}
                         </div>
@@ -382,12 +420,19 @@ export const MatriculasList = () => {
                       <label>Año Lectivo *</label>
                       <select
                         value={formData.anio_lectivo_id}
-                        onChange={(e) => setFormData({ ...formData, anio_lectivo_id: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            anio_lectivo_id: e.target.value,
+                          })
+                        }
                         required
                       >
                         <option value="">Seleccionar...</option>
-                        {aniosLectivos.map(a => (
-                          <option key={a.id} value={a.id}>{a.anio} {a.activo ? '(Activo)' : ''}</option>
+                        {aniosLectivos.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            {a.anio} {a.activo ? "(Activo)" : ""}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -406,11 +451,13 @@ export const MatriculasList = () => {
                   <label>Grupo *</label>
                   <select
                     value={formData.grupo_id}
-                    onChange={(e) => setFormData({ ...formData, grupo_id: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, grupo_id: e.target.value })
+                    }
                     required
                   >
                     <option value="">Seleccionar grupo...</option>
-                    {grupos.map(g => (
+                    {grupos.map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.grado?.nivel?.nombre} {g.grado?.nombre} - {g.nombre}
                       </option>
@@ -418,12 +465,14 @@ export const MatriculasList = () => {
                   </select>
                 </div>
 
-                {modalMode === 'edit' && (
+                {modalMode === "edit" && (
                   <div className={styles.formGroup}>
                     <label>Estado</label>
                     <select
                       value={formData.estado}
-                      onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, estado: e.target.value })
+                      }
                     >
                       <option value="Activa">Activa</option>
                       <option value="Cancelada">Cancelada</option>
@@ -432,11 +481,19 @@ export const MatriculasList = () => {
                   </div>
                 )}
 
-                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                <div
+                  className={styles.formGroup}
+                  style={{ gridColumn: "1 / -1" }}
+                >
                   <label>Observaciones</label>
                   <input
                     value={formData.observaciones}
-                    onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        observaciones: e.target.value,
+                      })
+                    }
                     placeholder="Notas adicionales..."
                   />
                 </div>
@@ -444,13 +501,24 @@ export const MatriculasList = () => {
             </div>
 
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setShowModal(false)}>Cancelar</button>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setShowModal(false)}
+              >
+                Cancelar
+              </button>
               <button
                 className={styles.saveBtn}
                 onClick={handleSubmit}
-                disabled={saving || (modalMode === 'create' && (!formData.estudiante_id || !formData.grupo_id || !formData.anio_lectivo_id))}
+                disabled={
+                  saving ||
+                  (modalMode === "create" &&
+                    (!formData.estudiante_id ||
+                      !formData.grupo_id ||
+                      !formData.anio_lectivo_id))
+                }
               >
-                {saving ? 'Guardando...' : 'Guardar'}
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>
