@@ -225,7 +225,7 @@ export const EstudiantesList = () => {
       const url =
         modalMode === "edit"
           ? `${API_URL}/estudiantes/${selectedId}`
-          : "${API_URL}/estudiantes";
+          : `${API_URL}/estudiantes`;
 
       const res = await fetch(url, {
         method: modalMode === "edit" ? "PATCH" : "POST",
