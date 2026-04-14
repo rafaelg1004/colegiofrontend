@@ -265,10 +265,10 @@ export const EstudiantesList = () => {
     }
   };
 
-  const handleDelete = async (id: string, nombre: string) => {
+  const handleDesactivar = async (id: string, nombre: string) => {
     if (
       !confirm(
-        `¿Eliminar al estudiante ${nombre}? Esta acción no se puede deshacer.`,
+        `¿Desactivar al estudiante ${nombre}? El estudiante pasará a estado "Inactivo" y no aparecerá en las búsquedas normales.`,
       )
     )
       return;
@@ -276,16 +276,21 @@ export const EstudiantesList = () => {
     try {
       const token = getAuthToken();
       const res = await fetch(`${API_URL}/estudiantes/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ estado: "Inactivo" }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "Error al eliminar");
+        throw new Error(err.message || "Error al desactivar");
       }
 
       fetchEstudiantes();
+      alert("Estudiante desactivado correctamente");
     } catch (err: any) {
       alert(err.message);
     }
@@ -426,13 +431,13 @@ export const EstudiantesList = () => {
                         <button
                           className={styles.deleteBtn}
                           onClick={() =>
-                            handleDelete(
+                            handleDesactivar(
                               est.id,
                               `${est.primer_nombre} ${est.primer_apellido}`,
                             )
                           }
                         >
-                          Eliminar
+                          Desactivar
                         </button>
                       </td>
                     </tr>

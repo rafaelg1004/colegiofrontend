@@ -216,7 +216,7 @@
   border-color: #4f46e5;
 }
 
-/* Delete Button */
+/* Desactivar Button */
 .deleteBtn {
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
@@ -224,13 +224,13 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #d97706;
 }
 
 .deleteBtn:hover {
-  background: #dc2626;
+  background: #f59e0b;
   color: white;
 }
 
