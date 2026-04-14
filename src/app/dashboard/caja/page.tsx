@@ -3,9 +3,67 @@
 import { useEffect, useState } from "react";
 import { getAuthToken } from "@/utils/auth";
 import { API_URL } from "@/utils/api";
-import styles from "./Caja.module.css";
+import styles from "./CajaModerna.module.css";
 
 const API = `${API_URL}`;
+
+// ===========================================
+// INTERFACES - Sistema Contable
+// ===========================================
+
+interface ConceptoCobro {
+  id: string;
+  nombre: string;
+  valor: number;
+  aplica_iva: boolean;
+  porcentaje_iva: number;
+  afecta_inventario?: boolean;
+  categoria_inventario_id?: string;
+}
+
+interface Estudiante {
+  id: string;
+  primer_nombre: string;
+  segundo_nombre?: string;
+  primer_apellido: string;
+  segundo_apellido?: string;
+  numero_documento?: string;
+  acudiente?: { id: string; nombre: string };
+}
+
+interface ArticuloInventario {
+  id: string;
+  nombre: string;
+  precio_venta: number;
+  precio_unitario: number;
+  cantidad_stock: number;
+}
+
+interface DetalleFactura {
+  concepto_cobro_id: string;
+  articulo_inventario_id?: string;
+  descripcion: string;
+  cantidad: number;
+  valor_unitario: number;
+  valor_iva: number;
+  subtotal: number;
+}
+
+interface Factura {
+  id: string;
+  numero_factura: string;
+  prefijo: string;
+  fecha_emision: string;
+  fecha_vencimiento?: string;
+  subtotal: number;
+  iva_total: number;
+  total: number;
+  estado: "PENDIENTE" | "PAGADA" | "ANULADA" | "PARCIAL";
+  estudiante_id?: string;
+  estudiante?: Estudiante;
+  observaciones?: string;
+  detalles?: DetalleFactura[];
+}
 
 interface Movimiento {
   id: string;
@@ -15,6 +73,8 @@ interface Movimiento {
   monto: number;
   estudiante_nombre?: string;
   observacion?: string;
+  numero_comprobante?: string;
+  factura_id?: string;
 }
 
 interface Resumen {
@@ -69,6 +129,7 @@ export default function CajaPage() {
   const [conceptosCobro, setConceptosCobro] = useState<any[]>([]);
   const [conceptoSeleccionado, setConceptoSeleccionado] = useState<any>(null);
   const [articulosVenta, setArticulosVenta] = useState<any[]>([]);
+  const [conceptosVenta, setConceptosVenta] = useState<any[]>([]);
   const [mostrarSelectorArticulos, setMostrarSelectorArticulos] =
     useState(false);
 
@@ -80,6 +141,10 @@ export default function CajaPage() {
   // Filtros reporte
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+
+  // Facturas
+  const [facturas, setFacturas] = useState<any[]>([]);
+  const [facturaSeleccionada, setFacturaSeleccionada] = useState<any>(null);
 
   // Conceptos predefinidos
   const conceptosIngreso = [
@@ -278,6 +343,23 @@ export default function CajaPage() {
     }
   };
 
+  // Cargar facturas
+  const cargarFacturas = async () => {
+    const token = getAuthToken();
+    if (!token) return;
+    try {
+      const res = await fetch(`${API}/caja/facturas`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFacturas(Array.isArray(data) ? data : data.data || []);
+      }
+    } catch (err) {
+      console.error("Error cargando facturas:", err);
+    }
+  };
+
   // Determinar si se requiere seleccionar estudiante
   const requiereEstudiante =
     concepto === "Matrícula" || concepto === "Pensión Mensual";
@@ -420,9 +502,11 @@ export default function CajaPage() {
     ventana.document.close();
   };
 
-  const registrarMovimiento = async () => {
-    if (!concepto || !monto || parseFloat(monto) <= 0) {
-      alert("Complete concepto y monto válido");
+  const registrarTransaccion = async () => {
+    // Validar que haya conceptos o monto
+    const montoNum = parseFloat(monto) || 0;
+    if (conceptosVenta.length === 0 && montoNum <= 0) {
+      alert("Agregue al menos un concepto o ingrese un monto válido");
       return;
     }
 
@@ -437,54 +521,86 @@ export default function CajaPage() {
     const token = getAuthToken();
 
     try {
-      const movimientoData: any = {
+      // Construir array de conceptos
+      let conceptosTransaccion: any[] = [];
+
+      // Si hay artículos de inventario, agregarlos como conceptos
+      if (articulosVenta.length > 0) {
+        conceptosTransaccion = articulosVenta.map((art) => {
+          const valorIva = art.precio_unitario * 0.19; // 19% IVA
+          return {
+            articulo_inventario_id: art.articulo_inventario_id,
+            descripcion: art.nombre,
+            cantidad: art.cantidad,
+            valor_unitario: art.precio_unitario,
+            valor_iva: valorIva,
+          };
+        });
+      }
+
+      // Si hay un concepto seleccionado con monto, agregarlo
+      if (concepto && montoNum > 0) {
+        const valorIva = conceptoSeleccionado?.aplica_iva
+          ? montoNum * (conceptoSeleccionado.porcentaje_iva / 100)
+          : 0;
+        conceptosTransaccion.push({
+          concepto_cobro_id: conceptoSeleccionado?.id,
+          descripcion: concepto,
+          cantidad: 1,
+          valor_unitario: montoNum,
+          valor_iva: valorIva,
+        });
+      }
+
+      const transaccionData = {
         tipo,
-        concepto,
-        monto: parseFloat(monto),
-        fecha,
-        observacion: observacion || null,
+        estudiante_id: estudianteSeleccionado?.id,
+        estudiante_nombre: estudianteSeleccionado
+          ? `${estudianteSeleccionado.primer_apellido} ${estudianteSeleccionado.primer_nombre}`
+          : null,
+        conceptos: conceptosTransaccion,
+        observaciones: observacion || null,
+        metodo_pago: "EFECTIVO",
       };
 
-      // Agregar datos del estudiante si aplica
-      if (requiereEstudiante && estudianteSeleccionado) {
-        movimientoData.estudiante_id = estudianteSeleccionado.id;
-        movimientoData.estudiante_nombre = `${estudianteSeleccionado.primer_apellido} ${estudianteSeleccionado.primer_nombre}`;
-      }
-
-      // Agregar artículos de inventario si aplica
-      if (articulosVenta.length > 0) {
-        movimientoData.articulos = articulosVenta.map((art) => ({
-          articulo_inventario_id: art.articulo_inventario_id,
-          cantidad: art.cantidad,
-        }));
-      }
-
-      const res = await fetch(`${API}/caja/movimientos`, {
+      const res = await fetch(`${API}/caja/transaccion`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(movimientoData),
+        body: JSON.stringify(transaccionData),
       });
 
-      if (!res.ok) throw new Error("Error al registrar");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Error al registrar transacción");
+      }
 
       const resultado = await res.json();
 
-      // Mostrar comprobante para cualquier tipo
-      if (resultado.data?.numero_comprobante) {
-        // Agregar nombre del estudiante al comprobante desde el estado local
-        const comprobanteConEstudiante = {
-          ...resultado.data,
+      // Mostrar resultado con partida doble
+      if (resultado.data?.comprobante) {
+        setComprobanteReciente({
+          ...resultado.data.movimiento,
+          factura: resultado.data.factura,
+          partida_doble: resultado.data.partida_doble,
           estudiante_nombre: estudianteSeleccionado
             ? `${estudianteSeleccionado.primer_apellido} ${estudianteSeleccionado.primer_nombre}`
             : null,
-        };
-        setComprobanteReciente(comprobanteConEstudiante);
+        });
         setMostrarComprobante(true);
-      } else {
-        alert("Movimiento registrado correctamente");
+
+        // Mensaje según tipo
+        if (tipo === "INGRESO" && resultado.data.factura) {
+          alert(
+            `✅ Ingreso registrado:\n📄 Factura: ${resultado.data.factura.numero_factura}\n🧾 Comprobante: ${resultado.data.comprobante}`,
+          );
+        } else {
+          alert(
+            `✅ Egreso registrado:\n🧾 Comprobante: ${resultado.data.comprobante}`,
+          );
+        }
       }
 
       // Limpiar formulario
@@ -492,12 +608,13 @@ export default function CajaPage() {
       setObservacion("");
       setConcepto("");
       setConceptoSeleccionado(null);
+      setConceptosVenta([]);
       setArticulosVenta([]);
       setMostrarSelectorArticulos(false);
       limpiarEstudiante();
       cargarResumen();
     } catch (err: any) {
-      alert(err.message || "Error al registrar movimiento");
+      alert(err.message || "Error al registrar transacción");
     } finally {
       setLoading(false);
     }
@@ -533,8 +650,14 @@ export default function CajaPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>📒 Libro de Caja</h1>
-        <p>Control simple de ingresos y egresos</p>
+        <h1>
+          <span className={styles.headerIcon}>�</span>
+          Sistema Contable - Caja
+        </h1>
+        <p>
+          Partida Doble: Ingresos generan Factura + Movimiento | Egresos solo
+          Movimiento
+        </p>
       </header>
 
       {/* Resumen rápido */}
@@ -572,25 +695,34 @@ export default function CajaPage() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className={styles.tabs}>
+      {/* Tabs modernos */}
+      <div className={styles.tabsContainer}>
         <button
-          className={activeTab === "registrar" ? styles.active : ""}
+          className={`${styles.tab} ${activeTab === "registrar" ? styles.tabActivo : ""}`}
           onClick={() => setActiveTab("registrar")}
         >
           ➕ Registrar
         </button>
         <button
-          className={activeTab === "movimientos" ? styles.active : ""}
+          className={`${styles.tab} ${activeTab === "movimientos" ? styles.tabActivo : ""}`}
           onClick={() => setActiveTab("movimientos")}
         >
           📋 Movimientos
         </button>
         <button
-          className={activeTab === "reporte" ? styles.active : ""}
+          className={`${styles.tab} ${activeTab === "reporte" ? styles.tabActivo : ""}`}
           onClick={() => setActiveTab("reporte")}
         >
           📊 Reporte
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === "facturas" ? styles.tabActivo : ""}`}
+          onClick={() => {
+            setActiveTab("facturas");
+            cargarFacturas();
+          }}
+        >
+          📄 Facturas
         </button>
       </div>
 
@@ -862,11 +994,15 @@ export default function CajaPage() {
           </div>
 
           <button
-            className={styles.saveBtn}
-            onClick={registrarMovimiento}
+            className={styles.btnPrimary}
+            onClick={registrarTransaccion}
             disabled={loading}
           >
-            {loading ? "Guardando..." : "💾 Guardar Movimiento"}
+            {loading
+              ? "Procesando..."
+              : tipo === "INGRESO"
+                ? "� Registrar Ingreso + Factura"
+                : "💸 Registrar Egreso"}
           </button>
         </div>
       )}
@@ -1124,6 +1260,60 @@ export default function CajaPage() {
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Tab: Facturas */}
+      {activeTab === "facturas" && (
+        <div className={styles.movimientosContainer}>
+          <h3>📄 Facturas</h3>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Fecha</th>
+                <th>Estudiante</th>
+                <th>Total</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {facturas.map((factura: any) => (
+                <tr key={factura.id}>
+                  <td>{factura.numero_factura}</td>
+                  <td>
+                    {new Date(factura.fecha_emision).toLocaleDateString()}
+                  </td>
+                  <td>
+                    {factura.estudiante
+                      ? `${factura.estudiante.primer_apellido} ${factura.estudiante.primer_nombre}`
+                      : "N/A"}
+                  </td>
+                  <td>{formatMoney(factura.total)}</td>
+                  <td>
+                    <span
+                      className={
+                        factura.estado === "PAGADA"
+                          ? styles.estadoPagada
+                          : factura.estado === "ANULADA"
+                            ? styles.estadoAnulada
+                            : styles.estadoPendiente
+                      }
+                    >
+                      {factura.estado}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {facturas.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center" }}>
+                    No hay facturas registradas
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
