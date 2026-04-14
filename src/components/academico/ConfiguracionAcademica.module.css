@@ -6,8 +6,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header {
@@ -92,7 +98,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   min-height: 400px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Filter Bar */
@@ -124,6 +130,7 @@
 
 /* Cards */
 .card {
+  position: relative;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   padding: 1.25rem;
@@ -235,6 +242,11 @@
   color: #1e293b;
 }
 
+.areaActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .addSmallBtn {
   padding: 0.4rem 0.8rem;
   background: #eef2ff;
@@ -249,6 +261,61 @@
 .addSmallBtn:hover {
   background: #4f46e5;
   color: white;
+}
+
+.editSmallBtn {
+  padding: 0.4rem 0.6rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #16a34a;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.editSmallBtn:hover {
+  background: #16a34a;
+  color: white;
+}
+
+.editCardBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.4rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #16a34a;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card:hover .editCardBtn {
+  opacity: 1;
+}
+
+.editCardBtn:hover {
+  background: #16a34a;
+  color: white;
+}
+
+.editAsigBtn {
+  padding: 0.2rem 0.4rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.editAsigBtn:hover {
+  background: #f0fdf4;
+  color: #16a34a;
 }
 
 .asignaturasList {
@@ -286,7 +353,8 @@
 }
 
 /* Loading & Empty */
-.loading, .empty {
+.loading,
+.empty {
   padding: 3rem;
   text-align: center;
   color: #64748b;
@@ -316,8 +384,14 @@
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: scale(0.95) translateY(-20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .modalHeader {

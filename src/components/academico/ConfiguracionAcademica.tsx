@@ -40,7 +40,33 @@ interface Asignatura {
   area_id: string;
 }
 
-type TabId = "sedes" | "anios" | "periodos" | "areas";
+interface Nivel {
+  id: string;
+  nombre: string;
+}
+
+interface Grado {
+  id: string;
+  nombre: string;
+  codigo?: string;
+  orden: number;
+  nivel_id: string;
+  nivel?: { nombre: string };
+}
+
+interface TipoActividad {
+  id: string;
+  nombre: string;
+}
+
+type TabId =
+  | "sedes"
+  | "anios"
+  | "periodos"
+  | "areas"
+  | "niveles"
+  | "grados"
+  | "tipos-actividad";
 
 export const ConfiguracionAcademica = () => {
   const [activeTab, setActiveTab] = useState<TabId>("anios");
@@ -51,13 +77,25 @@ export const ConfiguracionAcademica = () => {
   const [anios, setAnios] = useState<AnioLectivo[]>([]);
   const [periodos, setPeriodos] = useState<Periodo[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
+  const [niveles, setNiveles] = useState<Nivel[]>([]);
+  const [grados, setGrados] = useState<Grado[]>([]);
+  const [tiposActividad, setTiposActividad] = useState<TipoActividad[]>([]);
   const [anioSeleccionado, setAnioSeleccionado] = useState<string>("");
+  const [nivelFiltro, setNivelFiltro] = useState<string>("");
 
   // Modal
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<
-    "sede" | "anio" | "periodo" | "area" | "asignatura"
+    | "sede"
+    | "anio"
+    | "periodo"
+    | "area"
+    | "asignatura"
+    | "nivel"
+    | "grado"
+    | "tipo-actividad"
   >("sede");
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
 
@@ -66,6 +104,9 @@ export const ConfiguracionAcademica = () => {
     { id: "periodos" as TabId, name: "Periodos", icon: "📊" },
     { id: "sedes" as TabId, name: "Sedes", icon: "🏫" },
     { id: "areas" as TabId, name: "Áreas y Asignaturas", icon: "📚" },
+    { id: "niveles" as TabId, name: "Niveles", icon: "🎚️" },
+    { id: "grados" as TabId, name: "Grados", icon: "🎓" },
+    { id: "tipos-actividad" as TabId, name: "Tipos de Actividad", icon: "📝" },
   ];
 
   // Fetch functions
@@ -110,6 +151,33 @@ export const ConfiguracionAcademica = () => {
     if (res.ok) setAreas(await res.json());
   }, []);
 
+  const fetchNiveles = useCallback(async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_URL}/academico/niveles`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setNiveles(await res.json());
+  }, []);
+
+  const fetchGrados = useCallback(async () => {
+    const token = getAuthToken();
+    const url = nivelFiltro
+      ? `${API_URL}/academico/grados?nivel_id=${nivelFiltro}`
+      : `${API_URL}/academico/grados`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setGrados(await res.json());
+  }, [nivelFiltro]);
+
+  const fetchTiposActividad = useCallback(async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_URL}/academico/tipos-actividad`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setTiposActividad(await res.json());
+  }, []);
+
   // Load data on tab change
   useEffect(() => {
     setLoading(true);
@@ -128,11 +196,30 @@ export const ConfiguracionAcademica = () => {
         case "areas":
           await fetchAreas();
           break;
+        case "niveles":
+          await fetchNiveles();
+          break;
+        case "grados":
+          await fetchNiveles();
+          await fetchGrados();
+          break;
+        case "tipos-actividad":
+          await fetchTiposActividad();
+          break;
       }
       setLoading(false);
     };
     loadData();
-  }, [activeTab, fetchSedes, fetchAnios, fetchPeriodos, fetchAreas]);
+  }, [
+    activeTab,
+    fetchSedes,
+    fetchAnios,
+    fetchPeriodos,
+    fetchAreas,
+    fetchNiveles,
+    fetchGrados,
+    fetchTiposActividad,
+  ]);
 
   useEffect(() => {
     if (activeTab === "periodos" && anioSeleccionado) {
@@ -140,9 +227,18 @@ export const ConfiguracionAcademica = () => {
     }
   }, [anioSeleccionado, activeTab, fetchPeriodos]);
 
+  useEffect(() => {
+    if (activeTab === "grados") {
+      fetchGrados();
+    }
+  }, [nivelFiltro, activeTab, fetchGrados]);
+
   // Open modals
   const openModal = (type: typeof modalType, data?: any) => {
     setModalType(type);
+    // Determinar si es creación o edición
+    const isEdit = data && data.id;
+    setModalMode(isEdit ? "edit" : "create");
     // Inicializar con valores por defecto según el tipo
     let defaultData = data || {};
     if (type === "anio" && !data) {
@@ -201,10 +297,33 @@ export const ConfiguracionAcademica = () => {
           endpoint = "asignaturas";
           body = { nombre: formData.nombre, area_id: formData.area_id };
           break;
+        case "nivel":
+          endpoint = "niveles";
+          body = { nombre: formData.nombre };
+          break;
+        case "grado":
+          endpoint = "grados";
+          body = {
+            nombre: formData.nombre,
+            codigo: formData.codigo,
+            orden: parseInt(formData.orden) || 1,
+            nivel_id: formData.nivel_id,
+          };
+          break;
+        case "tipo-actividad":
+          endpoint = "tipos-actividad";
+          body = { nombre: formData.nombre };
+          break;
       }
 
-      const res = await fetch(`${API_URL}/academico/${endpoint}`, {
-        method: "POST",
+      const isEdit = modalMode === "edit" && formData.id;
+      const url = isEdit
+        ? `${API_URL}/academico/${endpoint}/${formData.id}`
+        : `${API_URL}/academico/${endpoint}`;
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -214,7 +333,9 @@ export const ConfiguracionAcademica = () => {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "Error al guardar");
+        throw new Error(
+          err.message || `Error al ${isEdit ? "actualizar" : "guardar"}`,
+        );
       }
 
       setShowModal(false);
@@ -232,6 +353,15 @@ export const ConfiguracionAcademica = () => {
         case "area":
         case "asignatura":
           fetchAreas();
+          break;
+        case "nivel":
+          fetchNiveles();
+          break;
+        case "grado":
+          fetchGrados();
+          break;
+        case "tipo-actividad":
+          fetchTiposActividad();
           break;
       }
     } catch (err: any) {
@@ -270,6 +400,12 @@ export const ConfiguracionAcademica = () => {
                       <span className={styles.meta}>Tel: {sede.telefono}</span>
                     )}
                   </div>
+                  <button
+                    className={styles.editCardBtn}
+                    onClick={() => openModal("sede", sede)}
+                  >
+                    ✏️
+                  </button>
                 </div>
               ))
             ) : (
@@ -296,6 +432,12 @@ export const ConfiguracionAcademica = () => {
                       {anio.activo ? "Vigente" : "Inactivo"}
                     </span>
                   </div>
+                  <button
+                    className={styles.editCardBtn}
+                    onClick={() => openModal("anio", anio)}
+                  >
+                    ✏️
+                  </button>
                 </div>
               ))
             ) : (
@@ -343,6 +485,12 @@ export const ConfiguracionAcademica = () => {
                         </span>
                       </div>
                     </div>
+                    <button
+                      className={styles.editCardBtn}
+                      onClick={() => openModal("periodo", periodo)}
+                    >
+                      ✏️
+                    </button>
                   </div>
                 ))
               ) : (
@@ -364,20 +512,34 @@ export const ConfiguracionAcademica = () => {
                 <div key={area.id} className={styles.areaCard}>
                   <div className={styles.areaHeader}>
                     <h3>📚 {area.nombre}</h3>
-                    <button
-                      className={styles.addSmallBtn}
-                      onClick={() =>
-                        openModal("asignatura", { area_id: area.id })
-                      }
-                    >
-                      + Asignatura
-                    </button>
+                    <div className={styles.areaActions}>
+                      <button
+                        className={styles.editSmallBtn}
+                        onClick={() => openModal("area", area)}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className={styles.addSmallBtn}
+                        onClick={() =>
+                          openModal("asignatura", { area_id: area.id })
+                        }
+                      >
+                        + Asignatura
+                      </button>
+                    </div>
                   </div>
                   <div className={styles.asignaturasList}>
                     {area.asignatura && area.asignatura.length > 0 ? (
                       area.asignatura.map((asig) => (
                         <div key={asig.id} className={styles.asignaturaItem}>
                           <span>{asig.nombre}</span>
+                          <button
+                            className={styles.editAsigBtn}
+                            onClick={() => openModal("asignatura", asig)}
+                          >
+                            ✏️
+                          </button>
                         </div>
                       ))
                     ) : (
@@ -388,6 +550,96 @@ export const ConfiguracionAcademica = () => {
               ))
             ) : (
               <div className={styles.empty}>No hay áreas registradas</div>
+            )}
+          </div>
+        );
+
+      case "niveles":
+        return (
+          <div className={styles.dataGrid}>
+            {niveles.length > 0 ? (
+              niveles.map((nivel) => (
+                <div key={nivel.id} className={styles.card}>
+                  <div className={styles.cardIcon}>🎚️</div>
+                  <div className={styles.cardInfo}>
+                    <h3>{nivel.nombre}</h3>
+                  </div>
+                  <button
+                    className={styles.editCardBtn}
+                    onClick={() => openModal("nivel", nivel)}
+                  >
+                    ✏️
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className={styles.empty}>No hay niveles registrados</div>
+            )}
+          </div>
+        );
+
+      case "grados":
+        return (
+          <>
+            <div className={styles.filterBar}>
+              <select
+                value={nivelFiltro}
+                onChange={(e) => setNivelFiltro(e.target.value)}
+                className={styles.filterSelect}
+              >
+                <option value="">Todos los niveles</option>
+                {niveles.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.dataGrid}>
+              {grados.length > 0 ? (
+                grados.map((grado) => (
+                  <div key={grado.id} className={styles.card}>
+                    <div className={styles.cardIcon}>🎓</div>
+                    <div className={styles.cardInfo}>
+                      <h3>{grado.nombre}</h3>
+                      <p>Orden: {grado.orden}</p>
+                      {grado.nivel && (
+                        <span className={styles.meta}>
+                          Nivel: {grado.nivel.nombre}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      className={styles.editCardBtn}
+                      onClick={() => openModal("grado", grado)}
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.empty}>No hay grados registrados</div>
+              )}
+            </div>
+          </>
+        );
+
+      case "tipos-actividad":
+        return (
+          <div className={styles.dataGrid}>
+            {tiposActividad.length > 0 ? (
+              tiposActividad.map((tipo) => (
+                <div key={tipo.id} className={styles.card}>
+                  <div className={styles.cardIcon}>📝</div>
+                  <div className={styles.cardInfo}>
+                    <h3>{tipo.nombre}</h3>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className={styles.empty}>
+                No hay tipos de actividad registrados
+              </div>
             )}
           </div>
         );
@@ -407,6 +659,12 @@ export const ConfiguracionAcademica = () => {
         return { label: "+ Nuevo Periodo", type: "periodo" as const };
       case "areas":
         return { label: "+ Nueva Área", type: "area" as const };
+      case "niveles":
+        return { label: "+ Nuevo Nivel", type: "nivel" as const };
+      case "grados":
+        return { label: "+ Nuevo Grado", type: "grado" as const };
+      case "tipos-actividad":
+        return { label: "+ Nuevo Tipo", type: "tipo-actividad" as const };
     }
   };
 
@@ -419,12 +677,14 @@ export const ConfiguracionAcademica = () => {
           <h1>Configuración Académica</h1>
           <p>Parámetros base del sistema escolar</p>
         </div>
-        <button
-          className={styles.addBtn}
-          onClick={() => openModal(addBtn.type)}
-        >
-          {addBtn.label}
-        </button>
+        {addBtn && (
+          <button
+            className={styles.addBtn}
+            onClick={() => openModal(addBtn.type)}
+          >
+            {addBtn.label}
+          </button>
+        )}
       </header>
 
       <div className={styles.tabs}>
@@ -448,11 +708,15 @@ export const ConfiguracionAcademica = () => {
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>
-                {modalType === "sede" && "Nueva Sede"}
-                {modalType === "anio" && "Nuevo Año Lectivo"}
-                {modalType === "periodo" && "Nuevo Periodo"}
-                {modalType === "area" && "Nueva Área"}
-                {modalType === "asignatura" && "Nueva Asignatura"}
+                {modalMode === "edit" ? "Editar " : "Nueva "}
+                {modalType === "sede" && "Sede"}
+                {modalType === "anio" && "Año Lectivo"}
+                {modalType === "periodo" && "Periodo"}
+                {modalType === "area" && "Área"}
+                {modalType === "asignatura" && "Asignatura"}
+                {modalType === "nivel" && "Nivel"}
+                {modalType === "grado" && "Grado"}
+                {modalType === "tipo-actividad" && "Tipo de Actividad"}
               </h2>
               <button
                 className={styles.closeBtn}
@@ -645,6 +909,88 @@ export const ConfiguracionAcademica = () => {
                   </div>
                 </div>
               )}
+
+              {modalType === "nivel" && (
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Nombre del Nivel *</label>
+                    <input
+                      name="nombre"
+                      value={formData.nombre || ""}
+                      onChange={handleChange}
+                      placeholder="Ej: Primaria"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {modalType === "grado" && (
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Nombre del Grado *</label>
+                    <input
+                      name="nombre"
+                      value={formData.nombre || ""}
+                      onChange={handleChange}
+                      placeholder="Ej: Primero"
+                      required
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Código</label>
+                    <input
+                      name="codigo"
+                      value={formData.codigo || ""}
+                      onChange={handleChange}
+                      placeholder="Ej: 1°"
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Orden *</label>
+                    <input
+                      type="number"
+                      name="orden"
+                      value={formData.orden || 1}
+                      onChange={handleChange}
+                      min="1"
+                      max="11"
+                      required
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Nivel *</label>
+                    <select
+                      name="nivel_id"
+                      value={formData.nivel_id || ""}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Seleccionar...</option>
+                      {niveles.map((n) => (
+                        <option key={n.id} value={n.id}>
+                          {n.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {modalType === "tipo-actividad" && (
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Nombre del Tipo *</label>
+                    <input
+                      name="nombre"
+                      value={formData.nombre || ""}
+                      onChange={handleChange}
+                      placeholder="Ej: Taller"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className={styles.modalFooter}>
@@ -659,7 +1005,11 @@ export const ConfiguracionAcademica = () => {
                 onClick={handleSubmit}
                 disabled={saving}
               >
-                {saving ? "Guardando..." : "Guardar"}
+                {saving
+                  ? "Guardando..."
+                  : modalMode === "edit"
+                    ? "Guardar Cambios"
+                    : "Guardar"}
               </button>
             </div>
           </div>
