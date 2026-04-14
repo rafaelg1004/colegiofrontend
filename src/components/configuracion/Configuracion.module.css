@@ -1,3 +1,4 @@
+/* Layout Styles */
 .container {
   display: flex;
   flex-direction: column;
@@ -7,8 +8,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header {
@@ -71,12 +78,13 @@
   gap: 1.5rem;
 }
 
+/* Card Styles */
 .card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .cardTitle {
@@ -128,6 +136,18 @@
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
+.actions {
+  margin-top: 1rem;
+}
+
+.filterBar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
 .btnPrimary {
   padding: 0.75rem 1.5rem;
   background: #10b981;
@@ -146,6 +166,21 @@
 .btnPrimary:disabled {
   background: #9ca3af;
   cursor: not-allowed;
+}
+
+.btnSecondary {
+  padding: 0.75rem 1.5rem;
+  background: #64748b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnSecondary:hover {
+  background: #475569;
 }
 
 .btnDanger {
@@ -241,8 +276,75 @@
   font-weight: 600;
 }
 
-.badgeActivo { background: #dcfce7; color: #16a34a; }
-.badgeInactivo { background: #fee2e2; color: #dc2626; }
+.activo {
+  color: #16a34a;
+  font-weight: 500;
+}
+.inactivo {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.btnActivar {
+  padding: 0.375rem 0.75rem;
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btnActivar:hover {
+  background: #86efac;
+}
+
+.btnDesactivar {
+  padding: 0.375rem 0.75rem;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btnDesactivar:hover {
+  background: #fecaca;
+}
+
+.docente {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.estudiante {
+  background: #dcfce7;
+  color: #15803d;
+}
+.admin {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.rector {
+  background: #fef3c7;
+  color: #d97706;
+}
+.coordinador {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+.secretaria {
+  background: #fce7f3;
+  color: #be185d;
+}
+.acudiente {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+.padre {
+  background: #ccfbf1;
+  color: #0f766e;
+}
 
 @media (max-width: 768px) {
   .formGrid {
@@ -251,8 +353,5 @@
   .formGridColumns {
     flex-direction: column;
     align-items: stretch;
-  }
-  .tabsContainer {
-    flex-wrap: wrap;
   }
 }
