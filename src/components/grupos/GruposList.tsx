@@ -47,11 +47,18 @@ interface GradoOption {
   nivel_id: string;
 }
 
+interface Sede {
+  id: string;
+  nombre: string;
+}
+
 export const GruposList = () => {
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [anios, setAnios] = useState<AnioLectivo[]>([]);
   const [grados, setGrados] = useState<GradoOption[]>([]);
+  const [sedes, setSedes] = useState<Sede[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [anioFiltro, setAnioFiltro] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showEstudiantes, setShowEstudiantes] = useState(false);
@@ -86,6 +93,17 @@ export const GruposList = () => {
     }
   }, []);
 
+  const fetchSedes = useCallback(async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_URL}/academico/sedes`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setSedes(data || []);
+    }
+  }, []);
+
   const fetchGrupos = useCallback(async () => {
     if (!anioFiltro) return;
     setLoading(true);
@@ -109,7 +127,8 @@ export const GruposList = () => {
   useEffect(() => {
     fetchAnios();
     fetchGrados();
-  }, [fetchAnios, fetchGrados]);
+    fetchSedes();
+  }, [fetchAnios, fetchGrados, fetchSedes]);
 
   useEffect(() => {
     fetchGrupos();
@@ -128,14 +147,31 @@ export const GruposList = () => {
     setShowEstudiantes(true);
   };
 
-  const openModal = () => {
-    setFormData({
-      nombre: "",
-      jornada: "Manana",
-      cupo_maximo: 35,
-      grado_id: grados[0]?.id || "",
-      anio_lectivo_id: anioFiltro,
-    });
+  const openModal = (grupo?: Grupo) => {
+    if (grupo) {
+      // Modo edición
+      setModalMode("edit");
+      setFormData({
+        id: grupo.id,
+        nombre: grupo.nombre,
+        jornada: grupo.jornada,
+        cupo_maximo: grupo.cupo_maximo,
+        grado_id: grupo.grado_id,
+        anio_lectivo_id: grupo.anio_lectivo_id,
+        sede_id: grupo.sede_id || "",
+      });
+    } else {
+      // Modo creación
+      setModalMode("create");
+      setFormData({
+        nombre: "",
+        jornada: "Manana",
+        cupo_maximo: 35,
+        grado_id: grados[0]?.id || "",
+        anio_lectivo_id: anioFiltro,
+        sede_id: sedes[0]?.id || "",
+      });
+    }
     setShowModal(true);
   };
 
@@ -151,8 +187,14 @@ export const GruposList = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`${API_URL}/grupos`, {
-        method: "POST",
+      const isEdit = modalMode === "edit";
+      const url = isEdit
+        ? `${API_URL}/grupos/${formData.id}`
+        : `${API_URL}/grupos`;
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -162,7 +204,9 @@ export const GruposList = () => {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "Error al crear grupo");
+        throw new Error(
+          err.message || `Error al ${isEdit ? "actualizar" : "crear"} grupo`,
+        );
       }
 
       setShowModal(false);
@@ -191,7 +235,7 @@ export const GruposList = () => {
           <h1>Grupos</h1>
           <p>Gestion de grupos por ano lectivo</p>
         </div>
-        <button className={styles.addBtn} onClick={openModal}>
+        <button className={styles.addBtn} onClick={() => openModal()}>
           + Nuevo Grupo
         </button>
       </header>
@@ -222,11 +266,7 @@ export const GruposList = () => {
                 {gruposNivel
                   .sort((a, b) => a.grado.orden - b.grado.orden)
                   .map((grupo) => (
-                    <div
-                      key={grupo.id}
-                      className={styles.grupoCard}
-                      onClick={() => fetchEstudiantes(grupo)}
-                    >
+                    <div key={grupo.id} className={styles.grupoCard}>
                       <div className={styles.grupoHeader}>
                         <span className={styles.gradoTag}>
                           {grupo.grado.nombre}
@@ -248,8 +288,19 @@ export const GruposList = () => {
                           </div>
                         )}
                       </div>
-                      <div className={styles.verEstudiantes}>
-                        Ver estudiantes
+                      <div className={styles.grupoActions}>
+                        <button
+                          className={styles.viewBtn}
+                          onClick={() => fetchEstudiantes(grupo)}
+                        >
+                          Ver estudiantes
+                        </button>
+                        <button
+                          className={styles.editBtn}
+                          onClick={() => openModal(grupo)}
+                        >
+                          Editar
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -264,12 +315,12 @@ export const GruposList = () => {
         </div>
       )}
 
-      {/* Modal Crear Grupo */}
+      {/* Modal Crear/Editar Grupo */}
       {showModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>Nuevo Grupo</h2>
+              <h2>{modalMode === "edit" ? "Editar Grupo" : "Nuevo Grupo"}</h2>
               <button
                 className={styles.closeBtn}
                 onClick={() => setShowModal(false)}
@@ -328,6 +379,21 @@ export const GruposList = () => {
                     max="50"
                   />
                 </div>
+                <div className={styles.formGroup}>
+                  <label>Sede</label>
+                  <select
+                    name="sede_id"
+                    value={formData.sede_id || ""}
+                    onChange={handleChange}
+                  >
+                    <option value="">Sin sede</option>
+                    {sedes.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
             <div className={styles.modalFooter}>
@@ -342,7 +408,11 @@ export const GruposList = () => {
                 onClick={handleSubmit}
                 disabled={saving}
               >
-                {saving ? "Guardando..." : "Crear Grupo"}
+                {saving
+                  ? "Guardando..."
+                  : modalMode === "edit"
+                    ? "Guardar Cambios"
+                    : "Crear Grupo"}
               </button>
             </div>
           </div>
