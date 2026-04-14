@@ -16,6 +16,8 @@ interface Sede {
 interface AnioLectivo {
   id: string;
   anio: number;
+  fecha_inicio?: string;
+  fecha_fin?: string;
   activo: boolean;
 }
 
@@ -24,6 +26,8 @@ interface Periodo {
   nombre: string;
   numero: number;
   porcentaje_peso: number;
+  fecha_inicio?: string;
+  fecha_fin?: string;
   activo: boolean;
   anio_lectivo_id: string;
 }
@@ -233,6 +237,13 @@ export const ConfiguracionAcademica = () => {
     }
   }, [nivelFiltro, activeTab, fetchGrados]);
 
+  // Helper para formatear fecha ISO a YYYY-MM-DD
+  const formatDateForInput = (isoDate?: string): string => {
+    if (!isoDate) return "";
+    const date = new Date(isoDate);
+    return date.toISOString().split("T")[0];
+  };
+
   // Open modals
   const openModal = (type: typeof modalType, data?: any) => {
     setModalType(type);
@@ -244,8 +255,24 @@ export const ConfiguracionAcademica = () => {
     if (type === "anio" && !data) {
       defaultData = { anio: new Date().getFullYear(), activo: false };
     }
+    if (type === "anio" && data) {
+      // Convertir fechas ISO a formato YYYY-MM-DD para el input date
+      defaultData = {
+        ...data,
+        fecha_inicio: formatDateForInput(data.fecha_inicio),
+        fecha_fin: formatDateForInput(data.fecha_fin),
+      };
+    }
     if (type === "periodo" && !data) {
       defaultData = { numero: 1, porcentaje_peso: 25, activo: false };
+    }
+    if (type === "periodo" && data) {
+      // Convertir fechas ISO a formato YYYY-MM-DD para el input date
+      defaultData = {
+        ...data,
+        fecha_inicio: formatDateForInput(data.fecha_inicio),
+        fecha_fin: formatDateForInput(data.fecha_fin),
+      };
     }
     setFormData(defaultData);
     setShowModal(true);
@@ -426,6 +453,11 @@ export const ConfiguracionAcademica = () => {
                   <div className={styles.cardIcon}>📅</div>
                   <div className={styles.cardInfo}>
                     <h3>{anio.anio}</h3>
+                    <p className={styles.meta}>
+                      {anio.fecha_inicio && anio.fecha_fin
+                        ? `${new Date(anio.fecha_inicio).toLocaleDateString("es-CO")} - ${new Date(anio.fecha_fin).toLocaleDateString("es-CO")}`
+                        : "Sin fechas definidas"}
+                    </p>
                     <span
                       className={`${styles.badge} ${anio.activo ? styles.badgeActive : styles.badgeInactive}`}
                     >
@@ -474,6 +506,11 @@ export const ConfiguracionAcademica = () => {
                     <div className={styles.cardInfo}>
                       <h3>{periodo.nombre}</h3>
                       <p>Periodo #{periodo.numero}</p>
+                      <p className={styles.meta}>
+                        {periodo.fecha_inicio && periodo.fecha_fin
+                          ? `${new Date(periodo.fecha_inicio).toLocaleDateString("es-CO")} - ${new Date(periodo.fecha_fin).toLocaleDateString("es-CO")}`
+                          : "Sin fechas definidas"}
+                      </p>
                       <div className={styles.metaRow}>
                         <span className={styles.meta}>
                           Peso: {periodo.porcentaje_peso}%
