@@ -394,6 +394,123 @@
   }
 }
 
+/* Users Table Styles */
+.listContainer {
+  padding: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table th,
+.table td {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+.table td {
+  color: #334155;
+  font-size: 0.875rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.docente {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.estudiante {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.admin {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.rector {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.coordinador {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.secretaria {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.acudiente {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.activo {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.inactivo {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.btnActivar {
+  padding: 0.375rem 0.75rem;
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnActivar:hover {
+  background: #86efac;
+}
+
+.btnDesactivar {
+  padding: 0.375rem 0.75rem;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnDesactivar:hover {
+  background: #fecaca;
+}
+
 .modalHeader {
   display: flex;
   justify-content: space-between;
