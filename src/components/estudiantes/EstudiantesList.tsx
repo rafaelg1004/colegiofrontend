@@ -85,6 +85,7 @@ const initialForm: Partial<Estudiante> = {
   alergias: "",
   condicion_especial: "",
   codigo_simat: "",
+  estado: "Activo",
 };
 
 const STEPS = [
@@ -611,22 +612,21 @@ export const EstudiantesList = () => {
                       <option value="Otro">Otro</option>
                     </select>
                   </div>
-                  {modalMode === "edit" && (
-                    <div className={styles.formGroup}>
-                      <label>Estado</label>
-                      <select
-                        name="estado"
-                        value={formData.estado || "Activo"}
-                        onChange={handleChange}
-                      >
-                        <option value="Activo">Activo</option>
-                        <option value="Inactivo">Inactivo</option>
-                        <option value="Retirado">Retirado</option>
-                        <option value="Graduado">Graduado</option>
-                        <option value="Trasladado">Trasladado</option>
-                      </select>
-                    </div>
-                  )}
+                  <div className={styles.formGroup}>
+                    <label>Estado</label>
+                    <select
+                      name="estado"
+                      value={formData.estado || "Activo"}
+                      onChange={handleChange}
+                      disabled={modalMode === "view"}
+                    >
+                      <option value="Activo">Activo</option>
+                      <option value="Inactivo">Inactivo</option>
+                      <option value="Retirado">Retirado</option>
+                      <option value="Graduado">Graduado</option>
+                      <option value="Trasladado">Trasladado</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
