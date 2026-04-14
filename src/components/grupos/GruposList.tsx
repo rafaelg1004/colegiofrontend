@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { getAuthToken } from '@/utils/auth';
-import { API_URL } from '@/utils/api';
-import styles from './GruposList.module.css';
+import { useEffect, useState, useCallback } from "react";
+import { getAuthToken } from "@/utils/auth";
+import { API_URL } from "@/utils/api";
+import styles from "./GruposList.module.css";
 
 interface Grado {
   nombre: string;
@@ -52,18 +52,20 @@ export const GruposList = () => {
   const [anios, setAnios] = useState<AnioLectivo[]>([]);
   const [grados, setGrados] = useState<GradoOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [anioFiltro, setAnioFiltro] = useState('');
+  const [anioFiltro, setAnioFiltro] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showEstudiantes, setShowEstudiantes] = useState(false);
-  const [grupoSeleccionado, setGrupoSeleccionado] = useState<Grupo | null>(null);
+  const [grupoSeleccionado, setGrupoSeleccionado] = useState<Grupo | null>(
+    null,
+  );
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
 
   const fetchAnios = useCallback(async () => {
     const token = getAuthToken();
-    const res = await fetch('${API_URL}/academico/anios-lectivos', {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const res = await fetch(`${API_URL}/academico/anios-lectivos`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       const data = await res.json();
@@ -75,8 +77,8 @@ export const GruposList = () => {
 
   const fetchGrados = useCallback(async () => {
     const token = getAuthToken();
-    const res = await fetch('${API_URL}/grupos/grados', {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const res = await fetch(`${API_URL}/grupos/grados`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       const data = await res.json();
@@ -89,9 +91,12 @@ export const GruposList = () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`${API_URL}/grupos?anio_lectivo_id=${anioFiltro}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `${API_URL}/grupos?anio_lectivo_id=${anioFiltro}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (res.ok) {
         const data = await res.json();
         setGrupos(Array.isArray(data) ? data : []);
@@ -114,7 +119,7 @@ export const GruposList = () => {
     setGrupoSeleccionado(grupo);
     const token = getAuthToken();
     const res = await fetch(`${API_URL}/grupos/${grupo.id}/estudiantes`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       const data = await res.json();
@@ -125,17 +130,20 @@ export const GruposList = () => {
 
   const openModal = () => {
     setFormData({
-      nombre: '',
-      jornada: 'Manana',
+      nombre: "",
+      jornada: "Manana",
       cupo_maximo: 35,
-      grado_id: grados[0]?.id || '',
-      anio_lectivo_id: anioFiltro
+      grado_id: grados[0]?.id || "",
+      anio_lectivo_id: anioFiltro,
     });
     setShowModal(true);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const value = e.target.type === 'number' ? parseInt(e.target.value) : e.target.value;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const value =
+      e.target.type === "number" ? parseInt(e.target.value) : e.target.value;
     setFormData({ ...formData, [e.target.name]: value });
   };
 
@@ -143,18 +151,18 @@ export const GruposList = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('${API_URL}/grupos', {
-        method: 'POST',
+      const res = await fetch(`${API_URL}/grupos`, {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Error al crear grupo');
+        throw new Error(err.message || "Error al crear grupo");
       }
 
       setShowModal(false);
@@ -166,12 +174,15 @@ export const GruposList = () => {
     }
   };
 
-  const gruposPorNivel = grupos.reduce((acc, grupo) => {
-    const nivel = grupo.grado?.nivel?.nombre || 'Sin nivel';
-    if (!acc[nivel]) acc[nivel] = [];
-    acc[nivel].push(grupo);
-    return acc;
-  }, {} as Record<string, Grupo[]>);
+  const gruposPorNivel = grupos.reduce(
+    (acc, grupo) => {
+      const nivel = grupo.grado?.nivel?.nombre || "Sin nivel";
+      if (!acc[nivel]) acc[nivel] = [];
+      acc[nivel].push(grupo);
+      return acc;
+    },
+    {} as Record<string, Grupo[]>,
+  );
 
   return (
     <div className={styles.container}>
@@ -192,9 +203,9 @@ export const GruposList = () => {
           className={styles.filterSelect}
         >
           <option value="">Seleccionar ano...</option>
-          {anios.map(a => (
+          {anios.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.anio} {a.activo ? '(Activo)' : ''}
+              {a.anio} {a.activo ? "(Activo)" : ""}
             </option>
           ))}
         </select>
@@ -208,35 +219,47 @@ export const GruposList = () => {
             <div key={nivel} className={styles.nivelSection}>
               <h2 className={styles.nivelTitle}>{nivel}</h2>
               <div className={styles.gruposGrid}>
-                {gruposNivel.sort((a, b) => a.grado.orden - b.grado.orden).map(grupo => (
-                  <div key={grupo.id} className={styles.grupoCard} onClick={() => fetchEstudiantes(grupo)}>
-                    <div className={styles.grupoHeader}>
-                      <span className={styles.gradoTag}>{grupo.grado.nombre}</span>
-                      <span className={styles.jornadaTag}>{grupo.jornada}</span>
-                    </div>
-                    <h3 className={styles.grupoNombre}>{grupo.nombre}</h3>
-                    <div className={styles.grupoInfo}>
-                      <div className={styles.infoItem}>
-                        <span className={styles.label}>Cupo:</span>
-                        <span>{grupo.cupo_maximo}</span>
+                {gruposNivel
+                  .sort((a, b) => a.grado.orden - b.grado.orden)
+                  .map((grupo) => (
+                    <div
+                      key={grupo.id}
+                      className={styles.grupoCard}
+                      onClick={() => fetchEstudiantes(grupo)}
+                    >
+                      <div className={styles.grupoHeader}>
+                        <span className={styles.gradoTag}>
+                          {grupo.grado.nombre}
+                        </span>
+                        <span className={styles.jornadaTag}>
+                          {grupo.jornada}
+                        </span>
                       </div>
-                      {grupo.sede && (
+                      <h3 className={styles.grupoNombre}>{grupo.nombre}</h3>
+                      <div className={styles.grupoInfo}>
                         <div className={styles.infoItem}>
-                          <span className={styles.label}>Sede:</span>
-                          <span>{grupo.sede.nombre}</span>
+                          <span className={styles.label}>Cupo:</span>
+                          <span>{grupo.cupo_maximo}</span>
                         </div>
-                      )}
+                        {grupo.sede && (
+                          <div className={styles.infoItem}>
+                            <span className={styles.label}>Sede:</span>
+                            <span>{grupo.sede.nombre}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className={styles.verEstudiantes}>
+                        Ver estudiantes
+                      </div>
                     </div>
-                    <div className={styles.verEstudiantes}>
-                      Ver estudiantes
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           ))}
           {Object.keys(gruposPorNivel).length === 0 && (
-            <div className={styles.empty}>No hay grupos para este ano lectivo</div>
+            <div className={styles.empty}>
+              No hay grupos para este ano lectivo
+            </div>
           )}
         </div>
       )}
@@ -244,27 +267,51 @@ export const GruposList = () => {
       {/* Modal Crear Grupo */}
       {showModal && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Nuevo Grupo</h2>
-              <button className={styles.closeBtn} onClick={() => setShowModal(false)}>x</button>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setShowModal(false)}
+              >
+                x
+              </button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
                   <label>Nombre del Grupo *</label>
-                  <input name="nombre" value={formData.nombre || ''} onChange={handleChange} placeholder="Ej: 1-A" required />
+                  <input
+                    name="nombre"
+                    value={formData.nombre || ""}
+                    onChange={handleChange}
+                    placeholder="Ej: 1-A"
+                    required
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Grado *</label>
-                  <select name="grado_id" value={formData.grado_id || ''} onChange={handleChange} required>
+                  <select
+                    name="grado_id"
+                    value={formData.grado_id || ""}
+                    onChange={handleChange}
+                    required
+                  >
                     <option value="">Seleccionar...</option>
-                    {grados.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+                    {grados.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.nombre}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className={styles.formGroup}>
                   <label>Jornada *</label>
-                  <select name="jornada" value={formData.jornada || 'Manana'} onChange={handleChange}>
+                  <select
+                    name="jornada"
+                    value={formData.jornada || "Manana"}
+                    onChange={handleChange}
+                  >
                     <option value="Manana">Manana</option>
                     <option value="Tarde">Tarde</option>
                     <option value="Completa">Completa</option>
@@ -272,14 +319,30 @@ export const GruposList = () => {
                 </div>
                 <div className={styles.formGroup}>
                   <label>Cupo Maximo</label>
-                  <input type="number" name="cupo_maximo" value={formData.cupo_maximo || 35} onChange={handleChange} min="1" max="50" />
+                  <input
+                    type="number"
+                    name="cupo_maximo"
+                    value={formData.cupo_maximo || 35}
+                    onChange={handleChange}
+                    min="1"
+                    max="50"
+                  />
                 </div>
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setShowModal(false)}>Cancelar</button>
-              <button className={styles.saveBtn} onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Guardando...' : 'Crear Grupo'}
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setShowModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.saveBtn}
+                onClick={handleSubmit}
+                disabled={saving}
+              >
+                {saving ? "Guardando..." : "Crear Grupo"}
               </button>
             </div>
           </div>
@@ -288,11 +351,25 @@ export const GruposList = () => {
 
       {/* Modal Estudiantes */}
       {showEstudiantes && grupoSeleccionado && (
-        <div className={styles.modalOverlay} onClick={() => setShowEstudiantes(false)}>
-          <div className={styles.modalLarge} onClick={e => e.stopPropagation()}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setShowEstudiantes(false)}
+        >
+          <div
+            className={styles.modalLarge}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
-              <h2>Estudiantes de {grupoSeleccionado.grado.nombre} - {grupoSeleccionado.nombre}</h2>
-              <button className={styles.closeBtn} onClick={() => setShowEstudiantes(false)}>x</button>
+              <h2>
+                Estudiantes de {grupoSeleccionado.grado.nombre} -{" "}
+                {grupoSeleccionado.nombre}
+              </h2>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setShowEstudiantes(false)}
+              >
+                x
+              </button>
             </div>
             <div className={styles.modalBody}>
               {estudiantes.length > 0 ? (
@@ -302,23 +379,37 @@ export const GruposList = () => {
                       <span className={styles.numero}>{idx + 1}</span>
                       <div className={styles.estudianteInfo}>
                         <span className={styles.estudianteNombre}>
-                          {est.estudiante.primer_apellido}, {est.estudiante.primer_nombre}
+                          {est.estudiante.primer_apellido},{" "}
+                          {est.estudiante.primer_nombre}
                         </span>
-                        <span className={styles.estudianteDoc}>{est.estudiante.numero_documento}</span>
+                        <span className={styles.estudianteDoc}>
+                          {est.estudiante.numero_documento}
+                        </span>
                       </div>
-                      <span className={`${styles.generoTag} ${est.estudiante.genero === 'M' ? styles.generoM : styles.generoF}`}>
-                        {est.estudiante.genero || '-'}
+                      <span
+                        className={`${styles.generoTag} ${est.estudiante.genero === "M" ? styles.generoM : styles.generoF}`}
+                      >
+                        {est.estudiante.genero || "-"}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className={styles.empty}>No hay estudiantes matriculados en este grupo</div>
+                <div className={styles.empty}>
+                  No hay estudiantes matriculados en este grupo
+                </div>
               )}
             </div>
             <div className={styles.modalFooter}>
-              <span className={styles.totalEstudiantes}>Total: {estudiantes.length} estudiantes</span>
-              <button className={styles.cancelBtn} onClick={() => setShowEstudiantes(false)}>Cerrar</button>
+              <span className={styles.totalEstudiantes}>
+                Total: {estudiantes.length} estudiantes
+              </span>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setShowEstudiantes(false)}
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

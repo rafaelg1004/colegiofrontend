@@ -6,14 +6,22 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .titleSection h1 {
@@ -29,16 +37,21 @@
 
 .addBtn {
   padding: 0.75rem 1.5rem;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .addBtn:hover {
-  background: #059669;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
 }
 
 .filters {
@@ -61,7 +74,8 @@
   border-color: #4f46e5;
 }
 
-.loading, .empty {
+.loading,
+.empty {
   padding: 3rem;
   text-align: center;
   color: #64748b;
@@ -78,7 +92,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .nivelTitle {
@@ -203,8 +217,14 @@
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: scale(0.95) translateY(-20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .modalHeader {

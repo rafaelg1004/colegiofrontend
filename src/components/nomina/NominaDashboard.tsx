@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { getAuthToken } from '@/utils/auth';
-import { useRouter } from 'next/navigation';
-import { API_URL } from '@/utils/api';
-import styles from './NominaDashboard.module.css';
+import React, { useEffect, useState } from "react";
+import { getAuthToken } from "@/utils/auth";
+import { useRouter } from "next/navigation";
+import { API_URL } from "@/utils/api";
+import styles from "./NominaDashboard.module.css";
 
 export const NominaDashboard = () => {
   const router = useRouter();
@@ -24,8 +24,13 @@ export const NominaDashboard = () => {
       try {
         const token = getAuthToken();
         const [resNom, resRes] = await Promise.all([
-          fetch(`${API_URL}/nomina/listado?mes=${currentMonth}&anio=${currentYear}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`${API_URL}/nomina/resumen/${currentMonth}/${currentYear}`, { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(
+            `${API_URL}/nomina/listado?mes=${currentMonth}&anio=${currentYear}`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
+          fetch(`${API_URL}/nomina/resumen/${currentMonth}/${currentYear}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         const nominasData = await resNom.json();
@@ -43,27 +48,32 @@ export const NominaDashboard = () => {
   }, []);
 
   const goToEmpleados = () => {
-    router.push('/dashboard/empleados');
+    router.push("/dashboard/empleados");
   };
 
   const liquidarMasiva = async () => {
-    if (!confirm('¿Está seguro de liquidar la nómina masiva para el período actual?')) return;
+    if (
+      !confirm(
+        "¿Está seguro de liquidar la nómina masiva para el período actual?",
+      )
+    )
+      return;
 
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('${API_URL}/nomina/liquidar', {
-        method: 'POST',
+      const res = await fetch(`${API_URL}/nomina/liquidar`, {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ mes: currentMonth, anio: currentYear })
+        body: JSON.stringify({ mes: currentMonth, anio: currentYear }),
       });
 
-      if (!res.ok) throw new Error('Error al liquidar nómina');
+      if (!res.ok) throw new Error("Error al liquidar nómina");
 
-      alert('Nómina liquidada correctamente');
+      alert("Nómina liquidada correctamente");
       // Recargar datos
       window.location.reload();
     } catch (err: any) {
@@ -83,12 +93,20 @@ export const NominaDashboard = () => {
       <header className={styles.header}>
         <div>
           <h1>Gestión de Nómina</h1>
-          <p>Periodo actual: {currentMonth}/{currentYear}</p>
+          <p>
+            Periodo actual: {currentMonth}/{currentYear}
+          </p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.secondaryBtn} onClick={goToEmpleados}>Ver Empleados</button>
-          <button className={styles.primaryBtn} onClick={liquidarMasiva} disabled={saving}>
-            {saving ? 'Liquidando...' : 'Liquidar Nómina Masiva'}
+          <button className={styles.secondaryBtn} onClick={goToEmpleados}>
+            Ver Empleados
+          </button>
+          <button
+            className={styles.primaryBtn}
+            onClick={liquidarMasiva}
+            disabled={saving}
+          >
+            {saving ? "Liquidando..." : "Liquidar Nómina Masiva"}
           </button>
         </div>
       </header>
@@ -97,7 +115,9 @@ export const NominaDashboard = () => {
         <div className={styles.summaryGrid}>
           <div className={styles.summaryCard}>
             <span className={styles.label}>Total Neto a Pagar</span>
-            <span className={styles.value}>${resumen.resumen?.total_neto_pagar?.toLocaleString()}</span>
+            <span className={styles.value}>
+              ${resumen.resumen?.total_neto_pagar?.toLocaleString()}
+            </span>
           </div>
           <div className={styles.summaryCard}>
             <span className={styles.label}>Empleados Liquidados</span>
@@ -105,7 +125,9 @@ export const NominaDashboard = () => {
           </div>
           <div className={styles.summaryCard}>
             <span className={styles.label}>Costo Total Empresa</span>
-            <span className={styles.value}>${resumen.costo_total_empresa?.toLocaleString()}</span>
+            <span className={styles.value}>
+              ${resumen.costo_total_empresa?.toLocaleString()}
+            </span>
           </div>
         </div>
       )}
@@ -131,24 +153,36 @@ export const NominaDashboard = () => {
                 nominas.map((nom) => (
                   <tr key={nom.id}>
                     <td className={styles.empName}>
-                      {nom.empleado?.primer_nombre} {nom.empleado?.primer_apellido}
+                      {nom.empleado?.primer_nombre}{" "}
+                      {nom.empleado?.primer_apellido}
                     </td>
                     <td>{nom.empleado?.cargo}</td>
                     <td>${nom.salario_base?.toLocaleString()}</td>
-                    <td className={styles.neto}>${nom.neto_a_pagar?.toLocaleString()}</td>
+                    <td className={styles.neto}>
+                      ${nom.neto_a_pagar?.toLocaleString()}
+                    </td>
                     <td>
-                      <span className={`${styles.badge} ${styles[nom.estado?.toLowerCase()]}`}>
+                      <span
+                        className={`${styles.badge} ${styles[nom.estado?.toLowerCase()]}`}
+                      >
                         {nom.estado}
                       </span>
                     </td>
                     <td>
-                      <button className={styles.viewBtn} onClick={() => viewDetalle(nom)}>Detalle</button>
+                      <button
+                        className={styles.viewBtn}
+                        onClick={() => viewDetalle(nom)}
+                      >
+                        Detalle
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className={styles.empty}>No hay nóminas liquidadas para este periodo</td>
+                  <td colSpan={6} className={styles.empty}>
+                    No hay nóminas liquidadas para este periodo
+                  </td>
                 </tr>
               )}
             </tbody>

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { GruposView } from '@/components/grupos/GruposView';
+import { GruposList } from "@/components/grupos/GruposList";
 
 export default function GruposPage() {
-  return <GruposView />;
+  return <GruposList />;
 }

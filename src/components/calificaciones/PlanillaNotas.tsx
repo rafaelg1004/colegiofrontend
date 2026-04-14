@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { getAuthToken, clearAuthCookie, isTokenExpired, logout } from '@/utils/auth';
-import { API_URL } from '@/utils/api';
-import styles from './PlanillaNotas.module.css';
+import React, { useEffect, useState } from "react";
+import {
+  getAuthToken,
+  clearAuthCookie,
+  isTokenExpired,
+  logout,
+} from "@/utils/auth";
+import { API_URL } from "@/utils/api";
+import styles from "./PlanillaNotas.module.css";
 
 // Helper to check auth before making requests
 const checkAuth = () => {
@@ -53,9 +58,9 @@ export const PlanillaNotas = () => {
   const [asignaturas, setAsignaturas] = useState<any[]>([]);
   const [tiposActividad, setTiposActividad] = useState<any[]>([]);
 
-  const [selectedGrupo, setSelectedGrupo] = useState('');
-  const [selectedPeriodo, setSelectedPeriodo] = useState('');
-  const [selectedAsignatura, setSelectedAsignatura] = useState('');
+  const [selectedGrupo, setSelectedGrupo] = useState("");
+  const [selectedPeriodo, setSelectedPeriodo] = useState("");
+  const [selectedAsignatura, setSelectedAsignatura] = useState("");
 
   const [planillaData, setPlanillaData] = useState<PlanillaData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,12 +68,14 @@ export const PlanillaNotas = () => {
 
   // Modal for creating/editing activities
   const [showModal, setShowModal] = useState(false);
-  const [editingActividad, setEditingActividad] = useState<Actividad | null>(null);
+  const [editingActividad, setEditingActividad] = useState<Actividad | null>(
+    null,
+  );
   const [formData, setFormData] = useState({
-    nombre: '',
+    nombre: "",
     porcentaje_peso: 10,
-    tipo_actividad_id: '',
-    fecha: new Date().toISOString().split('T')[0],
+    tipo_actividad_id: "",
+    fecha: new Date().toISOString().split("T")[0],
   });
 
   useEffect(() => {
@@ -77,33 +84,62 @@ export const PlanillaNotas = () => {
 
       const token = getAuthToken();
       if (!token) {
-        console.warn('No hay token de autenticación');
+        console.warn("No hay token de autenticación");
         return;
       }
 
-      const resGrupos = await fetch('${API_URL}/grupos', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (resGrupos.status === 401) { logout(); return; }
+      const resGrupos = await fetch(`${API_URL}/grupos`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resGrupos.status === 401) {
+        logout();
+        return;
+      }
       const dataGrupos = await resGrupos.json();
       setGrupos(Array.isArray(dataGrupos) ? dataGrupos : dataGrupos.data || []);
 
-      const resAnios = await fetch('${API_URL}/academico/anios-lectivos', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (resAnios.status === 401) { logout(); return; }
+      const resAnios = await fetch(`${API_URL}/academico/anios-lectivos`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resAnios.status === 401) {
+        logout();
+        return;
+      }
       const anios = await resAnios.json();
       if (anios && anios.length > 0) {
-        const resPeriodos = await fetch(`${API_URL}/academico/periodos?anio_lectivo_id=${anios[0].id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-        if (resPeriodos.status === 401) { logout(); return; }
+        const resPeriodos = await fetch(
+          `${API_URL}/academico/periodos?anio_lectivo_id=${anios[0].id}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (resPeriodos.status === 401) {
+          logout();
+          return;
+        }
         const periodosData = await resPeriodos.json();
         setPeriodos(Array.isArray(periodosData) ? periodosData : []);
       }
 
-      const resAreas = await fetch('${API_URL}/academico/areas', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (resAreas.status === 401) { logout(); return; }
+      const resAreas = await fetch(`${API_URL}/academico/areas`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resAreas.status === 401) {
+        logout();
+        return;
+      }
       const areas = await resAreas.json();
-      const allAsig = Array.isArray(areas) ? areas.flatMap((a: any) => a.asignatura || []) : [];
+      const allAsig = Array.isArray(areas)
+        ? areas.flatMap((a: any) => a.asignatura || [])
+        : [];
       setAsignaturas(allAsig);
 
-      const resTipos = await fetch('${API_URL}/calificaciones/tipos-actividad', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (resTipos.status === 401) { logout(); return; }
+      const resTipos = await fetch(
+        `${API_URL}/calificaciones/tipos-actividad`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (resTipos.status === 401) {
+        logout();
+        return;
+      }
       const tipos = await resTipos.json();
       setTiposActividad(Array.isArray(tipos) ? tipos : []);
     };
@@ -117,10 +153,16 @@ export const PlanillaNotas = () => {
     setLoading(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`${API_URL}/calificaciones/planilla?grupo_id=${selectedGrupo}&asignatura_id=${selectedAsignatura}&periodo_id=${selectedPeriodo}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.status === 401) { logout(); return; }
+      const res = await fetch(
+        `${API_URL}/calificaciones/planilla?grupo_id=${selectedGrupo}&asignatura_id=${selectedAsignatura}&periodo_id=${selectedPeriodo}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (res.status === 401) {
+        logout();
+        return;
+      }
       const data = await res.json();
       setPlanillaData(data);
     } catch (err) {
@@ -130,22 +172,26 @@ export const PlanillaNotas = () => {
     }
   };
 
-  const handleNotaChange = (estudianteId: string, actividadId: string, value: string) => {
+  const handleNotaChange = (
+    estudianteId: string,
+    actividadId: string,
+    value: string,
+  ) => {
     if (!planillaData) return;
 
     const newPlanilla = {
       ...planillaData,
-      planilla: planillaData.planilla.map(row => {
+      planilla: planillaData.planilla.map((row) => {
         if (row.estudiante.id === estudianteId) {
-          const newNotas = row.notas.map(n =>
+          const newNotas = row.notas.map((n) =>
             n.actividad_id === actividadId
               ? { ...n, nota: value ? parseFloat(value) : null }
-              : n
+              : n,
           );
           return { ...row, notas: newNotas };
         }
         return row;
-      })
+      }),
     };
     setPlanillaData(newPlanilla);
   };
@@ -161,9 +207,13 @@ export const PlanillaNotas = () => {
       // Get all activities that have at least one grade
       for (const actividad of planillaData.actividades) {
         const calificaciones = planillaData.planilla
-          .filter(row => row.notas.find(n => n.actividad_id === actividad.id)?.nota !== null)
-          .map(row => {
-            const nota = row.notas.find(n => n.actividad_id === actividad.id);
+          .filter(
+            (row) =>
+              row.notas.find((n) => n.actividad_id === actividad.id)?.nota !==
+              null,
+          )
+          .map((row) => {
+            const nota = row.notas.find((n) => n.actividad_id === actividad.id);
             return {
               estudiante_id: row.estudiante.id,
               nota: nota?.nota,
@@ -171,34 +221,42 @@ export const PlanillaNotas = () => {
           });
 
         if (calificaciones.length > 0) {
-          const res = await fetch('${API_URL}/calificaciones/registrar', {
-            method: 'POST',
+          const res = await fetch(`${API_URL}/calificaciones/registrar`, {
+            method: "POST",
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               actividad_evaluativa_id: actividad.id,
               calificaciones,
             }),
           });
-          if (res.status === 401) { logout(); return; }
+          if (res.status === 401) {
+            logout();
+            return;
+          }
         }
       }
 
-      alert('Calificaciones guardadas exitosamente');
+      alert("Calificaciones guardadas exitosamente");
       handleCargarPlanilla();
     } catch (err) {
       console.error(err);
-      alert('Error al guardar calificaciones');
+      alert("Error al guardar calificaciones");
     } finally {
       setSaving(false);
     }
   };
 
   const handleCrearActividad = async () => {
-    if (!selectedGrupo || !selectedPeriodo || !selectedAsignatura || !formData.nombre) {
-      alert('Completa todos los campos');
+    if (
+      !selectedGrupo ||
+      !selectedPeriodo ||
+      !selectedAsignatura ||
+      !formData.nombre
+    ) {
+      alert("Completa todos los campos");
       return;
     }
     if (!checkAuth()) return;
@@ -206,11 +264,11 @@ export const PlanillaNotas = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch('${API_URL}/calificaciones/actividades', {
-        method: 'POST',
+      const res = await fetch(`${API_URL}/calificaciones/actividades`, {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           nombre: formData.nombre,
@@ -222,34 +280,45 @@ export const PlanillaNotas = () => {
           fecha: formData.fecha,
         }),
       });
-      if (res.status === 401) { logout(); return; }
+      if (res.status === 401) {
+        logout();
+        return;
+      }
 
       setShowModal(false);
-      setFormData({ nombre: '', porcentaje_peso: 10, tipo_actividad_id: '', fecha: new Date().toISOString().split('T')[0] });
+      setFormData({
+        nombre: "",
+        porcentaje_peso: 10,
+        tipo_actividad_id: "",
+        fecha: new Date().toISOString().split("T")[0],
+      });
       handleCargarPlanilla();
     } catch (err) {
       console.error(err);
-      alert('Error al crear actividad');
+      alert("Error al crear actividad");
     } finally {
       setSaving(false);
     }
   };
 
   const handleEliminarActividad = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta actividad?')) return;
+    if (!confirm("¿Estás seguro de eliminar esta actividad?")) return;
     if (!checkAuth()) return;
 
     try {
       const token = getAuthToken();
       const res = await fetch(`${API_URL}/calificaciones/actividades/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.status === 401) { logout(); return; }
+      if (res.status === 401) {
+        logout();
+        return;
+      }
       handleCargarPlanilla();
     } catch (err) {
       console.error(err);
-      alert('Error al eliminar actividad');
+      alert("Error al eliminar actividad");
     }
   };
 
@@ -258,97 +327,148 @@ export const PlanillaNotas = () => {
       <header className={styles.header}>
         <h1>Planilla de Calificaciones</h1>
         <div className={styles.selectors}>
-          <select value={selectedGrupo} onChange={(e) => setSelectedGrupo(e.target.value)}>
+          <select
+            value={selectedGrupo}
+            onChange={(e) => setSelectedGrupo(e.target.value)}
+          >
             <option value="">Seleccionar Grupo</option>
-            {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+            {grupos.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.nombre}
+              </option>
+            ))}
           </select>
-          <select value={selectedAsignatura} onChange={(e) => setSelectedAsignatura(e.target.value)}>
+          <select
+            value={selectedAsignatura}
+            onChange={(e) => setSelectedAsignatura(e.target.value)}
+          >
             <option value="">Seleccionar Asignatura</option>
-            {asignaturas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+            {asignaturas.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nombre}
+              </option>
+            ))}
           </select>
-          <select value={selectedPeriodo} onChange={(e) => setSelectedPeriodo(e.target.value)}>
+          <select
+            value={selectedPeriodo}
+            onChange={(e) => setSelectedPeriodo(e.target.value)}
+          >
             <option value="">Seleccionar Periodo</option>
-            {periodos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+            {periodos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
           </select>
-          <button onClick={handleCargarPlanilla} className={styles.loadBtn} disabled={loading}>
-            {loading ? 'Cargando...' : 'Cargar Planilla'}
+          <button
+            onClick={handleCargarPlanilla}
+            className={styles.loadBtn}
+            disabled={loading}
+          >
+            {loading ? "Cargando..." : "Cargar Planilla"}
           </button>
           {planillaData && (
-            <button onClick={() => setShowModal(true)} className={styles.addBtn}>
+            <button
+              onClick={() => setShowModal(true)}
+              className={styles.addBtn}
+            >
               + Nueva Actividad
             </button>
           )}
         </div>
       </header>
 
-      {planillaData && planillaData.actividades && planillaData.actividades.length > 0 && (
-        <>
-          <div className={styles.actions}>
-            <button onClick={handleGuardarNotas} className={styles.saveBtn} disabled={saving}>
-              {saving ? 'Guardando...' : 'Guardar Calificaciones'}
+      {planillaData &&
+        planillaData.actividades &&
+        planillaData.actividades.length > 0 && (
+          <>
+            <div className={styles.actions}>
+              <button
+                onClick={handleGuardarNotas}
+                className={styles.saveBtn}
+                disabled={saving}
+              >
+                {saving ? "Guardando..." : "Guardar Calificaciones"}
+              </button>
+            </div>
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Estudiante</th>
+                    {planillaData.actividades.map((act) => (
+                      <th key={act.id} title={act.nombre}>
+                        <div className={styles.activityHeader}>
+                          <span>{act.nombre.substring(0, 12)}</span>
+                          <small>{act.porcentaje_peso}%</small>
+                          <button
+                            className={styles.deleteActBtn}
+                            onClick={() => handleEliminarActividad(act.id)}
+                            title="Eliminar actividad"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </th>
+                    ))}
+                    <th className={styles.finalCol}>Nota Final</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {planillaData.planilla.map((row) => (
+                    <tr key={row.estudiante.id}>
+                      <td className={styles.studentName}>
+                        {row.estudiante.primer_nombre}{" "}
+                        {row.estudiante.primer_apellido}
+                      </td>
+                      {row.notas.map((n: any, idx: number) => (
+                        <td key={idx} className={styles.scoreCell}>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="5"
+                            value={n.nota ?? ""}
+                            onChange={(e) =>
+                              handleNotaChange(
+                                row.estudiante.id,
+                                n.actividad_id,
+                                e.target.value,
+                              )
+                            }
+                            className={styles.scoreInput}
+                          />
+                        </td>
+                      ))}
+                      <td
+                        className={`${styles.finalScore} ${(row.nota_final ?? 0) >= 3 ? styles.pass : styles.fail}`}
+                      >
+                        {row.nota_final || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+      {planillaData &&
+        planillaData.actividades &&
+        planillaData.actividades.length === 0 && (
+          <div className={styles.emptyState}>
+            <p>
+              No hay actividades evaluativas para este grupo, asignatura y
+              período.
+            </p>
+            <button
+              onClick={() => setShowModal(true)}
+              className={styles.addBtn}
+            >
+              + Crear Primera Actividad
             </button>
           </div>
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Estudiante</th>
-                  {planillaData.actividades.map(act => (
-                    <th key={act.id} title={act.nombre}>
-                      <div className={styles.activityHeader}>
-                        <span>{act.nombre.substring(0, 12)}</span>
-                        <small>{act.porcentaje_peso}%</small>
-                        <button
-                          className={styles.deleteActBtn}
-                          onClick={() => handleEliminarActividad(act.id)}
-                          title="Eliminar actividad"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </th>
-                  ))}
-                  <th className={styles.finalCol}>Nota Final</th>
-                </tr>
-              </thead>
-              <tbody>
-                {planillaData.planilla.map(row => (
-                  <tr key={row.estudiante.id}>
-                    <td className={styles.studentName}>
-                      {row.estudiante.primer_nombre} {row.estudiante.primer_apellido}
-                    </td>
-                    {row.notas.map((n: any, idx: number) => (
-                      <td key={idx} className={styles.scoreCell}>
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="5"
-                          value={n.nota ?? ''}
-                          onChange={(e) => handleNotaChange(row.estudiante.id, n.actividad_id, e.target.value)}
-                          className={styles.scoreInput}
-                        />
-                      </td>
-                    ))}
-                    <td className={`${styles.finalScore} ${(row.nota_final ?? 0) >= 3 ? styles.pass : styles.fail}`}>
-                      {row.nota_final || '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {planillaData && planillaData.actividades && planillaData.actividades.length === 0 && (
-        <div className={styles.emptyState}>
-          <p>No hay actividades evaluativas para este grupo, asignatura y período.</p>
-          <button onClick={() => setShowModal(true)} className={styles.addBtn}>
-            + Crear Primera Actividad
-          </button>
-        </div>
-      )}
+        )}
 
       {showModal && (
         <div className={styles.modalOverlay}>
@@ -359,7 +479,9 @@ export const PlanillaNotas = () => {
               <input
                 type="text"
                 value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, nombre: e.target.value })
+                }
                 placeholder="Ej: Parcial 1, Taller, Quiz..."
               />
             </div>
@@ -368,7 +490,12 @@ export const PlanillaNotas = () => {
               <input
                 type="number"
                 value={formData.porcentaje_peso}
-                onChange={(e) => setFormData({ ...formData, porcentaje_peso: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    porcentaje_peso: parseFloat(e.target.value),
+                  })
+                }
                 min="1"
                 max="100"
               />
@@ -377,10 +504,19 @@ export const PlanillaNotas = () => {
               <label>Tipo de actividad</label>
               <select
                 value={formData.tipo_actividad_id}
-                onChange={(e) => setFormData({ ...formData, tipo_actividad_id: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    tipo_actividad_id: e.target.value,
+                  })
+                }
               >
                 <option value="">Seleccionar tipo</option>
-                {tiposActividad.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                {tiposActividad.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nombre}
+                  </option>
+                ))}
               </select>
             </div>
             <div className={styles.formGroup}>
@@ -388,13 +524,24 @@ export const PlanillaNotas = () => {
               <input
                 type="date"
                 value={formData.fecha}
-                onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fecha: e.target.value })
+                }
               />
             </div>
             <div className={styles.modalActions}>
-              <button onClick={() => setShowModal(false)} className={styles.cancelBtn}>Cancelar</button>
-              <button onClick={handleCrearActividad} className={styles.confirmBtn} disabled={saving}>
-                {saving ? 'Creando...' : 'Crear Actividad'}
+              <button
+                onClick={() => setShowModal(false)}
+                className={styles.cancelBtn}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCrearActividad}
+                className={styles.confirmBtn}
+                disabled={saving}
+              >
+                {saving ? "Creando..." : "Crear Actividad"}
               </button>
             </div>
           </div>
