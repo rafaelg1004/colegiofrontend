@@ -31,7 +31,7 @@
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
 }
@@ -105,7 +105,7 @@
   background: white;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   max-width: 500px;
 }
 
@@ -188,7 +188,7 @@
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .filtros {
@@ -259,6 +259,21 @@
   font-weight: 600;
 }
 
+.viewBtn {
+  background: #dbeafe;
+  border: none;
+  color: #2563eb;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-right: 8px;
+}
+
+.viewBtn:hover {
+  background: #bfdbfe;
+}
+
 .deleteBtn {
   background: #fee2e2;
   border: none;
@@ -277,7 +292,7 @@
   background: white;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .reporteContainer h3 {
@@ -315,6 +330,167 @@
   font-weight: 600;
 }
 
+/* Buscador de Estudiantes */
+.busquedaEstudiante {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+
+.busquedaEstudiante input {
+  flex: 1;
+}
+
+.clearBtn {
+  background: #fee2e2;
+  border: none;
+  color: #ef4444;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.clearBtn:hover {
+  background: #fecaca;
+}
+
+.listaEstudiantes {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.estudianteItem {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.estudianteItem:hover {
+  background: #f3f4f6;
+}
+
+.estudianteItem:last-child {
+  border-bottom: none;
+}
+
+.estudianteNombre {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.estudianteDoc {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.estudianteGrupo {
+  font-size: 0.875rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.estudianteSeleccionado {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #dcfce7;
+  border-radius: 6px;
+  color: #166534;
+  font-size: 0.9rem;
+}
+
+/* Modal de Comprobante */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.comprobanteModal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.comprobanteModal h3 {
+  margin: 0 0 20px 0;
+  color: #166534;
+  font-size: 1.25rem;
+}
+
+.comprobanteInfo {
+  margin-bottom: 24px;
+}
+
+.comprobanteInfo p {
+  margin: 8px 0;
+  color: #374151;
+}
+
+.comprobanteInfo strong {
+  color: #1a1a1a;
+}
+
+.comprobanteActions {
+  display: flex;
+  gap: 12px;
+}
+
+.printBtn {
+  flex: 1;
+  padding: 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.printBtn:hover {
+  background: #2563eb;
+}
+
+.closeBtn {
+  flex: 1;
+  padding: 12px;
+  background: #e5e7eb;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover {
+  background: #d1d5db;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .resumenCards {
@@ -337,4 +513,124 @@
   .table td {
     padding: 8px;
   }
+
+  .comprobanteActions {
+    flex-direction: column;
+  }
+}
+
+/* Artículos de Inventario */
+.articulosContainer {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.articuloRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.articuloRow:last-child {
+  border-bottom: none;
+}
+
+.articuloNombre {
+  flex: 1;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.articuloStock {
+  font-size: 0.875rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.cantidadControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cantidadControl button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cantidadControl button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.cantidadControl button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cantidadControl input {
+  width: 60px;
+  text-align: center;
+  padding: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.articuloPrecio {
+  font-weight: 600;
+  color: #059669;
+  min-width: 100px;
+  text-align: right;
+}
+
+.articulosTotal {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid #e2e8f0;
+  text-align: right;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+}
+
+.inventarioHint {
+  font-size: 0.8rem;
+  color: #059669;
+  font-weight: normal;
+  margin-left: 8px;
+}
+
+.selectArticulo {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.selectArticulo:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+.articuloSeleccionadoBox {
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 8px;
+  padding: 16px;
 }
