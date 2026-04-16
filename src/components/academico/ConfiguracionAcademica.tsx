@@ -11,6 +11,13 @@ interface Sede {
   nombre: string;
   direccion?: string;
   telefono?: string;
+  institucion_id?: string;
+}
+
+interface Institucion {
+  id: string;
+  nombre: string;
+  nit?: string;
 }
 
 interface AnioLectivo {
@@ -84,6 +91,7 @@ export const ConfiguracionAcademica = () => {
   const [niveles, setNiveles] = useState<Nivel[]>([]);
   const [grados, setGrados] = useState<Grado[]>([]);
   const [tiposActividad, setTiposActividad] = useState<TipoActividad[]>([]);
+  const [institucion, setInstitucion] = useState<Institucion | null>(null);
   const [anioSeleccionado, setAnioSeleccionado] = useState<string>("");
   const [nivelFiltro, setNivelFiltro] = useState<string>("");
 
@@ -190,6 +198,17 @@ export const ConfiguracionAcademica = () => {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) setTiposActividad(await res.json());
+  }, []);
+
+  const fetchInstitucion = useCallback(async () => {
+    const token = getAuthToken();
+    const res = await fetch(`${API_URL}/configuracion/institucion`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setInstitucion(data);
+    }
   }, []);
 
   // Check dependencies before deleting
@@ -381,6 +400,11 @@ export const ConfiguracionAcademica = () => {
     }
   }, [nivelFiltro, activeTab, fetchGrados]);
 
+  // Load institucion on component mount
+  useEffect(() => {
+    fetchInstitucion();
+  }, [fetchInstitucion]);
+
   // Helper para formatear fecha ISO a YYYY-MM-DD
   const formatDateForInput = (isoDate?: string): string => {
     if (!isoDate) return "";
@@ -396,6 +420,10 @@ export const ConfiguracionAcademica = () => {
     setModalMode(isEdit ? "edit" : "create");
     // Inicializar con valores por defecto según el tipo
     let defaultData = data || {};
+    if (type === "sede" && !data && institucion) {
+      // Preseleccionar la institución al crear una nueva sede
+      defaultData = { institucion_id: institucion.id };
+    }
     if (type === "anio" && !data) {
       defaultData = { anio: new Date().getFullYear(), activo: false };
     }
@@ -437,6 +465,7 @@ export const ConfiguracionAcademica = () => {
             nombre: formData.nombre,
             direccion: formData.direccion,
             telefono: formData.telefono,
+            institucion_id: formData.institucion_id || institucion?.id,
           };
           break;
         case "anio":
@@ -993,6 +1022,19 @@ export const ConfiguracionAcademica = () => {
             <div className={styles.modalBody}>
               {modalType === "sede" && (
                 <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Institución</label>
+                    <input
+                      value={institucion?.nombre || "Cargando..."}
+                      disabled
+                      className={styles.readOnlyInput}
+                    />
+                    <input
+                      type="hidden"
+                      name="institucion_id"
+                      value={formData.institucion_id || institucion?.id || ""}
+                    />
+                  </div>
                   <div className={styles.formGroup}>
                     <label>Nombre *</label>
                     <input

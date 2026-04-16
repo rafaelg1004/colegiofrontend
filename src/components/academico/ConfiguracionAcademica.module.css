@@ -612,6 +612,13 @@
   border-color: #4f46e5;
 }
 
+.formGroup input:disabled,
+.readOnlyInput {
+  background: #e2e8f0;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
 .formGroupCheck {
   display: flex;
   align-items: center;
