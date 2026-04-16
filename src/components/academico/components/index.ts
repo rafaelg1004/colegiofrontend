@@ -1,0 +1,9 @@
+export { SedesTab } from "./SedesTab";
+export { AniosTab } from "./AniosTab";
+export { PeriodosTab } from "./PeriodosTab";
+export { AreasTab } from "./AreasTab";
+export { NivelesTab } from "./NivelesTab";
+export { GradosTab } from "./GradosTab";
+export { TiposActividadTab } from "./TiposActividadTab";
+export { FormModal } from "./FormModal";
+export { DeleteModal } from "./DeleteModal";
