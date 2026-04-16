@@ -570,22 +570,24 @@ export const ConfiguracionAcademica = () => {
                     {sede.telefono && (
                       <span className={styles.meta}>Tel: {sede.telefono}</span>
                     )}
+                    <div className={styles.cardActions}>
+                      <button
+                        className={styles.deleteCardBtn}
+                        onClick={() =>
+                          openDeleteModal("sedes", sede.id, sede.nombre)
+                        }
+                        title="Eliminar sede"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                      <button
+                        className={styles.editCardBtn}
+                        onClick={() => openModal("sede", sede)}
+                      >
+                        ✏️ Editar
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    className={styles.deleteCardBtn}
-                    onClick={() =>
-                      openDeleteModal("sedes", sede.id, sede.nombre)
-                    }
-                    title="Eliminar sede"
-                  >
-                    🗑️
-                  </button>
-                  <button
-                    className={styles.editCardBtn}
-                    onClick={() => openModal("sede", sede)}
-                  >
-                    ✏️
-                  </button>
                 </div>
               ))
             ) : (
@@ -616,22 +618,24 @@ export const ConfiguracionAcademica = () => {
                     >
                       {anio.activo ? "Vigente" : "Inactivo"}
                     </span>
+                    <div className={styles.cardActions}>
+                      <button
+                        className={styles.deleteCardBtn}
+                        onClick={() =>
+                          openDeleteModal("anios", anio.id, `Año ${anio.anio}`)
+                        }
+                        title="Eliminar año lectivo"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                      <button
+                        className={styles.editCardBtn}
+                        onClick={() => openModal("anio", anio)}
+                      >
+                        ✏️ Editar
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    className={styles.deleteCardBtn}
-                    onClick={() =>
-                      openDeleteModal("anios", anio.id, `Año ${anio.anio}`)
-                    }
-                    title="Eliminar año lectivo"
-                  >
-                    🗑️
-                  </button>
-                  <button
-                    className={styles.editCardBtn}
-                    onClick={() => openModal("anio", anio)}
-                  >
-                    ✏️
-                  </button>
                 </div>
               ))
             ) : (
@@ -683,22 +687,28 @@ export const ConfiguracionAcademica = () => {
                           {periodo.activo ? "Activo" : "Cerrado"}
                         </span>
                       </div>
+                      <div className={styles.cardActions}>
+                        <button
+                          className={styles.deleteCardBtn}
+                          onClick={() =>
+                            openDeleteModal(
+                              "periodos",
+                              periodo.id,
+                              periodo.nombre,
+                            )
+                          }
+                          title="Eliminar período"
+                        >
+                          🗑️ Eliminar
+                        </button>
+                        <button
+                          className={styles.editCardBtn}
+                          onClick={() => openModal("periodo", periodo)}
+                        >
+                          ✏️ Editar
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      className={styles.deleteCardBtn}
-                      onClick={() =>
-                        openDeleteModal("periodos", periodo.id, periodo.nombre)
-                      }
-                      title="Eliminar período"
-                    >
-                      🗑️
-                    </button>
-                    <button
-                      className={styles.editCardBtn}
-                      onClick={() => openModal("periodo", periodo)}
-                    >
-                      ✏️
-                    </button>
                   </div>
                 ))
               ) : (
@@ -780,22 +790,24 @@ export const ConfiguracionAcademica = () => {
                   <div className={styles.cardIcon}>🎚️</div>
                   <div className={styles.cardInfo}>
                     <h3>{nivel.nombre}</h3>
+                    <div className={styles.cardActions}>
+                      <button
+                        className={styles.deleteCardBtn}
+                        onClick={() =>
+                          openDeleteModal("niveles", nivel.id, nivel.nombre)
+                        }
+                        title="Eliminar nivel"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                      <button
+                        className={styles.editCardBtn}
+                        onClick={() => openModal("nivel", nivel)}
+                      >
+                        ✏️ Editar
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    className={styles.deleteCardBtn}
-                    onClick={() =>
-                      openDeleteModal("niveles", nivel.id, nivel.nombre)
-                    }
-                    title="Eliminar nivel"
-                  >
-                    🗑️
-                  </button>
-                  <button
-                    className={styles.editCardBtn}
-                    onClick={() => openModal("nivel", nivel)}
-                  >
-                    ✏️
-                  </button>
                 </div>
               ))
             ) : (
@@ -834,22 +846,24 @@ export const ConfiguracionAcademica = () => {
                           Nivel: {grado.nivel.nombre}
                         </span>
                       )}
+                      <div className={styles.cardActions}>
+                        <button
+                          className={styles.deleteCardBtn}
+                          onClick={() =>
+                            openDeleteModal("grados", grado.id, grado.nombre)
+                          }
+                          title="Eliminar grado"
+                        >
+                          🗑️ Eliminar
+                        </button>
+                        <button
+                          className={styles.editCardBtn}
+                          onClick={() => openModal("grado", grado)}
+                        >
+                          ✏️ Editar
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      className={styles.deleteCardBtn}
-                      onClick={() =>
-                        openDeleteModal("grados", grado.id, grado.nombre)
-                      }
-                      title="Eliminar grado"
-                    >
-                      🗑️
-                    </button>
-                    <button
-                      className={styles.editCardBtn}
-                      onClick={() => openModal("grado", grado)}
-                    >
-                      ✏️
-                    </button>
                   </div>
                 ))
               ) : (
@@ -868,16 +882,22 @@ export const ConfiguracionAcademica = () => {
                   <div className={styles.cardIcon}>📝</div>
                   <div className={styles.cardInfo}>
                     <h3>{tipo.nombre}</h3>
+                    <div className={styles.cardActions}>
+                      <button
+                        className={styles.deleteCardBtn}
+                        onClick={() =>
+                          openDeleteModal(
+                            "tipos-actividad",
+                            tipo.id,
+                            tipo.nombre,
+                          )
+                        }
+                        title="Eliminar tipo de actividad"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    className={styles.deleteCardBtn}
-                    onClick={() =>
-                      openDeleteModal("tipos-actividad", tipo.id, tipo.nombre)
-                    }
-                    title="Eliminar tipo de actividad"
-                  >
-                    🗑️
-                  </button>
                 </div>
               ))
             ) : (

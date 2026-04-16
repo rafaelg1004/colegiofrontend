@@ -293,23 +293,24 @@
   color: white;
 }
 
+.cardActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  justify-content: flex-end;
+}
+
 .editCardBtn {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  padding: 0.4rem;
+  padding: 0.4rem 0.6rem;
   background: #f0fdf4;
   border: 1px solid #86efac;
   color: #16a34a;
   border-radius: 6px;
   font-size: 0.875rem;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.card:hover .editCardBtn {
-  opacity: 1;
+  transition: all 0.2s ease;
 }
 
 .editCardBtn:hover {
@@ -318,22 +319,14 @@
 }
 
 .deleteCardBtn {
-  position: absolute;
-  top: 0.75rem;
-  right: 3rem;
-  padding: 0.4rem;
+  padding: 0.4rem 0.6rem;
   background: #fef2f2;
   border: 1px solid #fca5a5;
   color: #dc2626;
   border-radius: 6px;
   font-size: 0.875rem;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.card:hover .deleteCardBtn {
-  opacity: 1;
+  transition: all 0.2s ease;
 }
 
 .deleteCardBtn:hover {
