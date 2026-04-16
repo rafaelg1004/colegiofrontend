@@ -247,6 +247,21 @@
   gap: 0.5rem;
 }
 
+.deleteAreaBtn {
+  padding: 0.4rem 0.6rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.deleteAreaBtn:hover {
+  background: #dc2626;
+  color: white;
+}
+
 .addSmallBtn {
   padding: 0.4rem 0.8rem;
   background: #eef2ff;
@@ -299,6 +314,30 @@
 
 .editCardBtn:hover {
   background: #16a34a;
+  color: white;
+}
+
+.deleteCardBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 3rem;
+  padding: 0.4rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card:hover .deleteCardBtn {
+  opacity: 1;
+}
+
+.deleteCardBtn:hover {
+  background: #dc2626;
   color: white;
 }
 
@@ -639,6 +678,42 @@
 .saveBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.deleteBtn {
+  padding: 0.75rem 1.5rem;
+  background: #dc2626;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.deleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deleteWarning {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.errorMessage {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {

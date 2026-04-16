@@ -103,6 +103,16 @@ export const ConfiguracionAcademica = () => {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
 
+  // Delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteItem, setDeleteItem] = useState<{
+    id: string;
+    name: string;
+    type: TabId;
+  } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const tabs = [
     { id: "anios" as TabId, name: "Años Lectivos", icon: "📅" },
     { id: "periodos" as TabId, name: "Periodos", icon: "📊" },
@@ -181,6 +191,140 @@ export const ConfiguracionAcademica = () => {
     });
     if (res.ok) setTiposActividad(await res.json());
   }, []);
+
+  // Check dependencies before deleting
+  const checkDependencies = (type: TabId, id: string): string | null => {
+    switch (type) {
+      case "anios":
+        const hasPeriodos = periodos.some((p) => p.anio_lectivo_id === id);
+        if (hasPeriodos)
+          return "No se puede eliminar: Este año lectivo tiene períodos asociados.";
+        return null;
+      case "periodos":
+        // Aquí podrías verificar si hay notas o actividades asociadas al período
+        return null;
+      case "sedes":
+        // Aquí podrías verificar si hay grupos o estudiantes asociados a la sede
+        return null;
+      case "areas":
+        const hasAsignaturas = areas.find((a) => a.id === id)?.asignatura
+          ?.length;
+        if (hasAsignaturas)
+          return "No se puede eliminar: Esta área tiene asignaturas asociadas.";
+        return null;
+      case "niveles":
+        const hasGrados = grados.some((g) => g.nivel_id === id);
+        if (hasGrados)
+          return "No se puede eliminar: Este nivel tiene grados asociados.";
+        return null;
+      case "grados":
+        // Aquí podrías verificar si hay grupos o estudiantes asociados al grado
+        return null;
+      case "tipos-actividad":
+        // Aquí podrías verificar si hay actividades de este tipo
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (type: TabId, id: string, name: string) => {
+    const dependencyError = checkDependencies(type, id);
+    if (dependencyError) {
+      setDeleteError(dependencyError);
+    } else {
+      setDeleteError(null);
+    }
+    setDeleteItem({ id, name, type });
+    setShowDeleteModal(true);
+  };
+
+  // Handle delete
+  const handleDelete = async () => {
+    if (!deleteItem) return;
+
+    // Verificar dependencias nuevamente
+    const dependencyError = checkDependencies(deleteItem.type, deleteItem.id);
+    if (dependencyError) {
+      setDeleteError(dependencyError);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const token = getAuthToken();
+      let endpoint = "";
+
+      switch (deleteItem.type) {
+        case "sedes":
+          endpoint = `sedes/${deleteItem.id}`;
+          break;
+        case "anios":
+          endpoint = `anios-lectivos/${deleteItem.id}`;
+          break;
+        case "periodos":
+          endpoint = `periodos/${deleteItem.id}`;
+          break;
+        case "areas":
+          endpoint = `areas/${deleteItem.id}`;
+          break;
+        case "niveles":
+          endpoint = `niveles/${deleteItem.id}`;
+          break;
+        case "grados":
+          endpoint = `grados/${deleteItem.id}`;
+          break;
+        case "tipos-actividad":
+          endpoint = `tipos-actividad/${deleteItem.id}`;
+          break;
+        default:
+          throw new Error("Tipo no soportado para eliminación");
+      }
+
+      const res = await fetch(`${API_URL}/academico/${endpoint}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Error al eliminar");
+      }
+
+      // Refresh data after deletion
+      switch (deleteItem.type) {
+        case "sedes":
+          await fetchSedes();
+          break;
+        case "anios":
+          await fetchAnios();
+          break;
+        case "periodos":
+          await fetchPeriodos();
+          break;
+        case "areas":
+          await fetchAreas();
+          break;
+        case "niveles":
+          await fetchNiveles();
+          break;
+        case "grados":
+          await fetchGrados();
+          break;
+        case "tipos-actividad":
+          await fetchTiposActividad();
+          break;
+      }
+
+      setShowDeleteModal(false);
+      setDeleteItem(null);
+    } catch (error: any) {
+      setDeleteError(error.message || "Error al eliminar el elemento");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Load data on tab change
   useEffect(() => {
@@ -428,6 +572,15 @@ export const ConfiguracionAcademica = () => {
                     )}
                   </div>
                   <button
+                    className={styles.deleteCardBtn}
+                    onClick={() =>
+                      openDeleteModal("sedes", sede.id, sede.nombre)
+                    }
+                    title="Eliminar sede"
+                  >
+                    🗑️
+                  </button>
+                  <button
                     className={styles.editCardBtn}
                     onClick={() => openModal("sede", sede)}
                   >
@@ -464,6 +617,15 @@ export const ConfiguracionAcademica = () => {
                       {anio.activo ? "Vigente" : "Inactivo"}
                     </span>
                   </div>
+                  <button
+                    className={styles.deleteCardBtn}
+                    onClick={() =>
+                      openDeleteModal("anios", anio.id, `Año ${anio.anio}`)
+                    }
+                    title="Eliminar año lectivo"
+                  >
+                    🗑️
+                  </button>
                   <button
                     className={styles.editCardBtn}
                     onClick={() => openModal("anio", anio)}
@@ -523,6 +685,15 @@ export const ConfiguracionAcademica = () => {
                       </div>
                     </div>
                     <button
+                      className={styles.deleteCardBtn}
+                      onClick={() =>
+                        openDeleteModal("periodos", periodo.id, periodo.nombre)
+                      }
+                      title="Eliminar período"
+                    >
+                      🗑️
+                    </button>
+                    <button
                       className={styles.editCardBtn}
                       onClick={() => openModal("periodo", periodo)}
                     >
@@ -550,6 +721,15 @@ export const ConfiguracionAcademica = () => {
                   <div className={styles.areaHeader}>
                     <h3>📚 {area.nombre}</h3>
                     <div className={styles.areaActions}>
+                      <button
+                        className={styles.deleteAreaBtn}
+                        onClick={() =>
+                          openDeleteModal("areas", area.id, area.nombre)
+                        }
+                        title="Eliminar área"
+                      >
+                        🗑️
+                      </button>
                       <button
                         className={styles.editSmallBtn}
                         onClick={() => openModal("area", area)}
@@ -602,6 +782,15 @@ export const ConfiguracionAcademica = () => {
                     <h3>{nivel.nombre}</h3>
                   </div>
                   <button
+                    className={styles.deleteCardBtn}
+                    onClick={() =>
+                      openDeleteModal("niveles", nivel.id, nivel.nombre)
+                    }
+                    title="Eliminar nivel"
+                  >
+                    🗑️
+                  </button>
+                  <button
                     className={styles.editCardBtn}
                     onClick={() => openModal("nivel", nivel)}
                   >
@@ -647,6 +836,15 @@ export const ConfiguracionAcademica = () => {
                       )}
                     </div>
                     <button
+                      className={styles.deleteCardBtn}
+                      onClick={() =>
+                        openDeleteModal("grados", grado.id, grado.nombre)
+                      }
+                      title="Eliminar grado"
+                    >
+                      🗑️
+                    </button>
+                    <button
                       className={styles.editCardBtn}
                       onClick={() => openModal("grado", grado)}
                     >
@@ -671,6 +869,15 @@ export const ConfiguracionAcademica = () => {
                   <div className={styles.cardInfo}>
                     <h3>{tipo.nombre}</h3>
                   </div>
+                  <button
+                    className={styles.deleteCardBtn}
+                    onClick={() =>
+                      openDeleteModal("tipos-actividad", tipo.id, tipo.nombre)
+                    }
+                    title="Eliminar tipo de actividad"
+                  >
+                    🗑️
+                  </button>
                 </div>
               ))
             ) : (
@@ -1047,6 +1254,60 @@ export const ConfiguracionAcademica = () => {
                   : modalMode === "edit"
                     ? "Guardar Cambios"
                     : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deleteItem && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>⚠️ Confirmar Eliminación</h2>
+              <button
+                className={styles.closeBtn}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteError(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p>
+                ¿Estás seguro de que deseas eliminar{" "}
+                <strong>{deleteItem.name}</strong>?
+              </p>
+              <p className={styles.deleteWarning}>
+                Esta acción no se puede deshacer.
+              </p>
+
+              {deleteError && (
+                <div className={styles.errorMessage}>{deleteError}</div>
+              )}
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteError(null);
+                }}
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.deleteBtn}
+                onClick={handleDelete}
+                disabled={deleting || !!deleteError}
+              >
+                {deleting ? "Eliminando..." : "Eliminar"}
               </button>
             </div>
           </div>
