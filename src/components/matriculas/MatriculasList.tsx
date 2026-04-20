@@ -207,7 +207,7 @@ export const MatriculasList = () => {
       const token = getAuthToken();
 
       if (modalMode === "create") {
-        const res = await fetch("${API_URL}/matriculas", {
+        const res = await fetch(`${API_URL}/matriculas`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
