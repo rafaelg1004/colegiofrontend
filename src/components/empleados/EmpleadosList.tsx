@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { getAuthToken } from '@/utils/auth';
-import { API_URL } from '@/utils/api';
-import styles from './EmpleadosList.module.css';
+import { useEffect, useState, useCallback } from "react";
+import { getAuthToken } from "@/utils/auth";
+import { API_URL } from "@/utils/api";
+import styles from "./EmpleadosList.module.css";
 
 interface Empleado {
   id: string;
@@ -20,12 +20,14 @@ interface Empleado {
 export const EmpleadosList = () => {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
-  const [buscar, setBuscar] = useState('');
-  const [cargoFiltro, setCargoFiltro] = useState('');
-  
+  const [buscar, setBuscar] = useState("");
+  const [cargoFiltro, setCargoFiltro] = useState("");
+
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<any>({});
 
@@ -34,11 +36,11 @@ export const EmpleadosList = () => {
     try {
       const token = getAuthToken();
       const params = new URLSearchParams();
-      if (buscar) params.append('buscar', buscar);
-      if (cargoFiltro) params.append('cargo', cargoFiltro);
+      if (buscar) params.append("buscar", buscar);
+      if (cargoFiltro) params.append("cargo", cargoFiltro);
 
       const res = await fetch(`${API_URL}/nomina/empleados?${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
@@ -55,27 +57,29 @@ export const EmpleadosList = () => {
   }, [fetchEmpleados, buscar, cargoFiltro]);
 
   const openCreate = () => {
-    setModalMode('create');
+    setModalMode("create");
     setFormData({
-      primer_nombre: '',
-      primer_apellido: '',
-      tipo_documento: 'CC',
-      numero_documento: '',
-      cargo: 'Docente',
-      fecha_ingreso: new Date().toISOString().split('T')[0],
-      estado: 'Activo'
+      primer_nombre: "",
+      primer_apellido: "",
+      tipo_documento: "CC",
+      numero_documento: "",
+      cargo: "Docente",
+      fecha_ingreso: new Date().toISOString().split("T")[0],
+      estado: "Activo",
     });
     setShowModal(true);
   };
 
   const openEdit = (emp: Empleado) => {
-    setModalMode('edit');
+    setModalMode("edit");
     setSelectedEmpleado(emp);
     setFormData({ ...emp });
     setShowModal(true);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -83,22 +87,23 @@ export const EmpleadosList = () => {
     setSaving(true);
     try {
       const token = getAuthToken();
-      const url = modalMode === 'create'
-        ? '${API_URL}/nomina/empleados'
-        : `${API_URL}/nomina/empleados/${selectedEmpleado?.id}`;
-      
+      const url =
+        modalMode === "create"
+          ? `${API_URL}/nomina/empleados`
+          : `${API_URL}/nomina/empleados/${selectedEmpleado?.id}`;
+
       const res = await fetch(url, {
-        method: modalMode === 'create' ? 'POST' : 'PATCH',
+        method: modalMode === "create" ? "POST" : "PATCH",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Error al guardar');
+        throw new Error(err.message || "Error al guardar");
       }
 
       setShowModal(false);
@@ -117,17 +122,19 @@ export const EmpleadosList = () => {
           <h1>Docentes y Empleados</h1>
           <p>Gestión de talento humano y personal administrativo</p>
         </div>
-        <button className={styles.addBtn} onClick={openCreate}>+ Nuevo Empleado</button>
+        <button className={styles.addBtn} onClick={openCreate}>
+          + Nuevo Empleado
+        </button>
       </header>
 
       <div className={styles.filters}>
-        <input 
+        <input
           className={styles.searchInput}
           placeholder="Buscar por nombre o documento..."
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
         />
-        <select 
+        <select
           className={styles.filterSelect}
           value={cargoFiltro}
           onChange={(e) => setCargoFiltro(e.target.value)}
@@ -157,31 +164,53 @@ export const EmpleadosList = () => {
               </tr>
             </thead>
             <tbody>
-              {empleados.map(emp => (
+              {empleados.map((emp) => (
                 <tr key={emp.id}>
-                  <td className={styles.nameCell}>{emp.primer_nombre} {emp.primer_apellido}</td>
+                  <td className={styles.nameCell}>
+                    {emp.primer_nombre} {emp.primer_apellido}
+                  </td>
                   <td>{emp.numero_documento}</td>
                   <td>
-                    <span className={`${styles.cargoTag} ${emp.cargo === 'Docente' ? styles.cargoDocente : styles.cargoAdmin}`}>
+                    <span
+                      className={`${styles.cargoTag} ${emp.cargo === "Docente" ? styles.cargoDocente : styles.cargoAdmin}`}
+                    >
                       {emp.cargo}
                     </span>
                   </td>
                   <td>
-                    <div style={{ fontSize: '0.8rem' }}>{emp.correo_electronico}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{emp.celular}</div>
+                    <div style={{ fontSize: "0.8rem" }}>
+                      {emp.correo_electronico}
+                    </div>
+                    <div style={{ fontSize: "0.8rem", opacity: 0.6 }}>
+                      {emp.celular}
+                    </div>
                   </td>
                   <td>
-                    <span className={`${styles.badge} ${emp.estado === 'Activo' ? styles.activo : styles.inactivo}`}>
+                    <span
+                      className={`${styles.badge} ${emp.estado === "Activo" ? styles.activo : styles.inactivo}`}
+                    >
                       {emp.estado}
                     </span>
                   </td>
                   <td className={styles.actionsCell}>
-                    <button className={styles.editBtn} onClick={() => openEdit(emp)}>Editar</button>
+                    <button
+                      className={styles.editBtn}
+                      onClick={() => openEdit(emp)}
+                    >
+                      Editar
+                    </button>
                   </td>
                 </tr>
               ))}
               {empleados.length === 0 && (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No se encontraron empleados</td></tr>
+                <tr>
+                  <td
+                    colSpan={6}
+                    style={{ textAlign: "center", padding: "2rem" }}
+                  >
+                    No se encontraron empleados
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -190,24 +219,45 @@ export const EmpleadosList = () => {
 
       {showModal && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{modalMode === 'create' ? 'Nuevo Empleado' : 'Editar Empleado'}</h2>
-              <button className={styles.closeBtn} onClick={() => setShowModal(false)}>&times;</button>
+              <h2>
+                {modalMode === "create" ? "Nuevo Empleado" : "Editar Empleado"}
+              </h2>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setShowModal(false)}
+              >
+                &times;
+              </button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
                   <label>Primer Nombre *</label>
-                  <input name="primer_nombre" value={formData.primer_nombre || ''} onChange={handleChange} required />
+                  <input
+                    name="primer_nombre"
+                    value={formData.primer_nombre || ""}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Primer Apellido *</label>
-                  <input name="primer_apellido" value={formData.primer_apellido || ''} onChange={handleChange} required />
+                  <input
+                    name="primer_apellido"
+                    value={formData.primer_apellido || ""}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Tipo Documento *</label>
-                  <select name="tipo_documento" value={formData.tipo_documento || 'CC'} onChange={handleChange}>
+                  <select
+                    name="tipo_documento"
+                    value={formData.tipo_documento || "CC"}
+                    onChange={handleChange}
+                  >
                     <option value="CC">Cédula de Ciudadanía</option>
                     <option value="CE">Cédula de Extranjería</option>
                     <option value="Pasaporte">Pasaporte</option>
@@ -215,35 +265,65 @@ export const EmpleadosList = () => {
                 </div>
                 <div className={styles.formGroup}>
                   <label>Número Documento *</label>
-                  <input name="numero_documento" value={formData.numero_documento || ''} onChange={handleChange} required />
+                  <input
+                    name="numero_documento"
+                    value={formData.numero_documento || ""}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Cargo *</label>
-                  <select name="cargo" value={formData.cargo || 'Docente'} onChange={handleChange}>
+                  <select
+                    name="cargo"
+                    value={formData.cargo || "Docente"}
+                    onChange={handleChange}
+                  >
                     <option value="Docente">Docente</option>
                     <option value="Rector">Rector</option>
                     <option value="Coordinador">Coordinador</option>
                     <option value="Secretaria">Secretaria</option>
                     <option value="Psicologo">Psicólogo/a</option>
-                    <option value="Servicios Generales">Servicios Generales</option>
+                    <option value="Servicios Generales">
+                      Servicios Generales
+                    </option>
                   </select>
                 </div>
                 <div className={styles.formGroup}>
                   <label>Fecha Ingreso *</label>
-                  <input type="date" name="fecha_ingreso" value={formData.fecha_ingreso || ''} onChange={handleChange} required />
+                  <input
+                    type="date"
+                    name="fecha_ingreso"
+                    value={formData.fecha_ingreso || ""}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Correo Electrónico</label>
-                  <input type="email" name="correo_electronico" value={formData.correo_electronico || ''} onChange={handleChange} />
+                  <input
+                    type="email"
+                    name="correo_electronico"
+                    value={formData.correo_electronico || ""}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div className={styles.formGroup}>
                   <label>Celular</label>
-                  <input name="celular" value={formData.celular || ''} onChange={handleChange} />
+                  <input
+                    name="celular"
+                    value={formData.celular || ""}
+                    onChange={handleChange}
+                  />
                 </div>
-                {modalMode === 'edit' && (
+                {modalMode === "edit" && (
                   <div className={styles.formGroup}>
                     <label>Estado</label>
-                    <select name="estado" value={formData.estado || 'Activo'} onChange={handleChange}>
+                    <select
+                      name="estado"
+                      value={formData.estado || "Activo"}
+                      onChange={handleChange}
+                    >
                       <option value="Activo">Activo</option>
                       <option value="Inactivo">Inactivo</option>
                       <option value="Licencia">Licencia</option>
@@ -254,9 +334,18 @@ export const EmpleadosList = () => {
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setShowModal(false)}>Cancelar</button>
-              <button className={styles.saveBtn} onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Guardando...' : 'Guardar'}
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setShowModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.saveBtn}
+                onClick={handleSubmit}
+                disabled={saving}
+              >
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>

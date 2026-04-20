@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { getAuthToken } from '@/utils/auth';
-import { API_URL } from '@/utils/api';
-import styles from './ObservadorView.module.css';
+import { useEffect, useState, useCallback } from "react";
+import { getAuthToken } from "@/utils/auth";
+import { API_URL } from "@/utils/api";
+import styles from "./ObservadorView.module.css";
 
 interface Estudiante {
   id: string;
@@ -15,7 +15,7 @@ interface Estudiante {
 interface Observacion {
   id: string;
   fecha: string;
-  tipo: 'Positiva' | 'Negativa' | 'Informativa' | 'Compromiso';
+  tipo: "Positiva" | "Negativa" | "Informativa" | "Compromiso";
   descripcion: string;
   compromiso?: string;
   firma_acudiente: boolean;
@@ -34,14 +34,15 @@ interface Resumen {
   compromisos: number;
 }
 
-const API = '${API_URL}';
+const API = `${API_URL}`;
 
 export const ObservadorView = () => {
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
-  const [estudianteSeleccionado, setEstudianteSeleccionado] = useState<Estudiante | null>(null);
+  const [estudianteSeleccionado, setEstudianteSeleccionado] =
+    useState<Estudiante | null>(null);
   const [observaciones, setObservaciones] = useState<Observacion[]>([]);
   const [resumen, setResumen] = useState<Resumen | null>(null);
-  const [buscar, setBuscar] = useState('');
+  const [buscar, setBuscar] = useState("");
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -57,15 +58,24 @@ export const ObservadorView = () => {
     if (!token) return;
 
     try {
-      const res = await fetch(`${API}/estudiantes?buscar=${encodeURIComponent(buscar)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `${API}/estudiantes?buscar=${encodeURIComponent(buscar)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (res.ok) {
         const data = await res.json();
-        setEstudiantes(Array.isArray(data.data) ? data.data.slice(0, 10) : (Array.isArray(data) ? data.slice(0, 10) : []));
+        setEstudiantes(
+          Array.isArray(data.data)
+            ? data.data.slice(0, 10)
+            : Array.isArray(data)
+              ? data.slice(0, 10)
+              : [],
+        );
       }
     } catch (err) {
-      console.error('Error fetching estudiantes:', err);
+      console.error("Error fetching estudiantes:", err);
     }
   }, [buscar]);
 
@@ -76,7 +86,7 @@ export const ObservadorView = () => {
 
   const seleccionarEstudiante = async (est: Estudiante) => {
     setEstudianteSeleccionado(est);
-    setBuscar('');
+    setBuscar("");
     setEstudiantes([]);
     setLoading(true);
 
@@ -89,28 +99,34 @@ export const ObservadorView = () => {
     try {
       const [obsRes, resumenRes] = await Promise.all([
         fetch(`${API}/observador/estudiante/${est.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`${API}/observador/resumen/${est.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       if (obsRes.ok) {
         const data = await obsRes.json();
         setObservaciones(Array.isArray(data) ? data : []);
       } else {
-        console.error('Error fetching observaciones:', obsRes.status);
+        console.error("Error fetching observaciones:", obsRes.status);
         setObservaciones([]);
       }
 
       if (resumenRes.ok) {
         setResumen(await resumenRes.json());
       } else {
-        setResumen({ total: 0, positivas: 0, negativas: 0, informativas: 0, compromisos: 0 });
+        setResumen({
+          total: 0,
+          positivas: 0,
+          negativas: 0,
+          informativas: 0,
+          compromisos: 0,
+        });
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error("Error:", err);
       setObservaciones([]);
     }
 
@@ -125,48 +141,54 @@ export const ObservadorView = () => {
         estudiante_id: estudianteSeleccionado?.id,
         tipo: obs.tipo,
         descripcion: obs.descripcion,
-        compromiso: obs.compromiso || ''
+        compromiso: obs.compromiso || "",
       });
     } else {
       setEditandoObs(null);
       setFormData({
         estudiante_id: estudianteSeleccionado?.id,
-        tipo: 'Informativa',
-        descripcion: '',
-        compromiso: ''
+        tipo: "Informativa",
+        descripcion: "",
+        compromiso: "",
       });
     }
     setShowModal(true);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
     if (!formData.descripcion?.trim()) {
-      alert('La descripción es obligatoria');
+      alert("La descripción es obligatoria");
       return;
     }
 
     setSaving(true);
     try {
       const token = getAuthToken();
-      const url = editandoObs ? `${API}/observador/${editandoObs.id}` : `${API}/observador`;
-      const method = editandoObs ? 'PATCH' : 'POST';
+      const url = editandoObs
+        ? `${API}/observador/${editandoObs.id}`
+        : `${API}/observador`;
+      const method = editandoObs ? "PATCH" : "POST";
 
       const res = await fetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Error al guardar');
+        throw new Error(err.message || "Error al guardar");
       }
 
       setShowModal(false);
@@ -182,18 +204,18 @@ export const ObservadorView = () => {
   };
 
   const handleEliminar = async (obsId: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta observación?')) return;
+    if (!confirm("¿Estás seguro de eliminar esta observación?")) return;
 
     try {
       const token = getAuthToken();
       const res = await fetch(`${API}/observador/${obsId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Error al eliminar');
+        throw new Error(err.message || "Error al eliminar");
       }
 
       if (estudianteSeleccionado) {
@@ -208,13 +230,13 @@ export const ObservadorView = () => {
     try {
       const token = getAuthToken();
       const res = await fetch(`${API}/observador/${obsId}/firmar`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Error al firmar');
+        throw new Error(err.message || "Error al firmar");
       }
 
       if (estudianteSeleccionado) {
@@ -227,10 +249,10 @@ export const ObservadorView = () => {
 
   const getTipoColor = (tipo: string) => {
     const colores: Record<string, string> = {
-      'Positiva': styles.tipoPositiva,
-      'Negativa': styles.tipoNegativa,
-      'Informativa': styles.tipoInformativa,
-      'Compromiso': styles.tipoCompromiso,
+      Positiva: styles.tipoPositiva,
+      Negativa: styles.tipoNegativa,
+      Informativa: styles.tipoInformativa,
+      Compromiso: styles.tipoCompromiso,
     };
     return colores[tipo] || styles.tipoInformativa;
   };
@@ -255,13 +277,15 @@ export const ObservadorView = () => {
           />
           {estudiantes.length > 0 && (
             <div className={styles.searchResults}>
-              {estudiantes.map(est => (
+              {estudiantes.map((est) => (
                 <div
                   key={est.id}
                   className={styles.searchItem}
                   onClick={() => seleccionarEstudiante(est)}
                 >
-                  <span className={styles.nombre}>{est.primer_nombre} {est.primer_apellido}</span>
+                  <span className={styles.nombre}>
+                    {est.primer_nombre} {est.primer_apellido}
+                  </span>
                   <span className={styles.doc}>{est.numero_documento}</span>
                 </div>
               ))}
@@ -275,10 +299,14 @@ export const ObservadorView = () => {
           <div className={styles.estudianteHeader}>
             <div className={styles.estudianteInfo}>
               <div className={styles.avatar}>
-                {estudianteSeleccionado.primer_nombre[0]}{estudianteSeleccionado.primer_apellido[0]}
+                {estudianteSeleccionado.primer_nombre[0]}
+                {estudianteSeleccionado.primer_apellido[0]}
               </div>
               <div>
-                <h2>{estudianteSeleccionado.primer_nombre} {estudianteSeleccionado.primer_apellido}</h2>
+                <h2>
+                  {estudianteSeleccionado.primer_nombre}{" "}
+                  {estudianteSeleccionado.primer_apellido}
+                </h2>
                 <p>Doc: {estudianteSeleccionado.numero_documento}</p>
               </div>
             </div>
@@ -293,19 +321,27 @@ export const ObservadorView = () => {
                 <span className={styles.resumenNum}>{resumen.total}</span>
                 <span className={styles.resumenLabel}>Total</span>
               </div>
-              <div className={`${styles.resumenCard} ${styles.resumenPositiva}`}>
+              <div
+                className={`${styles.resumenCard} ${styles.resumenPositiva}`}
+              >
                 <span className={styles.resumenNum}>{resumen.positivas}</span>
                 <span className={styles.resumenLabel}>Positivas</span>
               </div>
-              <div className={`${styles.resumenCard} ${styles.resumenNegativa}`}>
+              <div
+                className={`${styles.resumenCard} ${styles.resumenNegativa}`}
+              >
                 <span className={styles.resumenNum}>{resumen.negativas}</span>
                 <span className={styles.resumenLabel}>Negativas</span>
               </div>
               <div className={`${styles.resumenCard} ${styles.resumenInfo}`}>
-                <span className={styles.resumenNum}>{resumen.informativas}</span>
+                <span className={styles.resumenNum}>
+                  {resumen.informativas}
+                </span>
                 <span className={styles.resumenLabel}>Informativas</span>
               </div>
-              <div className={`${styles.resumenCard} ${styles.resumenCompromiso}`}>
+              <div
+                className={`${styles.resumenCard} ${styles.resumenCompromiso}`}
+              >
                 <span className={styles.resumenNum}>{resumen.compromisos}</span>
                 <span className={styles.resumenLabel}>Compromisos</span>
               </div>
@@ -316,11 +352,17 @@ export const ObservadorView = () => {
             <div className={styles.loading}>Cargando observaciones...</div>
           ) : (
             <div className={styles.observacionesList}>
-              {observaciones.map(obs => (
+              {observaciones.map((obs) => (
                 <div key={obs.id} className={styles.observacionCard}>
                   <div className={styles.obsHeader}>
-                    <span className={`${styles.tipoTag} ${getTipoColor(obs.tipo)}`}>{obs.tipo}</span>
-                    <span className={styles.fecha}>{new Date(obs.fecha).toLocaleDateString('es-CO')}</span>
+                    <span
+                      className={`${styles.tipoTag} ${getTipoColor(obs.tipo)}`}
+                    >
+                      {obs.tipo}
+                    </span>
+                    <span className={styles.fecha}>
+                      {new Date(obs.fecha).toLocaleDateString("es-CO")}
+                    </span>
                   </div>
                   <p className={styles.descripcion}>{obs.descripcion}</p>
                   {obs.compromiso && (
@@ -331,8 +373,10 @@ export const ObservadorView = () => {
                   <div className={styles.obsFooter}>
                     {obs.registrado_por_empleado && (
                       <span className={styles.registradoPor}>
-                        Registrado por: {obs.registrado_por_empleado.primer_nombre} {obs.registrado_por_empleado.primer_apellido}
-                        ({obs.registrado_por_empleado.cargo})
+                        Registrado por:{" "}
+                        {obs.registrado_por_empleado.primer_nombre}{" "}
+                        {obs.registrado_por_empleado.primer_apellido}(
+                        {obs.registrado_por_empleado.cargo})
                       </span>
                     )}
                     <div className={styles.obsActions}>
@@ -360,14 +404,18 @@ export const ObservadorView = () => {
                         🗑️
                       </button>
                     </div>
-                    <span className={`${styles.firmaTag} ${obs.firma_acudiente ? styles.firmado : styles.pendiente}`}>
-                      {obs.firma_acudiente ? 'Firmado' : 'Pendiente firma'}
+                    <span
+                      className={`${styles.firmaTag} ${obs.firma_acudiente ? styles.firmado : styles.pendiente}`}
+                    >
+                      {obs.firma_acudiente ? "Firmado" : "Pendiente firma"}
                     </span>
                   </div>
                 </div>
               ))}
               {observaciones.length === 0 && (
-                <div className={styles.empty}>No hay observaciones registradas</div>
+                <div className={styles.empty}>
+                  No hay observaciones registradas
+                </div>
               )}
             </div>
           )}
@@ -384,15 +432,26 @@ export const ObservadorView = () => {
 
       {showModal && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{editandoObs ? 'Editar Observación' : 'Nueva Observación'}</h2>
-              <button className={styles.closeBtn} onClick={() => setShowModal(false)}>x</button>
+              <h2>
+                {editandoObs ? "Editar Observación" : "Nueva Observación"}
+              </h2>
+              <button
+                className={styles.closeBtn}
+                onClick={() => setShowModal(false)}
+              >
+                x
+              </button>
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGroup}>
                 <label>Tipo de Observación *</label>
-                <select name="tipo" value={formData.tipo || 'Informativa'} onChange={handleChange}>
+                <select
+                  name="tipo"
+                  value={formData.tipo || "Informativa"}
+                  onChange={handleChange}
+                >
                   <option value="Positiva">Positiva</option>
                   <option value="Negativa">Negativa</option>
                   <option value="Informativa">Informativa</option>
@@ -403,7 +462,7 @@ export const ObservadorView = () => {
                 <label>Descripción *</label>
                 <textarea
                   name="descripcion"
-                  value={formData.descripcion || ''}
+                  value={formData.descripcion || ""}
                   onChange={handleChange}
                   rows={4}
                   placeholder="Describa la observación..."
@@ -414,7 +473,7 @@ export const ObservadorView = () => {
                 <label>Compromiso (opcional)</label>
                 <textarea
                   name="compromiso"
-                  value={formData.compromiso || ''}
+                  value={formData.compromiso || ""}
                   onChange={handleChange}
                   rows={2}
                   placeholder="Compromisos adquiridos..."
@@ -422,9 +481,18 @@ export const ObservadorView = () => {
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.cancelBtn} onClick={() => setShowModal(false)}>Cancelar</button>
-              <button className={styles.saveBtn} onClick={handleSubmit} disabled={saving}>
-                {saving ? 'Guardando...' : 'Guardar'}
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setShowModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className={styles.saveBtn}
+                onClick={handleSubmit}
+                disabled={saving}
+              >
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>

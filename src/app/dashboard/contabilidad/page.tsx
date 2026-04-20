@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { getAuthToken } from '@/utils/auth';
-import { API_URL } from '@/utils/api';
-import styles from './Contabilidad.module.css';
+import { useEffect, useState } from "react";
+import { getAuthToken } from "@/utils/auth";
+import { API_URL } from "@/utils/api";
+import styles from "./Contabilidad.module.css";
 
 interface CuentaContable {
   id: string;
@@ -24,10 +24,10 @@ interface MovimientoContable {
   nomina?: { periodo_mes: number; periodo_anio: number };
 }
 
-const API = '${API_URL}';
+const API = `${API_URL}`;
 
 export default function ContabilidadPage() {
-  const [activeTab, setActiveTab] = useState('cuentas');
+  const [activeTab, setActiveTab] = useState("cuentas");
   const [loading, setLoading] = useState(false);
 
   // Datos
@@ -37,25 +37,32 @@ export default function ContabilidadPage() {
 
   // Forms
   const [formCuenta, setFormCuenta] = useState({
-    codigo: '', nombre: '', tipo: '', naturaleza: ''
+    codigo: "",
+    nombre: "",
+    tipo: "",
+    naturaleza: "",
   });
   const [formMovimiento, setFormMovimiento] = useState({
-    descripcion: '', debe: 0, haber: 0, cuenta_contable_id: ''
+    descripcion: "",
+    debe: 0,
+    haber: 0,
+    cuenta_contable_id: "",
   });
 
   // Facturación
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
-  const [busquedaEstudiante, setBusquedaEstudiante] = useState('');
-  const [estudianteSeleccionado, setEstudianteSeleccionado] = useState<any>(null);
-  const [conceptoFactura, setConceptoFactura] = useState('');
+  const [busquedaEstudiante, setBusquedaEstudiante] = useState("");
+  const [estudianteSeleccionado, setEstudianteSeleccionado] =
+    useState<any>(null);
+  const [conceptoFactura, setConceptoFactura] = useState("");
   const [montoFactura, setMontoFactura] = useState(0);
   const [facturasRecientes, setFacturasRecientes] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
   // Filtros
-  const [tipoFiltro, setTipoFiltro] = useState('');
-  const [fechaDesde, setFechaDesde] = useState('');
-  const [fechaHasta, setFechaHasta] = useState('');
+  const [tipoFiltro, setTipoFiltro] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
 
   useEffect(() => {
     loadCuentas();
@@ -67,21 +74,23 @@ export default function ContabilidadPage() {
       const token = getAuthToken();
       if (!token) return;
       const params = new URLSearchParams();
-      if (tipoFiltro) params.append('tipo', tipoFiltro);
+      if (tipoFiltro) params.append("tipo", tipoFiltro);
 
-      const res = await fetch(`${API}/contabilidad/cuentas?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API}/contabilidad/cuentas?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const err = await res.json();
-        console.error('Error cargando cuentas:', err);
-        alert(err.message || 'Error al cargar cuentas');
+        console.error("Error cargando cuentas:", err);
+        alert(err.message || "Error al cargar cuentas");
         setCuentas([]);
         return;
       }
       const data = await res.json();
       setCuentas(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Error cargando cuentas:', err);
-      alert('Error de conexión al cargar cuentas');
+      console.error("Error cargando cuentas:", err);
+      alert("Error de conexión al cargar cuentas");
       setCuentas([]);
     }
   };
@@ -91,22 +100,24 @@ export default function ContabilidadPage() {
       const token = getAuthToken();
       if (!token) return;
       const params = new URLSearchParams();
-      if (fechaDesde) params.append('fecha_desde', fechaDesde);
-      if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+      if (fechaDesde) params.append("fecha_desde", fechaDesde);
+      if (fechaHasta) params.append("fecha_hasta", fechaHasta);
 
-      const res = await fetch(`${API}/contabilidad/movimientos?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API}/contabilidad/movimientos?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const err = await res.json();
-        console.error('Error cargando movimientos:', err);
-        alert(err.message || 'Error al cargar movimientos');
+        console.error("Error cargando movimientos:", err);
+        alert(err.message || "Error al cargar movimientos");
         setMovimientos([]);
         return;
       }
       const data = await res.json();
       setMovimientos(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Error cargando movimientos:', err);
-      alert('Error de conexión al cargar movimientos');
+      console.error("Error cargando movimientos:", err);
+      alert("Error de conexión al cargar movimientos");
       setMovimientos([]);
     }
   };
@@ -116,22 +127,25 @@ export default function ContabilidadPage() {
       const token = getAuthToken();
       if (!token) return;
       const params = new URLSearchParams();
-      if (fechaDesde) params.append('fecha_desde', fechaDesde);
-      if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+      if (fechaDesde) params.append("fecha_desde", fechaDesde);
+      if (fechaHasta) params.append("fecha_hasta", fechaHasta);
 
-      const res = await fetch(`${API}/contabilidad/balance-comprobacion?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(
+        `${API}/contabilidad/balance-comprobacion?${params}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       if (!res.ok) {
         const err = await res.json();
-        console.error('Error cargando balance:', err);
-        alert(err.message || 'Error al cargar balance');
+        console.error("Error cargando balance:", err);
+        alert(err.message || "Error al cargar balance");
         setBalance(null);
         return;
       }
       const data = await res.json();
       setBalance(data);
     } catch (err) {
-      console.error('Error cargando balance:', err);
-      alert('Error de conexión al cargar balance');
+      console.error("Error cargando balance:", err);
+      alert("Error de conexión al cargar balance");
       setBalance(null);
     }
   };
@@ -146,7 +160,7 @@ export default function ContabilidadPage() {
     const token = getAuthToken();
     try {
       const res = await fetch(`${API}/estudiantes?buscar=${query}&limit=10`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
@@ -154,19 +168,21 @@ export default function ContabilidadPage() {
         setShowDropdown(true);
       }
     } catch (err) {
-      console.error('Error buscando estudiantes:', err);
+      console.error("Error buscando estudiantes:", err);
     }
   };
 
   const seleccionarEstudiante = (est: any) => {
     setEstudianteSeleccionado(est);
-    setBusquedaEstudiante(`${est.primer_nombre} ${est.primer_apellido} - ${est.numero_documento}`);
+    setBusquedaEstudiante(
+      `${est.primer_nombre} ${est.primer_apellido} - ${est.numero_documento}`,
+    );
     setShowDropdown(false);
   };
 
   const crearFactura = async () => {
     if (!estudianteSeleccionado || !conceptoFactura || montoFactura <= 0) {
-      alert('Seleccione un estudiante, ingrese concepto y monto');
+      alert("Seleccione un estudiante, ingrese concepto y monto");
       return;
     }
 
@@ -179,149 +195,190 @@ export default function ContabilidadPage() {
     }
 
     // Pequeña demora para que se actualice el estado
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    console.log('Cuentas después de cargar:', cuentas);
+    console.log("Cuentas después de cargar:", cuentas);
 
     // Buscar cuenta de ingresos según concepto
     const conceptoLower = conceptoFactura.toLowerCase();
-    let cuentaId = '';
-    const cuentaEncontrada = cuentas.find(c => {
+    let cuentaId = "";
+    const cuentaEncontrada = cuentas.find((c) => {
       const codigo = c.codigo;
-      if (conceptoLower.includes('matrícula') || conceptoLower.includes('matricula')) return codigo === '4105';
-      if (conceptoLower.includes('pensión') || conceptoLower.includes('pensio')) return codigo === '4115';
-      if (conceptoLower.includes('merienda')) return codigo === '4130' || codigo === '4135';
-      if (conceptoLower.includes('formulario')) return codigo === '4110';
-      if (conceptoLower.includes('grado')) return codigo === '4120';
-      if (conceptoLower.includes('clausura')) return codigo === '4125';
-      return codigo === '4140';
+      if (
+        conceptoLower.includes("matrícula") ||
+        conceptoLower.includes("matricula")
+      )
+        return codigo === "4105";
+      if (conceptoLower.includes("pensión") || conceptoLower.includes("pensio"))
+        return codigo === "4115";
+      if (conceptoLower.includes("merienda"))
+        return codigo === "4130" || codigo === "4135";
+      if (conceptoLower.includes("formulario")) return codigo === "4110";
+      if (conceptoLower.includes("grado")) return codigo === "4120";
+      if (conceptoLower.includes("clausura")) return codigo === "4125";
+      return codigo === "4140";
     });
-    cuentaId = cuentaEncontrada?.id || '';
+    cuentaId = cuentaEncontrada?.id || "";
 
     if (!cuentaId) {
-      console.log('Cuentas disponibles:', cuentas.map(c => ({ codigo: c.codigo, nombre: c.nombre, id: c.id })));
-      alert('Cuenta de ingresos no encontrada. Cree las cuentas primero en la pestaña Plan de Cuentas.');
+      console.log(
+        "Cuentas disponibles:",
+        cuentas.map((c) => ({ codigo: c.codigo, nombre: c.nombre, id: c.id })),
+      );
+      alert(
+        "Cuenta de ingresos no encontrada. Cree las cuentas primero en la pestaña Plan de Cuentas.",
+      );
       setLoading(false);
       return;
     }
 
     try {
       // Crear movimiento (crédito = ingreso)
-      console.log('Creando movimiento:', {
+      console.log("Creando movimiento:", {
         descripcion: `${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
         haber: montoFactura,
         cuenta_contable_id: cuentaId,
-        fecha: new Date().toISOString().split('T')[0]
+        fecha: new Date().toISOString().split("T")[0],
       });
 
       const res = await fetch(`${API}/contabilidad/movimientos`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           descripcion: `${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
           haber: Number(montoFactura),
           cuenta_contable_id: cuentaId,
-          fecha: new Date().toISOString().split('T')[0]
-        })
+          fecha: new Date().toISOString().split("T")[0],
+        }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        const msg = Array.isArray(err.message) ? err.message.join(', ') : err.message;
-        throw new Error(msg || 'Error al crear movimiento de ingreso');
+        const msg = Array.isArray(err.message)
+          ? err.message.join(", ")
+          : err.message;
+        throw new Error(msg || "Error al crear movimiento de ingreso");
       }
 
       // Recargar cuentas para asegurar que tenemos las más recientes
       await loadCuentas();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Buscar cuenta de banco/caja
-      const cuentaBancaria = cuentas.find(c => c.codigo === '1105' || c.codigo === '1110');
-      console.log('Cuenta bancaria:', cuentaBancaria);
+      const cuentaBancaria = cuentas.find(
+        (c) => c.codigo === "1105" || c.codigo === "1110",
+      );
+      console.log("Cuenta bancaria:", cuentaBancaria);
 
       if (cuentaBancaria) {
         // Crear movimiento en banco/caja (débito)
         const resBanco = await fetch(`${API}/contabilidad/movimientos`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             descripcion: `Cobro ${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
             debe: Number(montoFactura),
             cuenta_contable_id: cuentaBancaria.id,
-            fecha: new Date().toISOString().split('T')[0]
-          })
+            fecha: new Date().toISOString().split("T")[0],
+          }),
         });
-        console.log('Movimiento banco response:', resBanco.status);
+        console.log("Movimiento banco response:", resBanco.status);
       }
 
       // Recargar movimientos y balance
       loadMovimientos();
       loadBalance();
 
-      alert('Factura registrada correctamente');
+      alert("Factura registrada correctamente");
       setEstudianteSeleccionado(null);
-      setBusquedaEstudiante('');
-      setConceptoFactura('');
+      setBusquedaEstudiante("");
+      setConceptoFactura("");
       setMontoFactura(0);
     } catch (err: any) {
-      alert(err.message || 'Error al crear factura');
+      alert(err.message || "Error al crear factura");
     }
     setLoading(false);
   };
 
   const conceptosDefault = [
-    'Matrícula',
-    'Pensión Mes de',
-    'Formularios',
-    'Derecho a Grado',
-    'Clausura',
-    'Meriendas',
-    'Meriendas Sodexo',
-    'Uniforme',
-    'Materiales',
-    'Otra'
+    "Matrícula",
+    "Pensión Mes de",
+    "Formularios",
+    "Derecho a Grado",
+    "Clausura",
+    "Meriendas",
+    "Meriendas Sodexo",
+    "Uniforme",
+    "Materiales",
+    "Otra",
   ];
 
   const handleSaveCuenta = async () => {
-    if (!formCuenta.codigo || !formCuenta.nombre || !formCuenta.tipo || !formCuenta.naturaleza) {
-      alert('Complete todos los campos');
+    if (
+      !formCuenta.codigo ||
+      !formCuenta.nombre ||
+      !formCuenta.tipo ||
+      !formCuenta.naturaleza
+    ) {
+      alert("Complete todos los campos");
       return;
     }
     setLoading(true);
     const token = getAuthToken();
     try {
       const res = await fetch(`${API}/contabilidad/cuentas`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(formCuenta)
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formCuenta),
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Error al crear cuenta');
+        throw new Error(err.message || "Error al crear cuenta");
       }
-      setFormCuenta({ codigo: '', nombre: '', tipo: '', naturaleza: '' });
+      setFormCuenta({ codigo: "", nombre: "", tipo: "", naturaleza: "" });
       loadCuentas();
-    } catch (err: any) { alert(err.message || 'Error guardando'); }
+    } catch (err: any) {
+      alert(err.message || "Error guardando");
+    }
     setLoading(false);
   };
 
   const handleDeleteCuenta = async (id: string) => {
-    if (!confirm('¿Eliminar cuenta?')) return;
+    if (!confirm("¿Eliminar cuenta?")) return;
     const token = getAuthToken();
     try {
-      const res = await fetch(`${API}/contabilidad/cuentas/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API}/contabilidad/cuentas/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.message || 'Error al eliminar');
+        alert(err.message || "Error al eliminar");
         return;
       }
       loadCuentas();
-    } catch (err) { alert('Error al eliminar'); }
+    } catch (err) {
+      alert("Error al eliminar");
+    }
   };
 
   // Crear cuentas iniciales del PUC
   const crearCuentasIniciales = async () => {
-    if (!confirm('¿Crear plan de cuentas inicial? Esto agregará las cuentas básicas del colegio.')) return;
+    if (
+      !confirm(
+        "¿Crear plan de cuentas inicial? Esto agregará las cuentas básicas del colegio.",
+      )
+    )
+      return;
 
     setLoading(true);
     const token = getAuthToken();
@@ -329,37 +386,147 @@ export default function ContabilidadPage() {
     // Solo cuentas operativas, sin cuentas padre
     const cuentasIniciales = [
       // INGRESOS - Dinero que entra (Naturaleza: Crédito)
-      { codigo: '4105', nombre: 'Matrículas', tipo: 'Ingreso', naturaleza: 'Crédito' },
-      { codigo: '4110', nombre: 'Formularios', tipo: 'Ingreso', naturaleza: 'Crédito' },
-      { codigo: '4115', nombre: 'Pensiones (10 meses)', tipo: 'Ingreso', naturaleza: 'Crédito' },
-      { codigo: '4120', nombre: 'Derecho a Grado', tipo: 'Ingreso', naturaleza: 'Crédito' },
-      { codigo: '4125', nombre: 'Clausura', tipo: 'Ingreso', naturaleza: 'Crédito' },
-      { codigo: '4130', nombre: 'Meriendas', tipo: 'Ingreso', naturaleza: 'Crédito' },
-      { codigo: '4135', nombre: 'Meriendas Sodexo', tipo: 'Ingreso', naturaleza: 'Crédito' },
-      { codigo: '4140', nombre: 'Otras Actividades', tipo: 'Ingreso', naturaleza: 'Crédito' },
+      {
+        codigo: "4105",
+        nombre: "Matrículas",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4110",
+        nombre: "Formularios",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4115",
+        nombre: "Pensiones (10 meses)",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4120",
+        nombre: "Derecho a Grado",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4125",
+        nombre: "Clausura",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4130",
+        nombre: "Meriendas",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4135",
+        nombre: "Meriendas Sodexo",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4140",
+        nombre: "Otras Actividades",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
 
       // GASTOS - Dinero que sale (Naturaleza: Débito)
-      { codigo: '5105', nombre: 'Pagos Docentes', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5110', nombre: 'Arriendo', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5115', nombre: 'Servicios (Luz, Agua, Internet)', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5120', nombre: '4x1000', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5125', nombre: 'Aportes COOIENEM', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5130', nombre: 'Servicios Contadora', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5200', nombre: 'Implementos de Aseo', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5205', nombre: 'Material Didáctico', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5210', nombre: 'Cafetería Docente', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5215', nombre: 'Transporte', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5220', nombre: 'Mano de Obra', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5225', nombre: 'Mantenimiento y Reparación', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5230', nombre: 'Papelería Administrativa', tipo: 'Gasto', naturaleza: 'Débito' },
-      { codigo: '5235', nombre: 'Bono Cumpleaños', tipo: 'Gasto', naturaleza: 'Débito' },
+      {
+        codigo: "5105",
+        nombre: "Pagos Docentes",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5110",
+        nombre: "Arriendo",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5115",
+        nombre: "Servicios (Luz, Agua, Internet)",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      { codigo: "5120", nombre: "4x1000", tipo: "Gasto", naturaleza: "Débito" },
+      {
+        codigo: "5125",
+        nombre: "Aportes COOIENEM",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5130",
+        nombre: "Servicios Contadora",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5200",
+        nombre: "Implementos de Aseo",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5205",
+        nombre: "Material Didáctico",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5210",
+        nombre: "Cafetería Docente",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5215",
+        nombre: "Transporte",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5220",
+        nombre: "Mano de Obra",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5225",
+        nombre: "Mantenimiento y Reparación",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5230",
+        nombre: "Papelería Administrativa",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5235",
+        nombre: "Bono Cumpleaños",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
 
       // ACTIVOS - Lo que tiene el colegio (Efectivo/Banco)
-      { codigo: '1105', nombre: 'Caja', tipo: 'Activo', naturaleza: 'Débito' },
-      { codigo: '1110', nombre: 'Banco', tipo: 'Activo', naturaleza: 'Débito' },
+      { codigo: "1105", nombre: "Caja", tipo: "Activo", naturaleza: "Débito" },
+      { codigo: "1110", nombre: "Banco", tipo: "Activo", naturaleza: "Débito" },
 
       // PASIVOS - Lo que debe el colegio
-      { codigo: '2105', nombre: 'Cuentas por Pagar', tipo: 'Pasivo', naturaleza: 'Crédito' },
+      {
+        codigo: "2105",
+        nombre: "Cuentas por Pagar",
+        tipo: "Pasivo",
+        naturaleza: "Crédito",
+      },
     ];
 
     try {
@@ -368,9 +535,12 @@ export default function ContabilidadPage() {
 
       for (const cuenta of cuentasIniciales) {
         const res = await fetch(`${API}/contabilidad/cuentas`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(cuenta)
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(cuenta),
         });
 
         if (res.ok) {
@@ -383,49 +553,59 @@ export default function ContabilidadPage() {
       loadCuentas();
       alert(`Plan de cuentas creado: ${creadas} cuentas registradas`);
     } catch (err) {
-      alert('Error al crear cuentas iniciales');
+      alert("Error al crear cuentas iniciales");
     }
     setLoading(false);
   };
 
   const handleSaveMovimiento = async () => {
     if (!formMovimiento.descripcion || !formMovimiento.cuenta_contable_id) {
-      alert('Complete los campos');
+      alert("Complete los campos");
       return;
     }
     if (formMovimiento.debe === 0 && formMovimiento.haber === 0) {
-      alert('Ingrese al menos un valor en DÉBITO o CRÉDITO');
+      alert("Ingrese al menos un valor en DÉBITO o CRÉDITO");
       return;
     }
     setLoading(true);
     const token = getAuthToken();
     try {
       const res = await fetch(`${API}/contabilidad/movimientos`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           ...formMovimiento,
-          fecha: new Date().toISOString().split('T')[0]
-        })
+          fecha: new Date().toISOString().split("T")[0],
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Error al crear movimiento');
+        throw new Error(err.message || "Error al crear movimiento");
       }
-      setFormMovimiento({ descripcion: '', debe: 0, haber: 0, cuenta_contable_id: '' });
+      setFormMovimiento({
+        descripcion: "",
+        debe: 0,
+        haber: 0,
+        cuenta_contable_id: "",
+      });
       loadMovimientos();
-    } catch (err: any) { alert(err.message || 'Error guardando'); }
+    } catch (err: any) {
+      alert(err.message || "Error guardando");
+    }
     setLoading(false);
   };
 
-  const tipos = ['Activo', 'Pasivo', 'Patrimonio', 'Ingreso', 'Gasto', 'Costo'];
-  const naturalezas = ['Débito', 'Crédito'];
+  const tipos = ["Activo", "Pasivo", "Patrimonio", "Ingreso", "Gasto", "Costo"];
+  const naturalezas = ["Débito", "Crédito"];
 
   const tabs = [
-    { id: 'cuentas', label: 'Plan de Cuentas (PUC)' },
-    { id: 'facturacion', label: 'Facturación' },
-    { id: 'movimientos', label: 'Movimientos' },
-    { id: 'balance', label: 'Balance de Comprobación' }
+    { id: "cuentas", label: "Plan de Cuentas (PUC)" },
+    { id: "facturacion", label: "Facturación" },
+    { id: "movimientos", label: "Movimientos" },
+    { id: "balance", label: "Balance de Comprobación" },
   ];
 
   return (
@@ -433,58 +613,123 @@ export default function ContabilidadPage() {
       <h1 className={styles.title}>Contabilidad</h1>
 
       <div className={styles.tabsContainer}>
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => {
               setActiveTab(tab.id);
-              if (tab.id === 'balance') loadBalance();
-              if (tab.id === 'facturacion' && cuentas.length === 0) loadCuentas();
+              if (tab.id === "balance") loadBalance();
+              if (tab.id === "facturacion" && cuentas.length === 0)
+                loadCuentas();
             }}
-            className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
+            className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ""}`}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {activeTab === 'cuentas' && (
+      {activeTab === "cuentas" && (
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Plan de Cuentas (PUC)</h3>
           <div className={styles.formGrid}>
             <div className={styles.formGroup}>
               <label>Código *</label>
-              <input placeholder="Código de cuenta" value={formCuenta.codigo} onChange={e => setFormCuenta({...formCuenta, codigo: e.target.value})} />
+              <input
+                placeholder="Código de cuenta"
+                value={formCuenta.codigo}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, codigo: e.target.value })
+                }
+              />
             </div>
             <div className={styles.formGroup}>
               <label>Nombre *</label>
-              <input placeholder="Nombre de cuenta" value={formCuenta.nombre} onChange={e => setFormCuenta({...formCuenta, nombre: e.target.value})} />
+              <input
+                placeholder="Nombre de cuenta"
+                value={formCuenta.nombre}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, nombre: e.target.value })
+                }
+              />
             </div>
             <div className={styles.formGroup}>
               <label>Tipo *</label>
-              <select value={formCuenta.tipo} onChange={e => setFormCuenta({...formCuenta, tipo: e.target.value})}>
+              <select
+                value={formCuenta.tipo}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, tipo: e.target.value })
+                }
+              >
                 <option value="">Seleccionar tipo</option>
-                {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+                {tipos.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </select>
             </div>
             <div className={styles.formGroup}>
               <label>Naturaleza *</label>
-              <select value={formCuenta.naturaleza} onChange={e => setFormCuenta({...formCuenta, naturaleza: e.target.value})}>
+              <select
+                value={formCuenta.naturaleza}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, naturaleza: e.target.value })
+                }
+              >
                 <option value="">Seleccionar naturaleza</option>
-                {naturalezas.map(n => <option key={n} value={n}>{n}</option>)}
+                {naturalezas.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <button onClick={handleSaveCuenta} disabled={loading} className={styles.btnPrimary}>Agregar</button>
+              <button
+                onClick={handleSaveCuenta}
+                disabled={loading}
+                className={styles.btnPrimary}
+              >
+                Agregar
+              </button>
             </div>
           </div>
 
-          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <select value={tipoFiltro} onChange={e => { setTipoFiltro(e.target.value); loadCuentas(); }}>
+          <div
+            style={{
+              marginTop: "1rem",
+              display: "flex",
+              gap: "1rem",
+              alignItems: "center",
+            }}
+          >
+            <select
+              value={tipoFiltro}
+              onChange={(e) => {
+                setTipoFiltro(e.target.value);
+                loadCuentas();
+              }}
+            >
               <option value="">Todos los tipos</option>
-              {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+              {tipos.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
             </select>
-            <button onClick={crearCuentasIniciales} disabled={loading} style={{ padding: '0.5rem 1rem', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+            <button
+              onClick={crearCuentasIniciales}
+              disabled={loading}
+              style={{
+                padding: "0.5rem 1rem",
+                background: "#6366f1",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+            >
               Crear Plan de Cuentas
             </button>
           </div>
@@ -501,19 +746,28 @@ export default function ContabilidadPage() {
                 </tr>
               </thead>
               <tbody>
-                {cuentas.map(cuenta => (
+                {cuentas.map((cuenta) => (
                   <tr key={cuenta.id}>
                     <td className={styles.mono}>{cuenta.codigo}</td>
                     <td>{cuenta.nombre}</td>
                     <td>{cuenta.tipo}</td>
                     <td>{cuenta.naturaleza}</td>
                     <td>
-                      <button onClick={() => handleDeleteCuenta(cuenta.id)} className={styles.btnDanger}>Eliminar</button>
+                      <button
+                        onClick={() => handleDeleteCuenta(cuenta.id)}
+                        className={styles.btnDanger}
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))}
                 {cuentas.length === 0 && (
-                  <tr><td colSpan={5} className={styles.empty}>No hay cuentas</td></tr>
+                  <tr>
+                    <td colSpan={5} className={styles.empty}>
+                      No hay cuentas
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -521,11 +775,11 @@ export default function ContabilidadPage() {
         </div>
       )}
 
-      {activeTab === 'facturacion' && (
+      {activeTab === "facturacion" && (
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Nueva Factura / Venta</h3>
           <div className={styles.formGrid}>
-            <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+            <div className={styles.formGroup} style={{ gridColumn: "1 / -1" }}>
               <label>Buscar Estudiante *</label>
               <input
                 placeholder="Nombre o documento del estudiante"
@@ -536,16 +790,36 @@ export default function ContabilidadPage() {
                 }}
               />
               {showDropdown && estudiantes.length > 0 && (
-                <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', maxHeight: '200px', overflow: 'auto', background: 'white', position: 'absolute', zIndex: 10, width: '100%' }}>
-                  {estudiantes.map(est => (
+                <div
+                  style={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    maxHeight: "200px",
+                    overflow: "auto",
+                    background: "white",
+                    position: "absolute",
+                    zIndex: 10,
+                    width: "100%",
+                  }}
+                >
+                  {estudiantes.map((est) => (
                     <div
                       key={est.id}
                       onClick={() => seleccionarEstudiante(est)}
-                      style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
-                      onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
-                      onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+                      style={{
+                        padding: "10px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                      onMouseOver={(e) =>
+                        (e.currentTarget.style.background = "#f8fafc")
+                      }
+                      onMouseOut={(e) =>
+                        (e.currentTarget.style.background = "white")
+                      }
                     >
-                      {est.primer_nombre} {est.primer_apellido} - {est.numero_documento}
+                      {est.primer_nombre} {est.primer_apellido} -{" "}
+                      {est.numero_documento}
                     </div>
                   ))}
                 </div>
@@ -553,9 +827,16 @@ export default function ContabilidadPage() {
             </div>
             <div className={styles.formGroup}>
               <label>Concepto *</label>
-              <select value={conceptoFactura} onChange={e => setConceptoFactura(e.target.value)}>
+              <select
+                value={conceptoFactura}
+                onChange={(e) => setConceptoFactura(e.target.value)}
+              >
                 <option value="">Seleccionar concepto</option>
-                {conceptosDefault.map(c => <option key={c} value={c}>{c}</option>)}
+                {conceptosDefault.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </div>
             <div className={styles.formGroup}>
@@ -563,51 +844,114 @@ export default function ContabilidadPage() {
               <input
                 type="number"
                 placeholder="0"
-                value={montoFactura || ''}
-                onChange={e => setMontoFactura(parseFloat(e.target.value) || 0)}
+                value={montoFactura || ""}
+                onChange={(e) =>
+                  setMontoFactura(parseFloat(e.target.value) || 0)
+                }
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button onClick={crearFactura} disabled={loading} className={styles.btnPrimary}>
-                {loading ? 'Guardando...' : 'Registrar Factura'}
+            <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <button
+                onClick={crearFactura}
+                disabled={loading}
+                className={styles.btnPrimary}
+              >
+                {loading ? "Guardando..." : "Registrar Factura"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {activeTab === 'movimientos' && (
+      {activeTab === "movimientos" && (
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Registro de Movimientos</h3>
           <div className={styles.formGrid}>
             <div className={styles.formGroup}>
               <label>Cuenta *</label>
-              <select value={formMovimiento.cuenta_contable_id} onChange={e => setFormMovimiento({...formMovimiento, cuenta_contable_id: e.target.value})}>
+              <select
+                value={formMovimiento.cuenta_contable_id}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    cuenta_contable_id: e.target.value,
+                  })
+                }
+              >
                 <option value="">Seleccionar cuenta</option>
-                {cuentas.map(c => <option key={c.id} value={c.id}>{c.codigo} - {c.nombre}</option>)}
+                {cuentas.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.codigo} - {c.nombre}
+                  </option>
+                ))}
               </select>
             </div>
             <div className={styles.formGroup}>
               <label>Descripción *</label>
-              <input placeholder="Descripción del movimiento" value={formMovimiento.descripcion} onChange={e => setFormMovimiento({...formMovimiento, descripcion: e.target.value})} />
+              <input
+                placeholder="Descripción del movimiento"
+                value={formMovimiento.descripcion}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    descripcion: e.target.value,
+                  })
+                }
+              />
             </div>
             <div className={styles.formGroup}>
               <label>Débito</label>
-              <input type="number" placeholder="0" value={formMovimiento.debe || ''} onChange={e => setFormMovimiento({...formMovimiento, debe: parseFloat(e.target.value) || 0})} />
+              <input
+                type="number"
+                placeholder="0"
+                value={formMovimiento.debe || ""}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    debe: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
             </div>
             <div className={styles.formGroup}>
               <label>Crédito</label>
-              <input type="number" placeholder="0" value={formMovimiento.haber || ''} onChange={e => setFormMovimiento({...formMovimiento, haber: parseFloat(e.target.value) || 0})} />
+              <input
+                type="number"
+                placeholder="0"
+                value={formMovimiento.haber || ""}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    haber: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
             </div>
             <div>
-              <button onClick={handleSaveMovimiento} disabled={loading} className={styles.btnPrimary}>Registrar</button>
+              <button
+                onClick={handleSaveMovimiento}
+                disabled={loading}
+                className={styles.btnPrimary}
+              >
+                Registrar
+              </button>
             </div>
           </div>
 
-          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-            <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
-            <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
-            <button onClick={loadMovimientos} className={styles.btnFilter}>Filtrar</button>
+          <div style={{ marginTop: "1rem", display: "flex", gap: "1rem" }}>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+            />
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+            />
+            <button onClick={loadMovimientos} className={styles.btnFilter}>
+              Filtrar
+            </button>
           </div>
 
           <div className={styles.tableContainer}>
@@ -617,22 +961,32 @@ export default function ContabilidadPage() {
                   <th>Fecha</th>
                   <th>Descripción</th>
                   <th>Cuenta</th>
-                  <th style={{ textAlign: 'right' }}>Débito</th>
-                  <th style={{ textAlign: 'right' }}>Crédito</th>
+                  <th style={{ textAlign: "right" }}>Débito</th>
+                  <th style={{ textAlign: "right" }}>Crédito</th>
                 </tr>
               </thead>
               <tbody>
-                {movimientos.map(mov => (
+                {movimientos.map((mov) => (
                   <tr key={mov.id}>
-                    <td>{mov.fecha?.split('T')[0]}</td>
+                    <td>{mov.fecha?.split("T")[0]}</td>
                     <td>{mov.descripcion}</td>
-                    <td>{mov.cuenta?.codigo} - {mov.cuenta?.nombre}</td>
-                    <td style={{ textAlign: 'right' }}>${mov.debe?.toLocaleString()}</td>
-                    <td style={{ textAlign: 'right' }}>${mov.haber?.toLocaleString()}</td>
+                    <td>
+                      {mov.cuenta?.codigo} - {mov.cuenta?.nombre}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      ${mov.debe?.toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      ${mov.haber?.toLocaleString()}
+                    </td>
                   </tr>
                 ))}
                 {movimientos.length === 0 && (
-                  <tr><td colSpan={5} className={styles.empty}>No hay movimientos</td></tr>
+                  <tr>
+                    <td colSpan={5} className={styles.empty}>
+                      No hay movimientos
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -640,13 +994,23 @@ export default function ContabilidadPage() {
         </div>
       )}
 
-      {activeTab === 'balance' && (
+      {activeTab === "balance" && (
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Balance de Comprobación</h3>
-          <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem' }}>
-            <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
-            <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
-            <button onClick={loadBalance} className={styles.btnFilter}>Generar</button>
+          <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem" }}>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+            />
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+            />
+            <button onClick={loadBalance} className={styles.btnFilter}>
+              Generar
+            </button>
           </div>
           {balance && (
             <div className={styles.tableContainer}>
@@ -655,9 +1019,9 @@ export default function ContabilidadPage() {
                   <tr>
                     <th>Código</th>
                     <th>Cuenta</th>
-                    <th style={{ textAlign: 'right' }}>Débito</th>
-                    <th style={{ textAlign: 'right' }}>Crédito</th>
-                    <th style={{ textAlign: 'right' }}>Saldo</th>
+                    <th style={{ textAlign: "right" }}>Débito</th>
+                    <th style={{ textAlign: "right" }}>Crédito</th>
+                    <th style={{ textAlign: "right" }}>Saldo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -665,18 +1029,33 @@ export default function ContabilidadPage() {
                     <tr key={c.id}>
                       <td className={styles.mono}>{c.codigo}</td>
                       <td>{c.nombre}</td>
-                      <td style={{ textAlign: 'right' }}>${c.debe?.toLocaleString()}</td>
-                      <td style={{ textAlign: 'right' }}>${c.haber?.toLocaleString()}</td>
-                      <td style={{ textAlign: 'right', fontWeight: 'bold' }}>${c.saldo?.toLocaleString()}</td>
+                      <td style={{ textAlign: "right" }}>
+                        ${c.debe?.toLocaleString()}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        ${c.haber?.toLocaleString()}
+                      </td>
+                      <td style={{ textAlign: "right", fontWeight: "bold" }}>
+                        ${c.saldo?.toLocaleString()}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr>
                     <td colSpan={2}>TOTALES</td>
-                    <td style={{ textAlign: 'right' }}>${balance.totales?.debe?.toLocaleString()}</td>
-                    <td style={{ textAlign: 'right' }}>${balance.totales?.haber?.toLocaleString()}</td>
-                    <td style={{ textAlign: 'right' }}>${(balance.totales?.debe - balance.totales?.haber)?.toLocaleString()}</td>
+                    <td style={{ textAlign: "right" }}>
+                      ${balance.totales?.debe?.toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      ${balance.totales?.haber?.toLocaleString()}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      $
+                      {(
+                        balance.totales?.debe - balance.totales?.haber
+                      )?.toLocaleString()}
+                    </td>
                   </tr>
                 </tfoot>
               </table>
