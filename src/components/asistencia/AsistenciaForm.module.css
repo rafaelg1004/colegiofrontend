@@ -141,10 +141,54 @@
   background: #f1f5f9;
 }
 
-.present { background: #dcfce7 !important; color: #16a34a !important; border-color: #16a34a !important; }
+.presente { background: #dcfce7 !important; color: #16a34a !important; border-color: #16a34a !important; }
 .ausente { background: #fee2e2 !important; color: #dc2626 !important; border-color: #dc2626 !important; }
 .tardanza { background: #fef3c7 !important; color: #d97706 !important; border-color: #d97706 !important; }
 .excusa { background: #ede9fe !important; color: #7c3aed !important; border-color: #7c3aed !important; }
+
+.instructionCard {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.instructionCard h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #1e40af;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.instructionCard p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #1e3a8a;
+}
+
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
 
 .footer {
   padding: 1.5rem;

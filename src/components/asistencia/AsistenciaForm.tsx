@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { getAuthToken } from "@/utils/auth";
-import { API_URL } from "@/utils/api";
+import { API_URL, api } from "@/utils/api";
 import styles from "./AsistenciaForm.module.css";
 
 export const AsistenciaForm = () => {
@@ -18,26 +18,18 @@ export const AsistenciaForm = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = getAuthToken();
-      if (!token) {
-        console.warn("No hay token de autenticación");
-        return;
-      }
-      const resGrupos = await fetch(`${API_URL}/grupos`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const gruposData = await resGrupos.json();
-      setGrupos(Array.isArray(gruposData) ? gruposData : gruposData.data || []);
+      try {
+        const gruposData = await api.get("/grupos");
+        setGrupos(Array.isArray(gruposData) ? gruposData : gruposData.data || []);
 
-      const resAreas = await fetch(`${API_URL}/academico/areas`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const areas = await resAreas.json();
-      setAsignaturas(
-        Array.isArray(areas)
+        const areas = await api.get("/academico/areas");
+        const asignaturasList = Array.isArray(areas)
           ? areas.flatMap((a: any) => a.asignatura || [])
-          : [],
-      );
+          : [];
+        setAsignaturas(asignaturasList);
+      } catch (err) {
+        console.error("Error cargando datos iniciales:", err);
+      }
     };
     fetchData();
   }, []);
@@ -45,18 +37,19 @@ export const AsistenciaForm = () => {
   const handleCargarLista = async () => {
     if (!selectedGrupo) return;
     setLoading(true);
+    setEstudiantes([]); // Limpiar lista anterior
     try {
-      const token = getAuthToken();
-      // Primero intentamos ver si ya hay asistencia para esa fecha
-      const resExistente = await fetch(
-        `${API_URL}/asistencia/fecha?grupo_id=${selectedGrupo}&fecha=${fecha}${selectedAsignatura ? `&asignatura_id=${selectedAsignatura}` : ""}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      const dataExistente = await resExistente.json();
+      // 1. Intentar cargar asistencia existente para esa fecha/grupo/asignatura
+      const queryParams = new URLSearchParams({
+        fecha,
+        ...(selectedAsignatura && { asignatura_id: selectedAsignatura }),
+      });
 
-      if (dataExistente.length > 0) {
+      const dataExistente = await api.get(
+        `/asistencia/grupo/${selectedGrupo}?${queryParams.toString()}`,
+      );
+
+      if (Array.isArray(dataExistente) && dataExistente.length > 0) {
         setEstudiantes(
           dataExistente.map((a: any) => ({
             ...a.estudiante,
@@ -66,24 +59,21 @@ export const AsistenciaForm = () => {
           })),
         );
       } else {
-        // Si no hay, cargamos los estudiantes del grupo para crearla
-        const resEst = await fetch(
-          `${API_URL}/grupos/${selectedGrupo}/estudiantes`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-        const dataEst = await resEst.json();
+        // 2. Si no hay, cargar los estudiantes del grupo para crearla
+        const dataEst = await api.get(`/grupos/${selectedGrupo}/estudiantes`);
+        const listaEstudiantes = Array.isArray(dataEst) ? dataEst : dataEst.data || [];
+        
         setEstudiantes(
-          dataEst.map((e: any) => ({
-            ...e.estudiante,
-            estado: "Presente",
+          listaEstudiantes.map((e: any) => ({
+            ...(e.estudiante || e), // Manejar diferentes estructuras de respuesta
+            estado: "",
             justificacion: "",
           })),
         );
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error al cargar lista:", err);
+      alert("No se pudo cargar la lista de estudiantes");
     } finally {
       setLoading(false);
     }
@@ -98,9 +88,17 @@ export const AsistenciaForm = () => {
   };
 
   const handleGuardar = async () => {
+    if (estudiantes.length === 0) return;
+
+    // Validar que todos tengan un estado seleccionado
+    const incompleto = estudiantes.some((e) => !e.estado);
+    if (incompleto) {
+      alert("Por favor, asigne un estado (P, A, T o E) a todos los estudiantes antes de guardar.");
+      return;
+    }
+
     setSaving(true);
     try {
-      const token = getAuthToken();
       const payload = {
         fecha,
         grupo_id: selectedGrupo,
@@ -112,22 +110,10 @@ export const AsistenciaForm = () => {
         })),
       };
 
-      const res = await fetch(`${API_URL}/asistencia`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        alert("Asistencia guardada correctamente");
-      } else {
-        throw new Error(" Error al guardar");
-      }
-    } catch (err) {
-      alert("Error al guardar asistencia");
+      await api.post("/asistencia", payload);
+      alert("Asistencia guardada correctamente");
+    } catch (err: any) {
+      alert(err.message || "Error al guardar asistencia");
     } finally {
       setSaving(false);
     }
@@ -137,6 +123,30 @@ export const AsistenciaForm = () => {
     <div className={styles.container}>
       <header className={styles.header}>
         <h1>Control de Asistencia</h1>
+        
+        <div className={styles.instructionCard}>
+          <h3>ℹ️ Instrucciones de Toma de Asistencia</h3>
+          <p>Seleccione el grupo y la fecha. Haga clic en los botones para marcar el estado de cada estudiante.</p>
+          <div className={styles.legend}>
+            <div className={styles.legendItem}>
+              <span className={styles.dot} style={{ background: "#16a34a" }}></span>
+              <span>P: Presente</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.dot} style={{ background: "#dc2626" }}></span>
+              <span>A: Ausente</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.dot} style={{ background: "#d97706" }}></span>
+              <span>T: Tardanza</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.dot} style={{ background: "#7c3aed" }}></span>
+              <span>E: Excusa</span>
+            </div>
+          </div>
+        </div>
+
         <div className={styles.filters}>
           <div className={styles.filterItem}>
             <label>Fecha</label>
@@ -188,13 +198,17 @@ export const AsistenciaForm = () => {
         <div className={styles.listContainer}>
           <div className={styles.stats}>
             <span>Total: {estudiantes.length}</span>
-            <span className={styles.present}>
+            <span className={styles.presente}>
               Presentes:{" "}
               {estudiantes.filter((e) => e.estado === "Presente").length}
             </span>
             <span className={styles.absent}>
               Ausentes:{" "}
               {estudiantes.filter((e) => e.estado === "Ausente").length}
+            </span>
+            <span style={{ color: "#d97706" }}>
+              Sin Procesar:{" "}
+              {estudiantes.filter((e) => !e.estado).length}
             </span>
           </div>
 
@@ -208,14 +222,20 @@ export const AsistenciaForm = () => {
                   <p className={styles.studentDoc}>{est.numero_documento}</p>
                 </div>
                 <div className={styles.attendanceActions}>
-                  {["Presente", "Ausente", "Tardanza", "Excusa"].map(
-                    (estado) => (
+                  {[
+                    { label: "Presente", short: "P" },
+                    { label: "Ausente", short: "A" },
+                    { label: "Tardanza", short: "T" },
+                    { label: "Excusa", short: "E" }
+                  ].map(
+                    (status) => (
                       <button
-                        key={estado}
-                        onClick={() => updateEstado(est.id, estado)}
-                        className={`${styles.stateBtn} ${est.estado === estado ? styles[estado.toLowerCase()] : ""}`}
+                        key={status.label}
+                        title={status.label}
+                        onClick={() => updateEstado(est.id, status.label)}
+                        className={`${styles.stateBtn} ${est.estado === status.label ? styles[status.label.toLowerCase()] : ""}`}
                       >
-                        {estado[0]}
+                        {status.short}
                       </button>
                     ),
                   )}

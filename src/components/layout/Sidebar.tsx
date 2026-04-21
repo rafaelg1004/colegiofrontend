@@ -14,16 +14,9 @@ const fullMenu = [
     name: "Inicio",
     path: "/dashboard",
     icon: "🏠",
-    roles: [
-      "admin",
-      "rector",
-      "coordinador",
-      "secretaria",
-      "docente",
-      "estudiante",
-      "acudiente",
-    ],
+    roles: ["admin", "rector", "coordinador", "secretaria", "docente", "estudiante", "acudiente"],
   },
+  // --- GESTIÓN ACADÉMICA CORE ---
   {
     name: "Estudiantes",
     path: "/dashboard/estudiantes",
@@ -37,30 +30,35 @@ const fullMenu = [
     roles: ["admin", "rector", "coordinador", "secretaria"],
   },
   {
+    name: "Grupos",
+    path: "/dashboard/grupos",
+    icon: "👥",
+    roles: ["admin", "rector", "coordinador", "docente"],
+  },
+  {
+    name: "Académico",
+    path: "/dashboard/academico",
+    icon: "📚",
+    roles: ["admin", "rector", "coordinador", "docente"],
+  },
+  // --- PROCESO EDUCATIVO ---
+  {
+    name: "Evaluación",
+    path: "/dashboard/evaluacion",
+    icon: "📑",
+    roles: ["admin", "rector", "coordinador", "docente"],
+  },
+  {
     name: "Calificaciones",
     path: "/dashboard/calificaciones",
     icon: "📊",
-    roles: [
-      "admin",
-      "rector",
-      "coordinador",
-      "docente",
-      "estudiante",
-      "acudiente",
-    ],
+    roles: ["admin", "rector", "coordinador", "docente", "estudiante", "acudiente"],
   },
   {
     name: "Asistencia",
     path: "/dashboard/asistencia",
     icon: "⏱️",
-    roles: [
-      "admin",
-      "rector",
-      "coordinador",
-      "docente",
-      "estudiante",
-      "acudiente",
-    ],
+    roles: ["admin", "rector", "coordinador", "docente", "estudiante", "acudiente"],
   },
   {
     name: "Observador",
@@ -68,19 +66,12 @@ const fullMenu = [
     icon: "📋",
     roles: ["admin", "rector", "coordinador", "docente"],
   },
+  // --- COMUNICACIÓN Y PERSONAS ---
   {
     name: "Circulares",
     path: "/dashboard/circulares",
     icon: "📢",
-    roles: [
-      "admin",
-      "rector",
-      "coordinador",
-      "secretaria",
-      "docente",
-      "estudiante",
-      "acudiente",
-    ],
+    roles: ["admin", "rector", "coordinador", "secretaria", "docente", "estudiante", "acudiente"],
   },
   {
     name: "Docentes/Emp.",
@@ -94,12 +85,7 @@ const fullMenu = [
     icon: "👨‍👩‍👧",
     roles: ["admin", "rector", "coordinador", "secretaria"],
   },
-  {
-    name: "Grupos",
-    path: "/dashboard/grupos",
-    icon: "👥",
-    roles: ["admin", "rector", "coordinador", "docente"],
-  },
+  // --- ADMINISTRACIÓN Y FINANZAS ---
   {
     name: "Nómina",
     path: "/dashboard/nomina",
@@ -113,28 +99,23 @@ const fullMenu = [
     roles: ["admin", "rector", "coordinador", "secretaria"],
   },
   {
-    name: "Inventario",
-    path: "/dashboard/inventario",
-    icon: "📦",
-    roles: ["admin", "rector", "coordinador", "secretaria"],
-  },
-  {
     name: "Caja",
     path: "/dashboard/caja",
     icon: "💰",
     roles: ["admin", "rector", "coordinador", "secretaria"],
   },
   {
+    name: "Inventario",
+    path: "/dashboard/inventario",
+    icon: "📦",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  // --- SISTEMA ---
+  {
     name: "Usuarios",
     path: "/dashboard/usuarios",
     icon: "👤",
     roles: ["admin", "rector", "coordinador"],
-  },
-  {
-    name: "Evaluación",
-    path: "/dashboard/evaluacion",
-    icon: "📑",
-    roles: ["admin", "rector", "coordinador", "docente"],
   },
   {
     name: "Reportes",
@@ -147,12 +128,6 @@ const fullMenu = [
     path: "/dashboard/configuracion",
     icon: "⚙️",
     roles: ["admin", "rector", "coordinador"],
-  },
-  {
-    name: "Académico",
-    path: "/dashboard/academico",
-    icon: "🎓",
-    roles: ["admin", "rector", "coordinador", "docente"],
   },
 ];
 

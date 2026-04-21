@@ -325,7 +325,10 @@ export default function ReportesPage() {
                           {nota.asignatura?.nombre || nota.asignatura || "-"}
                         </td>
                         <td style={{ padding: "10px", textAlign: "center" }}>
-                          {nota.nota_final?.toFixed(1) || "-"}
+                          {nota.nota_final !== null &&
+                          nota.nota_final !== undefined
+                            ? Number(nota.nota_final).toFixed(1)
+                            : "-"}
                         </td>
                         <td style={{ padding: "10px", textAlign: "center" }}>
                           <span

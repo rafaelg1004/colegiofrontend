@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { setAuthCookie, clearAuthCookie, saveTokenWithExpiration, isTokenExpired } from '@/utils/auth';
+import { setAuthCookie, clearAuthCookie, saveTokenWithExpiration, isTokenExpired, getAuthToken } from '@/utils/auth';
 import { API_URL } from '@/utils/api';
 import styles from './LoginForm.module.css';
 
@@ -14,22 +14,20 @@ export const LoginForm = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Solo limpiar si el usuario llegó aquí intencionalmente (no por prefetch)
-    // Verificamos si hay un token válido antes de limpiar
-    const token = localStorage.getItem('token');
+    // Si ya hay una sesión válida en la cookie, redirigir al dashboard
+    const token = getAuthToken();
     const user = localStorage.getItem('user');
 
-    // Si ya hay una sesión válida, redirigir al dashboard
-    if (token && token !== 'undefined' && token !== 'null' && user && !isTokenExpired(token)) {
+    if (token && user && !isTokenExpired(token)) {
       router.replace('/dashboard');
       return;
     }
 
     // Solo limpiar si no hay sesión válida
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('token_expiration');
-    clearAuthCookie();
+    if (!token) {
+      localStorage.removeItem('user');
+      clearAuthCookie();
+    }
   }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,7 +36,6 @@ export const LoginForm = () => {
     setError('');
 
     try {
-      // Usamos el puerto del backend definido anteriormente (3001)
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,11 +48,11 @@ export const LoginForm = () => {
         throw new Error(data.message || 'Credenciales incorrectas');
       }
 
-      localStorage.setItem('token', data.session.access_token);
+      // Guardar información del usuario (no sensible) en localStorage
       localStorage.setItem('user', JSON.stringify(data.user));
-      saveTokenWithExpiration(data.session.access_token);
 
-      setAuthCookie(data.session.access_token);
+      // Guardar el token EXCLUSIVAMENTE en la cookie
+      saveTokenWithExpiration(data.session.access_token);
 
       window.location.href = '/dashboard';
     } catch (err: any) {
