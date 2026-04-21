@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 2, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Mi%20PC/Documents/Proyectos/Colegio/frontend-colegio/src/app/globals.css"],"sourcesContent":["@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');\n\n:root {\n  --primary: #4f46e5;\n  --primary-hover: #4338ca;\n  --primary-light: #818cf8;\n  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);\n  --card-bg: #ffffff;\n  --card-border: #e2e8f0;\n  --text-main: #1e293b;\n  --text-muted: #64748b;\n  --error: #ef4444;\n  --success: #10b981;\n  --warning: #f59e0b;\n  --surface: #ffffff;\n  --surface-hover: #f1f5f9;\n  --border: #cbd5e1;\n  --shadow: 0 1px 3px rgba(0,0,0,0.1);\n}\n\n* {\n  box-sizing: border-box;\n  padding: 0;\n  margin: 0;\n}\n\nbody {\n  font-family: 'Outfit', sans-serif;\n  background: var(--bg-gradient);\n  color: var(--text-main);\n  min-height: 100vh;\n  overflow-x: hidden;\n}\n\na {\n  color: inherit;\n  text-decoration: none;\n}\n\ninput, button, select, textarea {\n  font-family: inherit;\n}"],"names":[],"mappings":"AAEA;;;;;;;;;;;;;;;;;;AAkBA;;;;;;AAMA;;;;;;;;AAQA;;;;;AAKA"}}]
-}
