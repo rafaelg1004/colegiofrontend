@@ -47,8 +47,7 @@ export const apiClient = async (endpoint: string, options: FetchOptions = {}) =>
 const handleTokenExpiration = () => {
   clearAuthCookie();
   if (typeof window !== 'undefined') {
-    // Clear localStorage as well
-    localStorage.removeItem('token');
+    // Clear user data from localStorage
     localStorage.removeItem('user');
     // Redirect to login
     window.location.href = '/login';
