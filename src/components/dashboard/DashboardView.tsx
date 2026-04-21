@@ -26,42 +26,42 @@ export const DashboardView = ({ user }: DashboardViewProps) => {
       </div>
       
       <div className={styles.grid}>
-        <Link href="/dashboard/estudiantes" className={styles.card}>
+        <Link href="/dashboard/estudiantes" prefetch={false} className={styles.card}>
           <div className={styles.cardIcon}>🎓</div>
           <div className={styles.cardInfo}>
             <h3>Estudiantes</h3>
             <p>Listado general, búsqueda y perfiles.</p>
           </div>
         </Link>
-        <Link href="/dashboard/matriculas" className={styles.card}>
+        <Link href="/dashboard/matriculas" prefetch={false} className={styles.card}>
           <div className={styles.cardIcon}>📝</div>
           <div className={styles.cardInfo}>
             <h3>Matrículas</h3>
             <p>Inscripciones y asignación de grupos.</p>
           </div>
         </Link>
-        <Link href="/dashboard/calificaciones" className={styles.card}>
+        <Link href="/dashboard/calificaciones" prefetch={false} className={styles.card}>
           <div className={styles.cardIcon}>📊</div>
           <div className={styles.cardInfo}>
             <h3>Calificaciones</h3>
             <p>Planillas de notas y boletines.</p>
           </div>
         </Link>
-        <Link href="/dashboard/asistencia" className={styles.card}>
+        <Link href="/dashboard/asistencia" prefetch={false} className={styles.card}>
           <div className={styles.cardIcon}>⏱️</div>
           <div className={styles.cardInfo}>
             <h3>Asistencia</h3>
             <p>Control diario y reporte de faltas.</p>
           </div>
         </Link>
-        <Link href="/dashboard/nomina" className={styles.card}>
+        <Link href="/dashboard/nomina" prefetch={false} className={styles.card}>
           <div className={styles.cardIcon}>💸</div>
           <div className={styles.cardInfo}>
             <h3>Nómina</h3>
             <p>Pagos a docentes y personal.</p>
           </div>
         </Link>
-        <Link href="/dashboard/financiero" className={styles.card}>
+        <Link href="/dashboard/financiero" prefetch={false} className={styles.card}>
           <div className={styles.cardIcon}>🏦</div>
           <div className={styles.cardInfo}>
             <h3>Finanzas</h3>

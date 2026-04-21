@@ -152,6 +152,7 @@ export const Sidebar = ({ onLogout, userRole }: SidebarProps) => {
             <Link
               key={item.path}
               href={item.path}
+              prefetch={false}
               className={`${styles.navItem} ${isActive ? styles.active : ""}`}
             >
               <span className={styles.icon}>{item.icon}</span>

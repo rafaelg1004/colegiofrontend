@@ -14,6 +14,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<any>(null);
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkSession = () => {
@@ -24,6 +25,9 @@ export default function DashboardLayout({
 
       if (!storedUser || !token || token === 'undefined' || token === 'null') {
         console.warn('🚫 Sesión inválida, redirigiendo...');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        clearAuthCookie();
         router.replace('/login');
         return;
       }
@@ -50,10 +54,9 @@ export default function DashboardLayout({
       }
     };
 
-    // Pequeño retardo para asegurar que localStorage/cookies estén listos tras el login
-    const timer = setTimeout(checkSession, 100);
-    return () => clearTimeout(timer);
-  }, [router]);
+    // Verificar inmediatamente al cambiar de ruta
+    checkSession();
+  }, [router, pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
