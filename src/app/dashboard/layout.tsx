@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { getAuthToken, clearAuthCookie, isTokenExpired } from '@/utils/auth';
 import styles from './DashboardLayout.module.css';
