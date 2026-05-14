@@ -23,6 +23,7 @@ interface ConceptoCobro {
   tipo?: "INGRESO" | "EGRESO";
   cuenta_debito_id?: string;
   cuenta_credito_id?: string;
+  articulo_inventario_id?: string;
 }
 
 interface Movimiento {
@@ -157,11 +158,12 @@ export default function CajaPage() {
       if (found.articulo_inventario_id) {
         // Es un concepto vinculado directamente a un artículo (ej: Matrícula)
         const art = {
+          ...found,
           id: found.articulo_inventario_id,
           nombre: found.nombre,
           precio_unitario: found.valor || 0,
-          es_servicio: true, // Asumimos servicio si viene de concepto directo por ahora
-          ...found // Traer cuentas contables
+          es_servicio: true,
+          concepto_cobro_id: found.id // Guardar el ID del concepto original
         };
         handleAddArticulo(art);
         setConcepto(""); // Limpiar para permitir otro
