@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -19,50 +20,9 @@ interface ConceptoCobro {
   porcentaje_iva: number;
   afecta_inventario?: boolean;
   categoria_inventario_id?: string;
-}
-
-interface Estudiante {
-  id: string;
-  primer_nombre: string;
-  segundo_nombre?: string;
-  primer_apellido: string;
-  segundo_apellido?: string;
-  numero_documento?: string;
-  acudiente?: { id: string; nombre: string };
-}
-
-interface ArticuloInventario {
-  id: string;
-  nombre: string;
-  precio_venta: number;
-  precio_unitario: number;
-  cantidad_stock: number;
-}
-
-interface DetalleFactura {
-  concepto_cobro_id: string;
-  articulo_inventario_id?: string;
-  descripcion: string;
-  cantidad: number;
-  valor_unitario: number;
-  valor_iva: number;
-  subtotal: number;
-}
-
-interface Factura {
-  id: string;
-  numero_factura: string;
-  prefijo: string;
-  fecha_emision: string;
-  fecha_vencimiento?: string;
-  subtotal: number;
-  iva_total: number;
-  total: number;
-  estado: "PENDIENTE" | "PAGADA" | "ANULADA" | "PARCIAL";
-  estudiante_id?: string;
-  estudiante?: Estudiante;
-  observaciones?: string;
-  detalles?: DetalleFactura[];
+  tipo?: "INGRESO" | "EGRESO";
+  cuenta_debito_id?: string;
+  cuenta_credito_id?: string;
 }
 
 interface Movimiento {
@@ -86,10 +46,6 @@ interface Resumen {
     cantidad_ingresos: number;
     cantidad_egresos: number;
   };
-  por_concepto: {
-    ingresos: Array<{ concepto: string; monto: number; cantidad: number }>;
-    egresos: Array<{ concepto: string; monto: number; cantidad: number }>;
-  };
   movimientos: Movimiento[];
 }
 
@@ -105,1215 +61,673 @@ export default function CajaPage() {
   const [observacion, setObservacion] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
 
-  // Estudiante seleccionado para matrícula/pensión
-  const [estudianteBusqueda, setEstudianteBusqueda] = useState("");
-  const [estudiantesEncontrados, setEstudiantesEncontrados] = useState<any[]>(
-    [],
-  );
-  const [estudianteSeleccionado, setEstudianteSeleccionado] =
-    useState<any>(null);
-  const [mostrarSelectorEstudiante, setMostrarSelectorEstudiante] =
-    useState(false);
+  // Beneficiario (Estudiante o Empleado)
+  const [busquedaBeneficiario, setBusquedaBeneficiario] = useState("");
+  const [resultadosBusqueda, setResultadosBusqueda] = useState<any[]>([]);
+  const [beneficiarioSeleccionado, setBeneficiarioSeleccionado] = useState<any>(null);
+  const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null);
 
-  // Comprobante generado
+  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  // Comprobante
   const [comprobanteReciente, setComprobanteReciente] = useState<any>(null);
   const [mostrarComprobante, setMostrarComprobante] = useState(false);
 
-  // Ver movimiento histórico
-  const [movimientoSeleccionado, setMovimientoSeleccionado] =
-    useState<any>(null);
-  const [mostrarDetalleMovimiento, setMostrarDetalleMovimiento] =
-    useState(false);
-
-  // Inventario - Conceptos de cobro
-  const [conceptosCobro, setConceptosCobro] = useState<any[]>([]);
-  const [conceptoSeleccionado, setConceptoSeleccionado] = useState<any>(null);
+  // Inventario
+  const [conceptosCobro, setConceptosCobro] = useState<ConceptoCobro[]>([]);
+  const [conceptoSeleccionado, setConceptoSeleccionado] = useState<ConceptoCobro | null>(null);
   const [articulosVenta, setArticulosVenta] = useState<any[]>([]);
-  const [conceptosVenta, setConceptosVenta] = useState<any[]>([]);
-  const [mostrarSelectorArticulos, setMostrarSelectorArticulos] =
-    useState(false);
-
-  // Artículos del inventario disponibles para el concepto seleccionado
   const [articulosInventario, setArticulosInventario] = useState<any[]>([]);
-  const [articuloSeleccionado, setArticuloSeleccionado] = useState<any>(null);
-  const [cantidadArticulo, setCantidadArticulo] = useState(1);
+  const [mostrarSelectorArticulos, setMostrarSelectorArticulos] = useState(false);
 
-  // Filtros reporte
+  // Filtros
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+  const [institucion, setInstitucion] = useState<any>(null);
+  const [sedes, setSedes] = useState<any[]>([]);
 
-  // Facturas
-  const [facturas, setFacturas] = useState<any[]>([]);
-  const [facturaSeleccionada, setFacturaSeleccionada] = useState<any>(null);
+  // Eliminamos listas manuales para usar solo lo de la BD
 
-  // Conceptos predefinidos
-  const conceptosIngreso = [
-    "Matrícula",
-    "Pensión Mensual",
-    "Meriendas",
-    "Libros",
-    "Uniformes",
-    "Formularios",
-    "Derecho a Grado",
-    "Clausura/Graduación",
-    "Otro Ingreso",
-  ];
-
-  const conceptosEgreso = [
-    "Nómina Docentes",
-    "Nómina Administrativos",
-    "Servicios Públicos",
-    "Arriendo",
-    "Suministros Oficina",
-    "Mantenimiento",
-    "Otro Gasto",
-  ];
 
   useEffect(() => {
     cargarResumen();
     cargarConceptosCobro();
+    cargarConfiguracion();
   }, []);
 
-  // Cargar conceptos de cobro que afectan inventario
-  const cargarConceptosCobro = async () => {
+  const cargarConfiguracion = async () => {
     const token = getAuthToken();
-    if (!token) return;
-
     try {
-      const res = await fetch(`${API}/caja/conceptos-cobro`, {
+      const resInst = await fetch(`${API}/configuracion/institucion`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Error al cargar conceptos");
-      const data = await res.json();
-      setConceptosCobro(data);
-    } catch (err) {
-      console.error("Error cargando conceptos de cobro:", err);
-    }
-  };
+      if (resInst.ok) setInstitucion(await resInst.json());
 
-  // Cargar artículos del inventario por categoría
-  const cargarArticulosPorCategoria = async (categoriaId: string) => {
-    const token = getAuthToken();
-    if (!token || !categoriaId) return;
-
-    try {
-      const res = await fetch(
-        `${API}/caja/articulos-por-categoria/${categoriaId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (!res.ok) throw new Error("Error al cargar artículos");
-      const data = await res.json();
-      setArticulosInventario(data);
-    } catch (err) {
-      console.error("Error cargando artículos del inventario:", err);
-    }
-  };
-
-  // Manejar selección de artículo del inventario - agrega al array
-  const handleArticuloSeleccionado = (articulo: any) => {
-    // Usar precio_venta si existe, sino precio_unitario
-    const precio = articulo.precio_venta || articulo.precio_unitario || 0;
-
-    // Verificar si el artículo ya existe en la lista
-    const existe = articulosVenta.find(
-      (a) => a.articulo_inventario_id === articulo.id,
-    );
-    if (existe) {
-      alert("Este artículo ya está en la lista. Puede modificar la cantidad.");
-      return;
-    }
-
-    // Agregar artículo al array
-    const nuevoArticulo = {
-      articulo_inventario_id: articulo.id,
-      nombre: articulo.nombre,
-      cantidad: 1,
-      precio_unitario: precio,
-      stock: articulo.cantidad_stock,
-    };
-
-    const nuevosArticulos = [...articulosVenta, nuevoArticulo];
-    setArticulosVenta(nuevosArticulos);
-
-    // Actualizar monto automáticamente
-    const nuevoMonto = nuevosArticulos.reduce(
-      (total, a) => total + a.precio_unitario * a.cantidad,
-      0,
-    );
-    setMonto(nuevoMonto.toString());
-
-    // Resetear selección
-    setArticuloSeleccionado(null);
-    setCantidadArticulo(1);
-  };
-
-  // Eliminar artículo de la lista
-  const eliminarArticulo = (index: number) => {
-    const nuevosArticulos = articulosVenta.filter((_, i) => i !== index);
-    setArticulosVenta(nuevosArticulos);
-
-    // Recalcular monto
-    const nuevoMonto = nuevosArticulos.reduce(
-      (total, a) => total + a.precio_unitario * a.cantidad,
-      0,
-    );
-    setMonto(nuevoMonto.toString());
-  };
-
-  // Actualizar cantidad de un artículo específico
-  const actualizarCantidadArticulo = (index: number, cantidad: number) => {
-    const nuevosArticulos = articulosVenta.map((art, i) =>
-      i === index ? { ...art, cantidad } : art,
-    );
-    setArticulosVenta(nuevosArticulos);
-
-    // Recalcular monto total
-    const nuevoMonto = nuevosArticulos.reduce(
-      (total, a) => total + a.precio_unitario * a.cantidad,
-      0,
-    );
-    setMonto(nuevoMonto.toString());
-  };
-
-  // Actualizar cantidad del artículo seleccionado
-  const actualizarCantidad = (cantidad: number) => {
-    setCantidadArticulo(cantidad);
-    const precio =
-      articuloSeleccionado?.precio_venta ||
-      articuloSeleccionado?.precio_unitario ||
-      0;
-    if (precio > 0) {
-      const nuevoMonto = cantidad * precio;
-      setMonto(nuevoMonto.toString());
-    }
-
-    setArticulosVenta((prev) => prev.map((a) => ({ ...a, cantidad })));
-  };
-
-  // Manejar selección de concepto para detectar si afecta inventario
-  const handleConceptoChange = (nombreConcepto: string) => {
-    setConcepto(nombreConcepto);
-
-    // Limpiar selección anterior
-    setArticuloSeleccionado(null);
-    setCantidadArticulo(1);
-    setArticulosVenta([]);
-
-    // Buscar si el concepto está en conceptosCobro y afecta inventario
-    const conceptoEncontrado = conceptosCobro.find(
-      (c) => c.nombre === nombreConcepto && c.afecta_inventario,
-    );
-
-    if (conceptoEncontrado) {
-      setConceptoSeleccionado(conceptoEncontrado);
-      setMostrarSelectorArticulos(true);
-      // Cargar artículos de la categoría del concepto
-      if (conceptoEncontrado.categoria_inventario_id) {
-        cargarArticulosPorCategoria(conceptoEncontrado.categoria_inventario_id);
-      } else {
-        // Si no tiene categoría, mostrar todos los artículos
-        setArticulosInventario([]);
-      }
-    } else {
-      setConceptoSeleccionado(null);
-      setMostrarSelectorArticulos(false);
-      setArticulosInventario([]);
-    }
+      const resSedes = await fetch(`${API}/configuracion/sedes`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resSedes.ok) setSedes(await resSedes.json());
+    } catch (err) { console.error(err); }
   };
 
   const cargarResumen = async () => {
     const token = getAuthToken();
     if (!token) return;
-
     try {
       const params = new URLSearchParams();
       if (fechaDesde) params.append("fecha_desde", fechaDesde);
       if (fechaHasta) params.append("fecha_hasta", fechaHasta);
-
       const res = await fetch(`${API}/caja/resumen?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Error al cargar resumen");
-      const data = await res.json();
-      setResumen(data);
-    } catch (err) {
-      console.error("Error cargando resumen:", err);
-    }
+      if (res.ok) setResumen(await res.json());
+    } catch (err) { console.error(err); }
   };
 
-  // Cargar facturas
-  const cargarFacturas = async () => {
+  const cargarConceptosCobro = async () => {
     const token = getAuthToken();
     if (!token) return;
     try {
-      const res = await fetch(`${API}/caja/facturas`, {
+      const res = await fetch(`${API}/caja/conceptos-cobro`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        const data = await res.json();
-        setFacturas(Array.isArray(data) ? data : data.data || []);
-      }
-    } catch (err) {
-      console.error("Error cargando facturas:", err);
-    }
+      if (res.ok) setConceptosCobro(await res.json());
+    } catch (err) { console.error(err); }
   };
 
-  // Determinar si se requiere seleccionar estudiante
-  const requiereEstudiante =
-    concepto === "Matrícula" || concepto === "Pensión Mensual";
-
-  // Buscar estudiantes
-  const buscarEstudiantes = async (query: string) => {
-    if (query.length < 2) {
-      setEstudiantesEncontrados([]);
-      return;
-    }
+  const cargarArticulosPorCategoria = async (categoriaId: string) => {
     const token = getAuthToken();
     try {
-      const res = await fetch(
-        `${API}/caja/buscar-estudiantes?q=${encodeURIComponent(query)}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setEstudiantesEncontrados(data);
+      const res = await fetch(`${API}/caja/articulos-por-categoria/${categoriaId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setArticulosInventario(await res.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleConceptoChange = (nombreConcepto: string) => {
+    setConcepto(nombreConcepto);
+    const found = conceptosCobro.find(c => c.nombre === nombreConcepto);
+    console.log("Concepto seleccionado:", found);
+    
+    if (found?.afecta_inventario) {
+      if (found.articulo_inventario_id) {
+        // Es un concepto vinculado directamente a un artículo (ej: Matrícula)
+        const art = {
+          id: found.articulo_inventario_id,
+          nombre: found.nombre,
+          precio_unitario: found.valor || 0,
+          es_servicio: true, // Asumimos servicio si viene de concepto directo por ahora
+          ...found // Traer cuentas contables
+        };
+        handleAddArticulo(art);
+        setConcepto(""); // Limpiar para permitir otro
+      } else {
+        setConceptoSeleccionado(found);
+        setMostrarSelectorArticulos(true);
+        const catId = (found as any).categoria_inventario_id;
+        if (catId) {
+          cargarArticulosPorCategoria(catId);
+        }
       }
-    } catch (err) {
-      console.error("Error buscando estudiantes:", err);
+    } else {
+      setConceptoSeleccionado(found || null);
+      setMostrarSelectorArticulos(false);
+      setArticulosInventario([]);
+      if (found) {
+        handleAddConceptoDirecto(found);
+      }
     }
   };
 
-  // Seleccionar estudiante
-  const seleccionarEstudiante = (est: any) => {
-    setEstudianteSeleccionado(est);
-    setEstudianteBusqueda(`${est.primer_apellido} ${est.primer_nombre}`);
-    setEstudiantesEncontrados([]);
-    setMostrarSelectorEstudiante(false);
+  const handleAddConceptoDirecto = (found: any) => {
+    const item = {
+      id: found.id,
+      nombre: found.nombre,
+      cantidad: 1,
+      precio_unitario: found.valor || 0,
+      es_concepto: true,
+      concepto_cobro_id: found.id,
+      aplica_iva: found.aplica_iva,
+      porcentaje_iva: found.porcentaje_iva,
+      cuenta_debito_id: found.cuenta_debito_id,
+      cuenta_credito_id: found.cuenta_credito_id
+    };
+    
+    setArticulosVenta(prev => {
+      const exists = prev.find(i => i.id === item.id);
+      if (exists) {
+        return prev.map(i => i.id === item.id ? { ...i, cantidad: i.cantidad + 1 } : i);
+      }
+      return [...prev, item];
+    });
+    // Limpiar selección para permitir otro concepto
+    setConcepto("");
+    setConceptoSeleccionado(null);
   };
 
-  // Limpiar estudiante seleccionado
-  const limpiarEstudiante = () => {
-    setEstudianteSeleccionado(null);
-    setEstudianteBusqueda("");
-    setEstudiantesEncontrados([]);
+  const handleAddArticulo = (art: any) => {
+    const existing = articulosVenta.find(a => a.id === art.id);
+    let newArticulos;
+    if (existing) {
+      newArticulos = articulosVenta.map(a => a.id === art.id ? { ...a, cantidad: a.cantidad + 1 } : a);
+    } else {
+      newArticulos = [...articulosVenta, { ...art, cantidad: 1, precio_unitario: art.precio_venta || art.precio_unitario }];
+    }
+    updateArticulosYTotal(newArticulos);
   };
 
-  // Ver detalle de movimiento histórico
-  const verDetalleMovimiento = (movimiento: any) => {
-    setMovimientoSeleccionado(movimiento);
-    setMostrarDetalleMovimiento(true);
+  const updateArticulosYTotal = (newArticulos: any[]) => {
+    setArticulosVenta(newArticulos);
+    const total = newArticulos.reduce((sum, a) => sum + (a.precio_unitario * a.cantidad), 0);
+    setMonto(total.toString());
   };
 
-  // Imprimir comprobante desde historial
-  const imprimirComprobanteHistorial = () => {
-    if (!movimientoSeleccionado) return;
-    const ventana = window.open("", "_blank");
-    if (!ventana) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Comprobante ${movimientoSeleccionado.numero_comprobante || ""}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; max-width: 500px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-          .header h1 { margin: 0; font-size: 18px; }
-          .header h2 { margin: 10px 0 0; font-size: 14px; color: #666; }
-          .comprobante { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; }
-          .dato { margin: 15px 0; font-size: 14px; }
-          .dato strong { display: inline-block; width: 120px; }
-          .monto { font-size: 20px; font-weight: bold; text-align: center; margin: 30px 0; padding: 20px; border: 2px solid #333; }
-          .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #666; border-top: 1px solid #ccc; padding-top: 20px; }
-          @media print { body { padding: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>📚 INSTITUCIÓN EDUCATIVA</h1>
-          <h2>Comprobante de ${movimientoSeleccionado.tipo === "INGRESO" ? "Pago" : "Egreso"}</h2>
-        </div>
-        <div class="comprobante">${movimientoSeleccionado.numero_comprobante || "S/N"}</div>
-        <div class="dato"><strong>Fecha:</strong> ${new Date(movimientoSeleccionado.fecha).toLocaleDateString("es-CO")}</div>
-        ${movimientoSeleccionado.estudiante_nombre ? `<div class="dato"><strong>Recibido de:</strong> ${movimientoSeleccionado.estudiante_nombre}</div>` : ""}
-        <div class="dato"><strong>Concepto:</strong> ${movimientoSeleccionado.concepto}</div>
-        <div class="dato"><strong>Observación:</strong> ${movimientoSeleccionado.observacion || "-"}</div>
-        <div class="monto">${new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(movimientoSeleccionado.monto)}</div>
-        <div class="footer">
-          <p>Gracias por su pago</p>
-          <p>Registrado por: ${movimientoSeleccionado.registrado_por_email || movimientoSeleccionado.registrado_por || "Sistema"}</p>
-        </div>
-        <script>window.print();</script>
-      </body>
-      </html>
-    `;
-    ventana.document.write(html);
-    ventana.document.close();
+  const handleUpdateCantidad = (index: number, delta: number) => {
+    const newArticulos = [...articulosVenta];
+    newArticulos[index].cantidad = Math.max(1, newArticulos[index].cantidad + delta);
+    updateArticulosYTotal(newArticulos);
   };
 
-  // Imprimir comprobante reciente
-  const imprimirComprobante = () => {
-    if (!comprobanteReciente) return;
-    const ventana = window.open("", "_blank");
-    if (!ventana) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Comprobante ${comprobanteReciente.numero_comprobante || ""}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; max-width: 500px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-          .header h1 { margin: 0; font-size: 18px; }
-          .header h2 { margin: 10px 0 0; font-size: 14px; color: #666; }
-          .comprobante { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; }
-          .dato { margin: 15px 0; font-size: 14px; }
-          .dato strong { display: inline-block; width: 120px; }
-          .monto { font-size: 20px; font-weight: bold; text-align: center; margin: 30px 0; padding: 20px; border: 2px solid #333; }
-          .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #666; border-top: 1px solid #ccc; padding-top: 20px; }
-          @media print { body { padding: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>📚 INSTITUCIÓN EDUCATIVA</h1>
-          <h2>Comprobante de Pago</h2>
-        </div>
-        <div class="comprobante">${comprobanteReciente.numero_comprobante || "S/N"}</div>
-        <div class="dato"><strong>Fecha:</strong> ${new Date(comprobanteReciente.fecha).toLocaleDateString("es-CO")}</div>
-        <div class="dato"><strong>Recibido de:</strong> ${comprobanteReciente.estudiante_nombre || "N/A"}</div>
-        <div class="dato"><strong>Concepto:</strong> ${comprobanteReciente.concepto}</div>
-        <div class="dato"><strong>Observación:</strong> ${comprobanteReciente.observacion || "-"}</div>
-        <div class="monto">${new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(comprobanteReciente.monto)}</div>
-        <div class="footer">
-          <p>Gracias por su pago</p>
-          <p>Registrado por: ${comprobanteReciente.registrado_por_email || comprobanteReciente.registrado_por || "Sistema"}</p>
-        </div>
-        <script>window.print();</script>
-      </body>
-      </html>
-    `;
-    ventana.document.write(html);
-    ventana.document.close();
+  const buscarBeneficiarios = async (q: string) => {
+    setBusquedaBeneficiario(q);
+    if (q.length < 2) return setResultadosBusqueda([]);
+    const token = getAuthToken();
+    const endpoint = tipo === "INGRESO" ? "buscar-estudiantes" : "buscar-empleados";
+    const res = await fetch(`${API}/caja/${endpoint}?q=${encodeURIComponent(q)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) setResultadosBusqueda(await res.json());
   };
 
   const registrarTransaccion = async () => {
-    // Validar que haya conceptos o monto
-    const montoNum = parseFloat(monto) || 0;
-    if (conceptosVenta.length === 0 && montoNum <= 0) {
-      alert("Agregue al menos un concepto o ingrese un monto válido");
+    if (loading) return;
+    
+    if (articulosVenta.length === 0) {
+      showToast("Por favor agregue al menos un concepto o artículo a la lista", "error");
       return;
     }
 
-    // Validar estudiante si es matrícula o pensión
-    if (requiereEstudiante && !estudianteSeleccionado) {
-      alert("Debe seleccionar un estudiante para concepto de " + concepto);
-      setMostrarSelectorEstudiante(true);
+    // Validar precios de venta
+    const itemInvalido = articulosVenta.find(a => !a.precio_unitario || parseFloat(a.precio_unitario) <= 0);
+    if (itemInvalido) {
+      showToast(`El ítem "${itemInvalido.nombre}" no tiene un precio configurado o es 0. Por favor verifique el inventario.`, "error");
+      return;
+    }
+
+    if (tipo === "INGRESO" && !beneficiarioSeleccionado) {
+      showToast("Debe seleccionar un estudiante para registrar un ingreso", "error");
       return;
     }
 
     setLoading(true);
-    const token = getAuthToken();
-
     try {
-      // Construir array de conceptos
-      let conceptosTransaccion: any[] = [];
-
-      // Si hay artículos de inventario, agregarlos como conceptos
-      if (articulosVenta.length > 0) {
-        conceptosTransaccion = articulosVenta.map((art) => {
-          const valorIva = art.precio_unitario * 0.19; // 19% IVA
-          return {
-            articulo_inventario_id: art.articulo_inventario_id,
-            descripcion: art.nombre,
-            cantidad: art.cantidad,
-            valor_unitario: art.precio_unitario,
-            valor_iva: valorIva,
-          };
-        });
-      }
-
-      // Si hay un concepto seleccionado con monto, agregarlo
-      if (concepto && montoNum > 0) {
-        const valorIva = conceptoSeleccionado?.aplica_iva
-          ? montoNum * (conceptoSeleccionado.porcentaje_iva / 100)
-          : 0;
-        conceptosTransaccion.push({
-          concepto_cobro_id: conceptoSeleccionado?.id,
-          descripcion: concepto,
-          cantidad: 1,
-          valor_unitario: montoNum,
-          valor_iva: valorIva,
-        });
-      }
-
-      const transaccionData = {
-        tipo,
-        estudiante_id: estudianteSeleccionado?.id,
-        estudiante_nombre: estudianteSeleccionado
-          ? `${estudianteSeleccionado.primer_apellido} ${estudianteSeleccionado.primer_nombre}`
-          : null,
-        conceptos: conceptosTransaccion,
-        observaciones: observacion || null,
-        metodo_pago: "EFECTIVO",
-      };
+      const token = getAuthToken();
+      const nombreCompleto = beneficiarioSeleccionado 
+        ? `${beneficiarioSeleccionado.primer_nombre} ${beneficiarioSeleccionado.primer_apellido}` 
+        : "PÚBLICO GENERAL";
 
       const res = await fetch(`${API}/caja/transaccion`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(transaccionData),
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo,
+          estudiante_id: tipo === "INGRESO" ? beneficiarioSeleccionado?.id : null,
+          empleado_id: tipo === "EGRESO" ? beneficiarioSeleccionado?.id : null,
+          estudiante_nombre: nombreCompleto,
+          conceptos: articulosVenta.map(av => ({
+            articulo_inventario_id: av.es_concepto ? null : av.id,
+            concepto_cobro_id: av.es_concepto ? av.id : null,
+            descripcion: av.nombre,
+            cantidad: av.cantidad,
+            valor_unitario: av.precio_unitario,
+            valor_iva: av.aplica_iva ? av.precio_unitario * (av.porcentaje_iva / 100) : 0,
+            cuenta_debito_id: av.cuenta_debito_id,
+            cuenta_credito_id: av.cuenta_credito_id
+          })),
+          observaciones: observacion,
+          metodo_pago: "EFECTIVO"
+        })
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Error al registrar transacción");
-      }
-
-      const resultado = await res.json();
-
-      // Mostrar resultado con partida doble
-      if (resultado.data?.comprobante) {
-        setComprobanteReciente({
-          ...resultado.data.movimiento,
-          factura: resultado.data.factura,
-          partida_doble: resultado.data.partida_doble,
-          estudiante_nombre: estudianteSeleccionado
-            ? `${estudianteSeleccionado.primer_apellido} ${estudianteSeleccionado.primer_nombre}`
-            : null,
+      if (res.ok) {
+        const result = await res.json();
+        showToast("Transacción registrada exitosamente", "success");
+        setComprobanteReciente({ 
+          ...result.data.movimiento, 
+          partida_doble: result.data.partida_doble, 
+          estudiante_nombre: nombreCompleto,
+          conceptos_detalle: articulosVenta // Usamos articulosVenta actual
         });
         setMostrarComprobante(true);
-
-        // Mensaje según tipo
-        if (tipo === "INGRESO" && resultado.data.factura) {
-          alert(
-            `✅ Ingreso registrado:\n📄 Factura: ${resultado.data.factura.numero_factura}\n🧾 Comprobante: ${resultado.data.comprobante}`,
-          );
-        } else {
-          alert(
-            `✅ Egreso registrado:\n🧾 Comprobante: ${resultado.data.comprobante}`,
-          );
-        }
+        // Reset form
+        setMonto(""); setConcepto(""); setArticulosVenta([]); setBeneficiarioSeleccionado(null); setBusquedaBeneficiario("");
+        cargarResumen();
+      } else {
+        const err = await res.json();
+        showToast(err.message || "Error al registrar la transacción", "error");
       }
-
-      // Limpiar formulario
-      setMonto("");
-      setObservacion("");
-      setConcepto("");
-      setConceptoSeleccionado(null);
-      setConceptosVenta([]);
-      setArticulosVenta([]);
-      setMostrarSelectorArticulos(false);
-      limpiarEstudiante();
-      cargarResumen();
-    } catch (err: any) {
-      alert(err.message || "Error al registrar transacción");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
-  const eliminarMovimiento = async (id: string) => {
-    if (!confirm("¿Eliminar este movimiento?")) return;
+  const formatMoney = (val: number) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(val);
 
-    const token = getAuthToken();
-    try {
-      const res = await fetch(`${API}/caja/movimientos/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al eliminar");
-      cargarResumen();
-    } catch (err) {
-      alert("Error al eliminar movimiento");
+  const imprimirRecibo = (datos: any) => {
+    const ventana = window.open("", "_blank");
+    if (!ventana) return;
+
+    const fecha = new Date(datos.fecha).toLocaleDateString("es-CO", {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    const sedeActual = sedes[0] || {};
+    // Parsear detalles si vienen como string JSON (necesario para reimpresiones)
+    let detalles = datos.conceptos_detalle;
+    if (typeof detalles === 'string') {
+      try { detalles = JSON.parse(detalles); } catch (e) { detalles = null; }
     }
-  };
 
-  const formatMoney = (val: number | string | undefined | null) => {
-    if (val === undefined || val === null) return "$ 0";
-    const num = typeof val === "string" ? parseFloat(val) : Number(val);
-    if (isNaN(num)) return "$ 0";
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-    }).format(num);
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Recibo de Caja - ${datos.numero_comprobante}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+          body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: start; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px; }
+          .school-info h1 { margin: 0; font-size: 24px; font-weight: 800; color: #4f46e5; text-transform: uppercase; }
+          .school-info p { margin: 5px 0; color: #64748b; font-size: 14px; }
+          .receipt-info { text-align: right; }
+          .receipt-info h2 { margin: 0; font-size: 20px; color: #1e293b; }
+          .receipt-number { font-size: 28px; font-weight: 800; color: #ef4444; margin: 10px 0; }
+          
+          .client-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; background: #f8fafc; padding: 20px; border-radius: 12px; }
+          .label { font-size: 12px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px; }
+          .value { font-size: 16px; font-weight: 600; color: #1e293b; }
+
+          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          th { text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 12px; text-transform: uppercase; }
+          td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+          
+          .totals { margin-left: auto; width: 300px; }
+          .total-row { display: flex; justify-content: space-between; padding: 10px 0; }
+          .total-row.grand-total { border-top: 2px solid #e2e8f0; margin-top: 10px; font-size: 20px; font-weight: 800; color: #4f46e5; }
+
+          .footer { margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+          .signature { border-top: 1px solid #cbd5e1; text-align: center; padding-top: 10px; font-size: 12px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="school-info">
+            <h1>${institucion?.nombre || "INSTITUCIÓN EDUCATIVA"}</h1>
+            <p><strong>NIT:</strong> ${institucion?.nit || "000.000.000-0"}</p>
+            <p><strong>Sede:</strong> ${sedeActual.nombre || "Sede Principal"}</p>
+            <p><strong>Dirección:</strong> ${sedeActual.direccion || institucion?.direccion || ""}</p>
+            <p><strong>Tel:</strong> ${sedeActual.telefono || institucion?.telefono || ""}</p>
+          </div>
+          <div class="receipt-info">
+            <h2>RECIBO DE CAJA</h2>
+            <div class="receipt-number">${datos.numero_comprobante}</div>
+            <p style="margin:0; font-weight:600;">FECHA: ${fecha}</p>
+          </div>
+        </div>
+
+        <div class="client-section">
+          <div>
+            <div class="label">Beneficiario / Pagador</div>
+            <div class="value">${datos.estudiante_nombre || "PÚBLICO GENERAL"}</div>
+          </div>
+          <div>
+            <div class="label">Concepto General</div>
+            <div class="value">${datos.concepto}</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th style="text-align:center;">Cant.</th>
+              <th style="text-align:right;">V. Unitario</th>
+              <th style="text-align:right;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(detalles || [{descripcion: datos.concepto, cantidad: 1, valor_unitario: datos.monto}]).map((c: any) => `
+              <tr>
+                <td>${c.descripcion}</td>
+                <td style="text-align: center;">${c.cantidad}</td>
+                <td style="text-align: right;">${formatMoney(c.valor_unitario)}</td>
+                <td style="text-align: right;">${formatMoney(c.cantidad * c.valor_unitario)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span>${formatMoney(datos.monto)}</span>
+          </div>
+          <div class="total-row">
+            <span>IVA:</span>
+            <span>$ 0</span>
+          </div>
+          <div class="total-row grand-total">
+            <span>TOTAL:</span>
+            <span>${formatMoney(datos.monto)}</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 40px; font-size: 14px; color: #64748b;">
+          <strong>Observaciones:</strong> ${datos.observacion || "Sin observaciones adicionales."}
+        </div>
+
+        <div class="footer">
+          <div class="signature">
+            Firma Autorizada
+          </div>
+          <div class="signature">
+            Recibí Conforme
+          </div>
+        </div>
+
+        <script>
+          window.onload = () => { window.print(); };
+        </script>
+      </body>
+      </html>
+    `;
+
+    ventana.document.write(html);
+    ventana.document.close();
   };
 
   return (
     <div className={styles.container}>
+      {notification && (
+        <div className={`${styles.toast} ${styles['toast_' + notification.type]}`}>
+          {notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'} {notification.msg}
+          <button onClick={() => setNotification(null)}>×</button>
+        </div>
+      )}
       <header className={styles.header}>
-        <h1>
-          <span className={styles.headerIcon}>�</span>
-          Sistema Contable - Caja
-        </h1>
-        <p>
-          Partida Doble: Ingresos generan Factura + Movimiento | Egresos solo
-          Movimiento
-        </p>
+        <h1><span className={styles.headerIcon}>🏦</span> Gestión de Caja</h1>
+        <p>Administración financiera y contabilidad en tiempo real</p>
       </header>
 
-      {/* Resumen rápido */}
       {resumen && (
         <div className={styles.resumenCards}>
           <div className={`${styles.card} ${styles.ingreso}`}>
-            <span className={styles.cardLabel}>Ingresos</span>
-            <span className={styles.cardValue}>
-              {formatMoney(resumen.totales.ingresos)}
-            </span>
-            <span className={styles.cardCount}>
-              {resumen.totales.cantidad_ingresos} movimientos
-            </span>
+            <span className={styles.cardLabel}>Total Ingresos</span>
+            <span className={styles.cardValue}>{formatMoney(resumen.totales.ingresos)}</span>
+            <span className={styles.cardCount}>{resumen.totales.cantidad_ingresos} transacciones</span>
           </div>
           <div className={`${styles.card} ${styles.egreso}`}>
-            <span className={styles.cardLabel}>Egresos</span>
-            <span className={styles.cardValue}>
-              {formatMoney(resumen.totales.egresos)}
-            </span>
-            <span className={styles.cardCount}>
-              {resumen.totales.cantidad_egresos} movimientos
-            </span>
+            <span className={styles.cardLabel}>Total Egresos</span>
+            <span className={styles.cardValue}>{formatMoney(resumen.totales.egresos)}</span>
+            <span className={styles.cardCount}>{resumen.totales.cantidad_egresos} transacciones</span>
           </div>
-          <div
-            className={`${styles.card} ${
-              resumen.totales.balance >= 0 ? styles.positive : styles.negative
-            }`}
-          >
-            <span className={styles.cardLabel}>Balance</span>
-            <span className={styles.cardValue}>
-              {formatMoney(resumen.totales.balance)}
-            </span>
-            <span className={styles.cardCount}>Diferencia</span>
+          <div className={`${styles.card} ${resumen.totales.balance >= 0 ? styles.positive : styles.negative}`}>
+            <span className={styles.cardLabel}>Balance Actual</span>
+            <span className={styles.cardValue}>{formatMoney(resumen.totales.balance)}</span>
+            <span className={styles.cardCount}>Saldo en caja</span>
           </div>
         </div>
       )}
 
-      {/* Tabs modernos */}
       <div className={styles.tabsContainer}>
-        <button
-          className={`${styles.tab} ${activeTab === "registrar" ? styles.tabActivo : ""}`}
-          onClick={() => setActiveTab("registrar")}
-        >
-          ➕ Registrar
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === "movimientos" ? styles.tabActivo : ""}`}
-          onClick={() => setActiveTab("movimientos")}
-        >
-          📋 Movimientos
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === "reporte" ? styles.tabActivo : ""}`}
-          onClick={() => setActiveTab("reporte")}
-        >
-          📊 Reporte
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === "facturas" ? styles.tabActivo : ""}`}
-          onClick={() => {
-            setActiveTab("facturas");
-            cargarFacturas();
-          }}
-        >
-          📄 Facturas
-        </button>
+        <button className={`${styles.tab} ${activeTab === 'registrar' ? styles.tabActivo : ''}`} onClick={() => setActiveTab('registrar')}>✨ Registrar Movimiento</button>
+        <button className={`${styles.tab} ${activeTab === 'movimientos' ? styles.tabActivo : ''}`} onClick={() => setActiveTab('movimientos')}>📑 Historial</button>
       </div>
 
-      {/* Tab: Registrar */}
       {activeTab === "registrar" && (
         <div className={styles.formContainer}>
           <div className={styles.formGroup}>
-            <label>Tipo</label>
+            <label>Tipo de Transacción</label>
             <div className={styles.tipoButtons}>
-              <button
-                className={tipo === "INGRESO" ? styles.activeTipo : ""}
-                onClick={() => setTipo("INGRESO")}
-                type="button"
-              >
-                💰 Ingreso
-              </button>
-              <button
-                className={tipo === "EGRESO" ? styles.activeTipo : ""}
-                onClick={() => setTipo("EGRESO")}
-                type="button"
-              >
-                💸 Egreso
-              </button>
+              <button className={tipo === "INGRESO" ? styles.activeTipo : ""} onClick={() => { setTipo("INGRESO"); setBeneficiarioSeleccionado(null); setBusquedaBeneficiario(""); }}>📥 Ingreso</button>
+              <button className={tipo === "EGRESO" ? styles.activeTipo : ""} onClick={() => { setTipo("EGRESO"); setBeneficiarioSeleccionado(null); setBusquedaBeneficiario(""); }}>📤 Egreso</button>
             </div>
           </div>
 
           <div className={styles.formGroup}>
             <label>Fecha</label>
-            <input
-              type="date"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-            />
+            <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} />
           </div>
 
           <div className={styles.formGroup}>
-            <label>
-              Concepto
-              {conceptosCobro.length > 0 && (
-                <span className={styles.inventarioHint}>
-                  {" "}
-                  (📦 = con inventario)
-                </span>
-              )}
-            </label>
-            <select
-              value={concepto}
-              onChange={(e) => handleConceptoChange(e.target.value)}
-            >
-              <option value="">Seleccione...</option>
-              {/* Todos los conceptos del backend */}
-              {conceptosCobro.map((c) => (
-                <option key={c.id} value={c.nombre}>
-                  {c.nombre} {c.afecta_inventario ? "📦" : ""}
-                </option>
+            <label>Concepto</label>
+            <select value={concepto} onChange={e => handleConceptoChange(e.target.value)}>
+              <option value="">Seleccione un concepto...</option>
+              {conceptosCobro.filter(c => c.tipo === tipo || (!c.tipo && tipo === "INGRESO")).map(c => (
+                <option key={c.id} value={c.nombre}>{c.nombre}</option>
               ))}
-              {/* Conceptos hardcodeados adicionales */}
-              {(tipo === "INGRESO" ? conceptosIngreso : conceptosEgreso)
-                .filter((c) => !conceptosCobro.some((cc) => cc.nombre === c))
-                .map((c, idx) => (
-                  <option key={`hardcoded-${c}-${idx}`} value={c}>
-                    {c}
-                  </option>
-                ))}
             </select>
           </div>
 
-          {/* Selector de artículos para conceptos con inventario */}
-          {mostrarSelectorArticulos && (
-            <div className={styles.formGroup}>
-              <label>📦 Seleccionar Artículo del Inventario</label>
-
-              {/* Select de artículos disponibles */}
-              <select
-                value={articuloSeleccionado?.id || ""}
-                onChange={(e) => {
-                  const articulo = articulosInventario.find(
-                    (a) => a.id === e.target.value,
-                  );
-                  if (articulo) handleArticuloSeleccionado(articulo);
-                }}
-                className={styles.selectArticulo}
-              >
-                <option value="">-- Seleccione un artículo --</option>
-                {articulosInventario.map((articulo) => {
-                  const precio =
-                    articulo.precio_venta || articulo.precio_unitario || 0;
-                  return (
-                    <option key={articulo.id} value={articulo.id}>
-                      {articulo.nombre} (Stock: {articulo.cantidad_stock}) -{" "}
-                      {formatMoney(precio)}
-                    </option>
-                  );
-                })}
-              </select>
-
-              {/* Lista de artículos agregados */}
-              {articulosVenta.length > 0 && (
-                <div className={styles.articulosLista}>
-                  <h4>Artículos agregados:</h4>
-                  {articulosVenta.map((art, index) => (
-                    <div
-                      key={art.articulo_inventario_id}
-                      className={styles.articuloRow}
-                    >
-                      <span className={styles.articuloNombre}>
-                        {art.nombre}
-                      </span>
-                      <span className={styles.articuloStock}>
-                        Stock: {art.stock}
-                      </span>
-                      <div className={styles.cantidadControl}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            actualizarCantidadArticulo(
-                              index,
-                              Math.max(1, art.cantidad - 1),
-                            )
-                          }
-                          disabled={art.cantidad <= 1}
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          value={art.cantidad}
-                          onChange={(e) =>
-                            actualizarCantidadArticulo(
-                              index,
-                              parseInt(e.target.value) || 1,
-                            )
-                          }
-                          min="1"
-                          max={art.stock}
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            actualizarCantidadArticulo(
-                              index,
-                              Math.min(art.stock, art.cantidad + 1),
-                            )
-                          }
-                          disabled={art.cantidad >= art.stock}
-                        >
-                          +
-                        </button>
-                      </div>
-                      <span className={styles.articuloPrecio}>
-                        {formatMoney(art.precio_unitario * art.cantidad)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => eliminarArticulo(index)}
-                        className={styles.btnEliminar}
-                        title="Eliminar artículo"
-                      >
-                        🗑️
-                      </button>
+          <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+            <label>{tipo === "INGRESO" ? "Estudiante" : "Beneficiario (Empleado/Proveedor)"}</label>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type="text" 
+                value={busquedaBeneficiario} 
+                onChange={e => buscarBeneficiarios(e.target.value)} 
+                placeholder={`Buscar ${tipo === "INGRESO" ? "estudiante" : "empleado o escribir nombre"}...`} 
+              />
+              {resultadosBusqueda.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', zIndex: 10, boxShadow: '0 10px 20px rgba(0,0,0,0.1)', borderRadius: '12px', marginTop: '5px', maxHeight: '200px', overflowY: 'auto' }}>
+                  {resultadosBusqueda.map(r => (
+                    <div key={r.id} style={{ padding: '10px 15px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }} onClick={() => {
+                      setBeneficiarioSeleccionado(r);
+                      setBusquedaBeneficiario(`${r.primer_apellido} ${r.primer_nombre}`);
+                      setResultadosBusqueda([]);
+                    }}>
+                      {r.primer_apellido} {r.primer_nombre} {r.cargo ? `- ${r.cargo}` : ""} - {r.numero_documento}
                     </div>
                   ))}
-                  <div className={styles.articulosTotal}>
-                    <strong>
-                      Total: {formatMoney(parseFloat(monto) || 0)}
-                    </strong>
-                  </div>
                 </div>
               )}
             </div>
-          )}
-
-          <div className={styles.formGroup}>
-            <label>Monto</label>
-            <input
-              type="number"
-              placeholder="0"
-              value={monto}
-              onChange={(e) => setMonto(e.target.value)}
-              min="0"
-              step="1000"
-              disabled={mostrarSelectorArticulos && articulosVenta.length > 0}
-              title={
-                mostrarSelectorArticulos
-                  ? "El monto se calcula automáticamente según los artículos"
-                  : ""
-              }
-            />
           </div>
 
-          {/* Selector de estudiante para matrícula/pensión */}
-          {requiereEstudiante && (
-            <div className={styles.formGroup}>
-              <label>Estudiante *</label>
-              <div className={styles.busquedaEstudiante}>
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre o documento..."
-                  value={estudianteBusqueda}
-                  onChange={(e) => {
-                    setEstudianteBusqueda(e.target.value);
-                    buscarEstudiantes(e.target.value);
-                    setMostrarSelectorEstudiante(true);
-                  }}
-                />
-                {estudianteSeleccionado && (
-                  <button
-                    onClick={limpiarEstudiante}
-                    className={styles.clearBtn}
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {mostrarSelectorEstudiante &&
-                estudiantesEncontrados.length > 0 && (
-                  <div className={styles.listaEstudiantes}>
-                    {estudiantesEncontrados.map((est) => (
-                      <div
-                        key={est.id}
-                        className={styles.estudianteItem}
-                        onClick={() => seleccionarEstudiante(est)}
-                      >
-                        <span className={styles.estudianteNombre}>
-                          {est.primer_apellido} {est.segundo_apellido}{" "}
-                          {est.primer_nombre}
-                        </span>
-                        <span className={styles.estudianteDoc}>
-                          {est.tipo_documento}: {est.numero_documento}
-                        </span>
-                        {est.matricula?.grupo && (
-                          <span className={styles.estudianteGrupo}>
-                            {est.matricula.grupo.grado?.nombre} -{" "}
-                            {est.matricula.grupo.nombre}
-                          </span>
+          {mostrarSelectorArticulos && (
+            <div className={styles.inventarioSelector}>
+              <label>📦 Selección de Artículos del Inventario</label>
+              <div className={styles.articulosGrid}>
+                {articulosInventario.length > 0 ? (
+                  articulosInventario.map(art => (
+                    <div key={art.id} className={styles.articuloCard} onClick={() => handleAddArticulo(art)}>
+                      <div className={styles.articuloHeader}>
+                        <span className={styles.articuloNombre}>{art.nombre}</span>
+                        {art.es_servicio ? (
+                          <span className={styles.badgeServicio}>SERVICIO</span>
+                        ) : (
+                          <span className={styles.articuloStock}>Stock: {art.cantidad_stock}</span>
                         )}
                       </div>
-                    ))}
+                      <div className={styles.articuloFooter}>
+                        <span className={styles.articuloPrecio}>{formatMoney(art.precio_venta || art.precio_unitario)}</span>
+                        <button className={styles.btnAddArt}>+</button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ gridColumn: 'span 3', padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                    No se encontraron artículos en esta categoría con stock disponible.
                   </div>
                 )}
-
-              {estudianteSeleccionado && (
-                <div className={styles.estudianteSeleccionado}>
-                  <strong>Seleccionado:</strong>{" "}
-                  {estudianteSeleccionado.primer_apellido}{" "}
-                  {estudianteSeleccionado.primer_nombre}
-                  {estudianteSeleccionado.matricula?.grupo && (
-                    <span>
-                      {" "}
-                      ({
-                        estudianteSeleccionado.matricula.grupo.grado?.nombre
-                      } - {estudianteSeleccionado.matricula.grupo.nombre})
-                    </span>
-                  )}
-                </div>
-              )}
+              </div>
             </div>
           )}
 
-          <div className={styles.formGroup}>
-            <label>Observación (opcional)</label>
-            <input
-              type="text"
-              placeholder="Detalles adicionales..."
-              value={observacion}
-              onChange={(e) => setObservacion(e.target.value)}
+          {articulosVenta.length > 0 && (
+            <div className={styles.cartSection} style={{ gridColumn: 'span 2', marginTop: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 700, fontSize: '1.1rem' }}>🛒 Detalle de la Transacción</label>
+              <div className={styles.tableWrapper}>
+                <table className={styles.table} style={{ borderSpacing: 0 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ background: '#f8fafc' }}>Concepto / Artículo</th>
+                      <th style={{ background: '#f8fafc' }}>Cant</th>
+                      <th style={{ background: '#f8fafc' }}>Precio Unitario</th>
+                      <th style={{ background: '#f8fafc' }}>Subtotal</th>
+                      <th style={{ background: '#f8fafc' }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {articulosVenta.map((a, i) => (
+                      <tr key={i}>
+                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 600 }}>{a.nombre}</span>
+                            {a.es_servicio && <span style={{ fontSize: '0.7rem', color: '#4f46e5', fontWeight: 700 }}>SERVICIO</span>}
+                          </div>
+                        </td>
+                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button onClick={() => handleUpdateCantidad(i, -1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ddd', background: '#f8fafc' }}>-</button>
+                            <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 700 }}>{a.cantidad}</span>
+                            <button onClick={() => handleUpdateCantidad(i, 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ddd', background: '#f8fafc' }}>+</button>
+                          </div>
+                        </td>
+                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 700 }}>{formatMoney(a.precio_unitario)}</td>
+                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 800, color: '#4f46e5' }}>{formatMoney(a.precio_unitario * a.cantidad)}</td>
+                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                          <button onClick={() => updateArticulosYTotal(articulosVenta.filter((_, idx) => idx !== i))} style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+            <label>Observaciones</label>
+            <textarea value={observacion} onChange={e => setObservacion(e.target.value)} placeholder="Detalles adicionales del movimiento..." rows={3} />
+          </div>
+
+          <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+            <label>Monto Total (Auto-calculado)</label>
+            <input 
+              type="text" 
+              value={formatMoney(parseFloat(monto) || 0)} 
+              readOnly 
+              style={{ background: '#f1f5f9', fontWeight: 800, fontSize: '1.8rem', color: '#4f46e5', textAlign: 'right', border: '2px solid #e2e8f0' }} 
             />
           </div>
 
-          <button
-            className={styles.btnPrimary}
-            onClick={registrarTransaccion}
-            disabled={loading}
-          >
-            {loading
-              ? "Procesando..."
-              : tipo === "INGRESO"
-                ? "� Registrar Ingreso + Factura"
-                : "💸 Registrar Egreso"}
+          <button className={styles.btnRegistrar} onClick={registrarTransaccion} disabled={loading}>
+            {loading ? "Procesando..." : "✅ Confirmar y Registrar Transacción"}
           </button>
         </div>
       )}
 
-      {/* Modal de comprobante */}
+      {activeTab === "movimientos" && (
+        <div className={styles.tableSection}>
+          <div className={styles.filtersRow}>
+            <div className={styles.filterGroup}>
+              <label>Desde</label>
+              <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+            </div>
+            <div className={styles.filterGroup}>
+              <label>Hasta</label>
+              <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+            </div>
+            <button className={styles.tabActivo} style={{ padding: '0.75rem 1.5rem', borderRadius: '12px' }} onClick={cargarResumen}>🔍 Filtrar</button>
+          </div>
+
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Concepto</th>
+                  <th>Beneficiario</th>
+                  <th>Monto</th>
+                  <th>Comprobante</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resumen?.movimientos.map(mov => (
+                  <tr key={mov.id}>
+                    <td>{new Date(mov.fecha).toLocaleDateString()}</td>
+                    <td><span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span></td>
+                    <td>{mov.concepto}</td>
+                    <td>{mov.estudiante_nombre || "-"}</td>
+                    <td style={{ fontWeight: 700, color: mov.tipo === 'INGRESO' ? '#059669' : '#dc2626' }}>{formatMoney(mov.monto)}</td>
+                    <td>{mov.numero_comprobante}</td>
+                    <td>
+                      <button 
+                        onClick={() => imprimirRecibo(mov)} 
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                        title="Reimprimir Comprobante"
+                      >
+                        🖨️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {mostrarComprobante && comprobanteReciente && (
         <div className={styles.modalOverlay}>
-          <div className={styles.comprobanteModal}>
-            <h3>✅ Movimiento registrado</h3>
-            <div className={styles.comprobanteInfo}>
-              <p>
-                <strong>Comprobante:</strong>{" "}
-                {comprobanteReciente.numero_comprobante}
-              </p>
-              <p>
-                <strong>Estudiante:</strong>{" "}
-                {comprobanteReciente.estudiante_nombre || "N/A"}
-              </p>
-              <p>
-                <strong>Concepto:</strong> {comprobanteReciente.concepto}
-              </p>
-              <p>
-                <strong>Monto:</strong> {formatMoney(comprobanteReciente.monto)}
-              </p>
-              <p>
-                <strong>Fecha:</strong>{" "}
-                {new Date(comprobanteReciente.fecha).toLocaleDateString(
-                  "es-CO",
-                )}
-              </p>
-              <p>
-                <strong>Registrado por:</strong>{" "}
-                {comprobanteReciente.registrado_por_email ||
-                  comprobanteReciente.registrado_por ||
-                  "Sistema"}
-              </p>
+          <div className={styles.modal}>
+            <div className={styles.comprobanteTitle}>
+              <h2>¡Registro Exitoso!</h2>
+              <p>Comprobante generado correctamente</p>
             </div>
-            <div className={styles.comprobanteActions}>
-              <button onClick={imprimirComprobante} className={styles.printBtn}>
-                🖨️ Imprimir Comprobante
-              </button>
-              <button
-                onClick={() => setMostrarComprobante(false)}
-                className={styles.closeBtn}
-              >
-                Cerrar
-              </button>
+            
+            <div className={styles.comprobanteMonto}>
+              <label>TOTAL</label>
+              <span>{formatMoney(comprobanteReciente.monto)}</span>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Modal de detalle de movimiento histórico */}
-      {mostrarDetalleMovimiento && movimientoSeleccionado && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.comprobanteModal}>
-            <h3>📋 Detalle del Movimiento</h3>
-            <div className={styles.comprobanteInfo}>
-              <p>
-                <strong>Comprobante:</strong>{" "}
-                {movimientoSeleccionado.numero_comprobante || "N/A"}
-              </p>
-              <p>
-                <strong>Tipo:</strong>{" "}
-                <span
-                  className={
-                    movimientoSeleccionado.tipo === "INGRESO"
-                      ? styles.positive
-                      : styles.negative
-                  }
-                >
-                  {movimientoSeleccionado.tipo === "INGRESO"
-                    ? "💰 INGRESO"
-                    : "💸 EGRESO"}
-                </span>
-              </p>
-              <p>
-                <strong>Concepto:</strong> {movimientoSeleccionado.concepto}
-              </p>
-              <p>
-                <strong>Monto:</strong>{" "}
-                {formatMoney(movimientoSeleccionado.monto)}
-              </p>
-              <p>
-                <strong>Fecha:</strong>{" "}
-                {new Date(movimientoSeleccionado.fecha).toLocaleDateString(
-                  "es-CO",
-                )}
-              </p>
-              {movimientoSeleccionado.estudiante_nombre && (
-                <p>
-                  <strong>Estudiante:</strong>{" "}
-                  {movimientoSeleccionado.estudiante_nombre}
-                </p>
-              )}
-              <p>
-                <strong>Observación:</strong>{" "}
-                {movimientoSeleccionado.observacion || "-"}
-              </p>
-              <p>
-                <strong>Registrado por:</strong>{" "}
-                {movimientoSeleccionado.registrado_por_email ||
-                  movimientoSeleccionado.registrado_por ||
-                  "Sistema"}
-              </p>
+            <div className={styles.comprobanteDato}>
+              <label>Referencia:</label>
+              <span>{comprobanteReciente.numero_comprobante}</span>
             </div>
-            <div className={styles.comprobanteActions}>
-              {movimientoSeleccionado.numero_comprobante && (
-                <button
-                  onClick={imprimirComprobanteHistorial}
-                  className={styles.printBtn}
-                >
-                  🖨️ Imprimir
-                </button>
-              )}
-              <button
-                onClick={() => setMostrarDetalleMovimiento(false)}
-                className={styles.closeBtn}
-              >
-                Cerrar
-              </button>
+            <div className={styles.comprobanteDato}>
+              <label>Beneficiario:</label>
+              <span>{comprobanteReciente.estudiante_nombre}</span>
+            </div>
+            <div className={styles.comprobanteDato}>
+              <label>Concepto:</label>
+              <span>{comprobanteReciente.concepto}</span>
+            </div>
+            {comprobanteReciente.partida_doble && (
+              <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '16px' }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '0.5rem' }}>REGISTRO CONTABLE (Partida Doble)</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                  <span>Débito: {comprobanteReciente.partida_doble.debe?.[0]?.cuenta}</span>
+                  <span>{formatMoney(comprobanteReciente.partida_doble.debe?.[0]?.valor)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+                  <span>Crédito: {comprobanteReciente.partida_doble.haber?.[0]?.cuenta}</span>
+                  <span>{formatMoney(comprobanteReciente.partida_doble.haber?.[0]?.valor)}</span>
+                </div>
+              </div>
+            )}
+
+            <div className={styles.modalActions} style={{ marginTop: '2rem' }}>
+              <button className={styles.btnModalPrimary} onClick={() => imprimirRecibo(comprobanteReciente)}>🖨️ Imprimir Recibo</button>
+              <button className={styles.btnModalSecondary} onClick={() => setMostrarComprobante(false)}>Cerrar</button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Tab: Movimientos */}
-      {activeTab === "movimientos" && (
-        <div className={styles.movimientosContainer}>
-          <div className={styles.filtros}>
-            <input
-              type="date"
-              placeholder="Desde"
-              value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
-            />
-            <input
-              type="date"
-              placeholder="Hasta"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-            />
-            <button onClick={cargarResumen}>🔍 Filtrar</button>
-          </div>
-
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Concepto</th>
-                <th>Monto</th>
-                <th>Observación</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resumen?.movimientos?.map((m) => (
-                <tr key={m.id}>
-                  <td>{new Date(m.fecha).toLocaleDateString("es-CO")}</td>
-                  <td>
-                    <span
-                      className={
-                        m.tipo === "INGRESO"
-                          ? styles.badgeIngreso
-                          : styles.badgeEgreso
-                      }
-                    >
-                      {m.tipo === "INGRESO" ? "💰" : "💸"} {m.tipo}
-                    </span>
-                  </td>
-                  <td>{m.concepto}</td>
-                  <td
-                    className={
-                      m.tipo === "INGRESO" ? styles.positive : styles.negative
-                    }
-                  >
-                    {formatMoney(m.monto)}
-                  </td>
-                  <td>{m.observacion || "-"}</td>
-                  <td>
-                    <button
-                      className={styles.viewBtn}
-                      onClick={() => verDetalleMovimiento(m)}
-                      title="Ver detalle"
-                    >
-                      👁️
-                    </button>
-                    <button
-                      className={styles.deleteBtn}
-                      onClick={() => eliminarMovimiento(m.id)}
-                      title="Eliminar"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Tab: Reporte */}
-      {activeTab === "reporte" && resumen && (
-        <div className={styles.reporteContainer}>
-          <h3>📊 Resumen por Concepto</h3>
-
-          <div className={styles.reporteGrid}>
-            <div className={styles.reporteSection}>
-              <h4>💰 Ingresos</h4>
-              <table className={styles.tableSmall}>
-                <thead>
-                  <tr>
-                    <th>Concepto</th>
-                    <th>Cant</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resumen.por_concepto.ingresos.map((item) => (
-                    <tr key={item.concepto}>
-                      <td>{item.concepto}</td>
-                      <td>{item.cantidad}</td>
-                      <td className={styles.positive}>
-                        {formatMoney(item.monto)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className={styles.reporteSection}>
-              <h4>💸 Egresos</h4>
-              <table className={styles.tableSmall}>
-                <thead>
-                  <tr>
-                    <th>Concepto</th>
-                    <th>Cant</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resumen.por_concepto.egresos.map((item) => (
-                    <tr key={item.concepto}>
-                      <td>{item.concepto}</td>
-                      <td>{item.cantidad}</td>
-                      <td className={styles.negative}>
-                        {formatMoney(item.monto)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Facturas */}
-      {activeTab === "facturas" && (
-        <div className={styles.movimientosContainer}>
-          <h3>📄 Facturas</h3>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Fecha</th>
-                <th>Estudiante</th>
-                <th>Total</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {facturas.map((factura: any) => (
-                <tr key={factura.id}>
-                  <td>{factura.numero_factura}</td>
-                  <td>
-                    {new Date(factura.fecha_emision).toLocaleDateString()}
-                  </td>
-                  <td>
-                    {factura.estudiante
-                      ? `${factura.estudiante.primer_apellido} ${factura.estudiante.primer_nombre}`
-                      : "N/A"}
-                  </td>
-                  <td>{formatMoney(factura.total)}</td>
-                  <td>
-                    <span
-                      className={
-                        factura.estado === "PAGADA"
-                          ? styles.estadoPagada
-                          : factura.estado === "ANULADA"
-                            ? styles.estadoAnulada
-                            : styles.estadoPendiente
-                      }
-                    >
-                      {factura.estado}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {facturas.length === 0 && (
-                <tr>
-                  <td colSpan={5} style={{ textAlign: "center" }}>
-                    No hay facturas registradas
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
       )}
     </div>

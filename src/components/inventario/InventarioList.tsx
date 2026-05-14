@@ -11,7 +11,7 @@ export const InventarioList = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "move" | "history">(
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "move" | "history">(
     "create",
   );
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -22,6 +22,26 @@ export const InventarioList = () => {
   const [showNuevaCategoria, setShowNuevaCategoria] = useState(false);
   const [nuevaCategoriaNombre, setNuevaCategoriaNombre] = useState("");
   const [savingCategoria, setSavingCategoria] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const formatCurrency = (val: number | string) => {
+    if (val === undefined || val === null || val === "") return "";
+    const num = typeof val === 'string' ? parseFloat(val.replace(/\./g, '').replace(',', '.')) : val;
+    if (isNaN(num)) return "";
+    return new Intl.NumberFormat("de-DE").format(num); // de-DE uses dots for thousands
+  };
+
+  const unformatCurrency = (val: string) => {
+    return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0;
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    // Solo permitir números y puntos de miles (que el usuario escriba o se formateen)
+    const rawValue = value.replace(/\D/g, '');
+    const numValue = parseFloat(rawValue) || 0;
+    setFormData({ ...formData, [name]: numValue });
+  };
 
   const fetchInventario = async () => {
     try {
@@ -68,8 +88,28 @@ export const InventarioList = () => {
       precio_venta: 0,
       ubicacion: "Almacén Central",
       categoria_id: "",
+      es_servicio: false,
     });
     setModalMode("create");
+    setShowModal(true);
+  };
+
+  const openEdit = (item: any) => {
+    setSelectedItem(item);
+    setFormData({
+      nombre: item.nombre || "",
+      descripcion: item.descripcion || "",
+      codigo_interno: item.codigo_interno || "",
+      cantidad_stock: item.cantidad_stock || 0,
+      cantidad_minima: item.cantidad_minima || 0,
+      unidad_medida: item.unidad_medida || "und",
+      precio_unitario: item.precio_unitario || 0,
+      precio_venta: item.precio_venta || 0,
+      ubicacion: item.ubicacion || "Almacén Central",
+      categoria_id: item.categoria_id || "",
+      es_servicio: item.es_servicio || false,
+    });
+    setModalMode("edit");
     setShowModal(true);
   };
 
@@ -90,6 +130,18 @@ export const InventarioList = () => {
     setShowModal(true);
   };
 
+  const openGeneralMove = () => {
+    setSelectedItem(null);
+    setFormData({
+      tipo_movimiento: "Entrada",
+      cantidad: "",
+      observacion: "",
+      articulo_busqueda: ""
+    });
+    setModalMode("move");
+    setShowModal(true);
+  };
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -97,8 +149,11 @@ export const InventarioList = () => {
   ) => {
     const { name, value, type } = e.target;
     let parsedValue: any = value;
+    
     if (type === "number") {
-      parsedValue = value === "" ? null : parseFloat(value);
+      parsedValue = value === "" ? "" : parseFloat(value);
+    } else if (type === "checkbox") {
+      parsedValue = (e.target as HTMLInputElement).checked;
     }
 
     // Detectar si seleccionó "nueva_categoria"
@@ -156,34 +211,90 @@ export const InventarioList = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.nombre?.trim()) {
-      alert("El nombre del artículo es obligatorio");
-      return;
+    // Validaciones por modo
+    if (modalMode === "create" || modalMode === "edit") {
+      if (!formData.nombre?.trim()) {
+        alert("El nombre del artículo es obligatorio");
+        return;
+      }
+    } else if (modalMode === "move") {
+      if (!formData.cantidad || formData.cantidad <= 0) {
+        alert("La cantidad debe ser mayor a 0");
+        return;
+      }
     }
 
     setSaving(true);
     try {
       const token = getAuthToken();
-      const res = await fetch(`${API_URL}/inventario/articulos`, {
-        method: "POST",
+      let url = "";
+      let method = "";
+      let body = {};
+
+      if (modalMode === "move") {
+        url = `${API_URL}/inventario/movimientos`;
+        method = "POST";
+        body = {
+          articulo_id: selectedItem.id,
+          tipo: formData.tipo_movimiento,
+          cantidad: formData.cantidad,
+          motivo: formData.observacion
+        };
+      } else {
+        const isEdit = modalMode === "edit";
+        url = isEdit
+          ? `${API_URL}/inventario/articulos/${selectedItem.id}`
+          : `${API_URL}/inventario/articulos`;
+        method = isEdit ? "PATCH" : "POST";
+        body = formData;
+      }
+
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "Error al crear artículo");
+        throw new Error(err.message || "Error en la operación");
       }
 
       setShowModal(false);
       fetchInventario();
     } catch (err: any) {
-      alert(err.message || "Error al crear artículo");
+      alert(err.message || "Error en la operación");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string, nombre: string) => {
+    if (!confirm(`¿Está seguro de eliminar el artículo "${nombre}"?`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_URL}/inventario/articulos/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Error al eliminar artículo");
+      }
+
+      fetchInventario();
+    } catch (err: any) {
+      alert(err.message || "Error al eliminar");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -203,9 +314,7 @@ export const InventarioList = () => {
         <div className={styles.actions}>
           <button
             className={styles.moveBtn}
-            onClick={() =>
-              alert("Seleccione un elemento para registrar movimiento")
-            }
+            onClick={openGeneralMove}
           >
             Registrar Movimiento
           </button>
@@ -234,11 +343,17 @@ export const InventarioList = () => {
                 <span className={styles.category}>
                   {el.categoria?.nombre || "General"}
                 </span>
-                <span
-                  className={`${styles.stock} ${el.cantidad_stock <= (el.cantidad_minima || 0) ? styles.low : ""}`}
-                >
-                  Stock: {el.cantidad_stock} {el.unidad_medida || "und"}
-                </span>
+                {el.es_servicio ? (
+                  <span className={styles.category} style={{ background: '#e0e7ff', color: '#4338ca' }}>
+                    SERVICIO
+                  </span>
+                ) : (
+                  <span
+                    className={`${styles.stock} ${el.cantidad_stock <= (el.cantidad_minima || 0) ? styles.low : ""}`}
+                  >
+                    Stock: {el.cantidad_stock} {el.unidad_medida || "und"}
+                  </span>
+                )}
               </div>
               <h3>{el.nombre}</h3>
               <p className={styles.description}>
@@ -249,6 +364,21 @@ export const InventarioList = () => {
                   📍 {el.ubicacion || "Almacén Central"}
                 </span>
                 <div className={styles.cardActions}>
+                  <button
+                    className={styles.editBtn}
+                    onClick={() => openEdit(el)}
+                    title="Editar artículo"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={() => handleDelete(el.id, el.nombre)}
+                    disabled={deletingId === el.id}
+                    title="Eliminar artículo"
+                  >
+                    {deletingId === el.id ? "..." : "🗑️"}
+                  </button>
                   <button
                     className={styles.moveBtn}
                     style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
@@ -276,6 +406,7 @@ export const InventarioList = () => {
             <div className={styles.modalHeader}>
               <h2>
                 {modalMode === "create" && "Nuevo Elemento"}
+                {modalMode === "edit" && `Editar: ${selectedItem?.nombre}`}
                 {modalMode === "move" && `Movimiento: ${selectedItem?.nombre}`}
                 {modalMode === "history" &&
                   `Historial: ${selectedItem?.nombre}`}
@@ -288,7 +419,7 @@ export const InventarioList = () => {
               </button>
             </div>
             <div className={styles.modalBody}>
-              {modalMode === "create" && (
+              {(modalMode === "create" || modalMode === "edit") && (
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
                     <label>Nombre *</label>
@@ -298,6 +429,17 @@ export const InventarioList = () => {
                       onChange={handleChange}
                       required
                     />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Tipo de Ítem</label>
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '10px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <input type="radio" name="es_servicio" checked={!formData.es_servicio} onChange={() => setFormData({...formData, es_servicio: false})} /> 📦 Producto
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <input type="radio" name="es_servicio" checked={formData.es_servicio} onChange={() => setFormData({...formData, es_servicio: true})} /> ✨ Servicio
+                      </label>
+                    </div>
                   </div>
                   <div className={styles.formGroup}>
                     <label>Categoría</label>
@@ -348,67 +490,73 @@ export const InventarioList = () => {
                       </div>
                     )}
                   </div>
-                  <div className={styles.formGroup}>
-                    <label>Cantidad Inicial</label>
-                    <input
-                      type="number"
-                      name="cantidad_stock"
-                      value={formData.cantidad_stock || 0}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Cantidad Mínima</label>
-                    <input
-                      type="number"
-                      name="cantidad_minima"
-                      value={formData.cantidad_minima || 0}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Unidad</label>
-                    <select
-                      name="unidad_medida"
-                      value={formData.unidad_medida || "und"}
-                      onChange={handleChange}
-                    >
-                      <option value="und">Unidad</option>
-                      <option value="kg">Kilogramo</option>
-                      <option value="lt">Litro</option>
-                      <option value="pkg">Paquete</option>
-                      <option value="caja">Caja</option>
-                    </select>
-                  </div>
+                  {!formData.es_servicio && (
+                    <>
+                      <div className={styles.formGroup}>
+                        <label>Cantidad Inicial</label>
+                        <input
+                          type="number"
+                          name="cantidad_stock"
+                          value={formData.cantidad_stock || 0}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Cantidad Mínima</label>
+                        <input
+                          type="number"
+                          name="cantidad_minima"
+                          value={formData.cantidad_minima || 0}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Unidad</label>
+                        <select
+                          name="unidad_medida"
+                          value={formData.unidad_medida || "und"}
+                          onChange={handleChange}
+                        >
+                          <option value="und">Unidad</option>
+                          <option value="kg">Kilogramo</option>
+                          <option value="lt">Litro</option>
+                          <option value="pkg">Paquete</option>
+                          <option value="caja">Caja</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
                   <div className={styles.formGroup}>
                     <label>Precio Costo</label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       name="precio_unitario"
-                      value={formData.precio_unitario || 0}
-                      onChange={handleChange}
+                      value={formatCurrency(formData.precio_unitario)}
+                      onChange={handlePriceChange}
+                      placeholder="0"
                     />
                   </div>
                   <div className={styles.formGroup}>
                     <label>Precio Venta *</label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       name="precio_venta"
-                      value={formData.precio_venta || 0}
-                      onChange={handleChange}
+                      value={formatCurrency(formData.precio_venta)}
+                      onChange={handlePriceChange}
                       required
+                      placeholder="0"
                     />
                   </div>
-                  <div className={styles.formGroup}>
-                    <label>Ubicación</label>
-                    <input
-                      name="ubicacion"
-                      value={formData.ubicacion || ""}
-                      onChange={handleChange}
-                    />
-                  </div>
+                  {!formData.es_servicio && (
+                    <div className={styles.formGroup}>
+                      <label>Ubicación</label>
+                      <input
+                        name="ubicacion"
+                        value={formData.ubicacion || ""}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  )}
                   <div className={styles.formGroup}>
                     <label>Código Interno (Se asignará automáticamente)</label>
                     <input
@@ -435,37 +583,92 @@ export const InventarioList = () => {
                   </div>
                 </div>
               )}
-              {modalMode === "move" && selectedItem && (
+              {modalMode === "move" && (
                 <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label>Tipo de Movimiento</label>
-                    <select
-                      name="tipo_movimiento"
-                      value={formData.tipo_movimiento || "Entrada"}
-                      onChange={handleChange}
-                    >
-                      <option value="Entrada">Entrada</option>
-                      <option value="Salida">Salida</option>
-                      <option value="Ajuste">Ajuste</option>
-                    </select>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Cantidad</label>
-                    <input
-                      type="number"
-                      name="cantidad"
-                      value={formData.cantidad || 0}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>Observación</label>
-                    <input
-                      name="observacion"
-                      value={formData.observacion || ""}
-                      onChange={handleChange}
-                    />
-                  </div>
+                  {!selectedItem && (
+                    <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                      <label>Buscar Artículo *</label>
+                      <div className={styles.searchWrapper}>
+                        <input
+                          type="text"
+                          placeholder="Escriba nombre del artículo..."
+                          value={formData.articulo_busqueda || ""}
+                          onChange={(e) => setFormData({ ...formData, articulo_busqueda: e.target.value })}
+                          className={styles.searchInnerInput}
+                        />
+                        {formData.articulo_busqueda && !selectedItem && (
+                          <div className={styles.searchResultsDropdown}>
+                            {elementos
+                              .filter(el => el.nombre.toLowerCase().includes(formData.articulo_busqueda.toLowerCase()))
+                              .slice(0, 5)
+                              .map(el => (
+                                <div 
+                                  key={el.id} 
+                                  className={styles.searchResultItem}
+                                  onClick={() => {
+                                    setSelectedItem(el);
+                                    setFormData({ ...formData, articulo_busqueda: el.nombre });
+                                  }}
+                                >
+                                  <strong>{el.nombre}</strong> (Stock: {el.cantidad_stock})
+                                </div>
+                              ))
+                            }
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedItem && (
+                    <>
+                      <div className={styles.selectedItemBadge} style={{ gridColumn: '1 / -1' }}>
+                        <span>Artículo: <strong>{selectedItem.nombre}</strong></span>
+                        <span>Stock Actual: <strong>{selectedItem.cantidad_stock}</strong></span>
+                        <button 
+                          onClick={() => {
+                            setSelectedItem(null);
+                            setFormData({ ...formData, articulo_busqueda: "" });
+                          }} 
+                          className={styles.changeItemBtn}
+                        >
+                          Cambiar
+                        </button>
+                      </div>
+                      
+                      <div className={styles.formGroup}>
+                        <label>Tipo de Movimiento</label>
+                        <select
+                          name="tipo_movimiento"
+                          value={formData.tipo_movimiento || "Entrada"}
+                          onChange={handleChange}
+                        >
+                          <option value="Entrada">Entrada</option>
+                          <option value="Salida">Salida</option>
+                          <option value="Ajuste">Ajuste</option>
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Cantidad</label>
+                        <input
+                          type="number"
+                          name="cantidad"
+                          value={formData.cantidad}
+                          onChange={handleChange}
+                          placeholder="Ej: 10"
+                        />
+                      </div>
+                      <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                        <label>Observación / Motivo</label>
+                        <input
+                          name="observacion"
+                          value={formData.observacion || ""}
+                          onChange={handleChange}
+                          placeholder="Opcional..."
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
               {modalMode === "history" && (

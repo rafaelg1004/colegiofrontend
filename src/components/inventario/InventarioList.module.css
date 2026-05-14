@@ -179,6 +179,42 @@
   text-decoration: underline;
 }
 
+.editBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  color: #475569;
+}
+
+.editBtn:hover {
+  background: #f1f5f9;
+  color: #4f46e5;
+}
+
+.deleteBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  color: #475569;
+}
+
+.deleteBtn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
 .loading {
   grid-column: 1 / -1;
   text-align: center;
@@ -212,7 +248,8 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   width: 90%;
-  max-width: 500px;
+  max-width: 700px;
+  min-height: 500px;
   max-height: calc(100vh - 4rem);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -251,6 +288,7 @@
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 450px;
 }
 
 .formGrid {
@@ -385,4 +423,71 @@
 
 .textareaDescripcion::placeholder {
   color: #94a3b8;
+}
+
+/* Movimiento Modal search styles */
+.searchWrapper {
+  position: relative;
+}
+
+.searchInnerInput {
+  width: 100%;
+}
+
+.searchResultsDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  margin-top: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.searchResultItem {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.searchResultItem:last-child {
+  border-bottom: none;
+}
+
+.searchResultItem:hover {
+  background: #f8fafc;
+  color: #4f46e5;
+}
+
+.selectedItemBadge {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #166534;
+  margin-bottom: 1rem;
+}
+
+.changeItemBtn {
+  background: white;
+  border: 1px solid #dcfce7;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.changeItemBtn:hover {
+  background: #f0fdf4;
 }
