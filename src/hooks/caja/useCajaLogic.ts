@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { getAuthToken } from "@/utils/auth";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -96,12 +97,83 @@ export const useCajaLogic = () => {
     setTimeout(() => setNotification(null), 5000);
   };
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     cargarResumen();
     cargarConceptosCobro();
     cargarInstitucion();
     cargarSedes();
-  }, []);
+    
+    // Auto-selección desde URL (Finanzas)
+    const eId = searchParams.get('estudianteId');
+    const fId = searchParams.get('facturaId');
+    if (eId) {
+      setTipo("INGRESO"); // Asegurar que es un ingreso
+      handleAutoSeleccion(eId, fId);
+    }
+  }, [searchParams]);
+
+  const handleAutoSeleccion = async (eId: string, fId: string | null) => {
+    try {
+      const token = getAuthToken();
+      console.log("🔍 Iniciando auto-selección para estudiante:", eId);
+      
+      // 1. Buscar datos del estudiante directamente
+      const res = await fetch(`${API}/caja/buscar-estudiantes?id=${eId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (res.ok) {
+        const students = await res.json();
+        // El endpoint puede devolver un array o un objeto
+        const student = Array.isArray(students) ? students.find((s: any) => s.id === eId) : students;
+        
+        if (student && student.id) {
+          console.log("✅ Estudiante encontrado:", student.primer_nombre);
+          setBeneficiarioSeleccionado(student);
+          setBusquedaBeneficiario(`${student.primer_apellido || ''} ${student.primer_nombre || ''}`.trim());
+          
+          // 2. Cargar facturas y seleccionar la que viene
+          const resF = await fetch(`${API}/caja/estudiantes/${eId}/facturas-pendientes`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (resF.ok) {
+            const dataF = await resF.json();
+            const facturas = dataF.data || [];
+            setFacturasPendientes(facturas);
+            
+            if (fId && facturas.length > 0) {
+              const fac = facturas.find((f: any) => f.id === fId);
+              if (fac) {
+                setFacturaIdSeleccionada(fac.id);
+                setMonto(fac.total.toString());
+                setObservacion(`Pago de factura ${fac.numero_factura}`);
+                
+                // CARGAR AL CARRITO AUTOMÁTICAMENTE
+                if (fac.factura_detalle && fac.factura_detalle.length > 0) {
+                  const detalles = fac.factura_detalle.map((d: any) => ({
+                    ...d,
+                    id: d.articulo_inventario_id || d.concepto_cobro_id || d.id,
+                    nombre: d.descripcion,
+                    precio_unitario: d.valor_unitario,
+                    cantidad: d.cantidad,
+                    es_concepto: d.concepto_cobro_id ? true : false,
+                    aplica_iva: d.valor_iva > 0,
+                    porcentaje_iva: d.valor_iva > 0 ? (Number(d.valor_iva) / Number(d.valor_unitario)) * 100 : 0
+                  }));
+                  setArticulosVenta(detalles);
+                  console.log("🛒 Carrito cargado automáticamente con", detalles.length, "items");
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error en auto-selección:", err);
+    }
+  };
 
   const cargarSedes = async () => {
     try {

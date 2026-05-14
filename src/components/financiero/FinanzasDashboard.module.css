@@ -162,6 +162,22 @@
 .payBtn:hover {
   background: #059669;
 }
+.payBtn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.payBtn:active {
+  transform: translateY(0);
+}
 
 .loading {
   padding: 5rem;

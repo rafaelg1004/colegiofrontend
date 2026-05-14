@@ -229,14 +229,16 @@ export const FinanzasDashboard = () => {
                   <th>N° Factura</th>
                   <th>Estudiante</th>
                   <th>Grado</th>
+                  <th>Concepto</th>
                   <th>Deuda</th>
                   <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {deudores.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
                       No hay deudores pendientes para este mes.
                     </td>
                   </tr>
@@ -246,6 +248,7 @@ export const FinanzasDashboard = () => {
                       <td>{deudor.numero_factura}</td>
                       <td>{deudor.estudiante_nombre}</td>
                       <td>{deudor.grado}</td>
+                      <td style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>{deudor.concepto}</td>
                       <td className={styles.amount}>
                         {formatMoney(deudor.deuda)}
                       </td>
@@ -253,6 +256,16 @@ export const FinanzasDashboard = () => {
                         <span className={`${styles.badge} ${deudor.estado === 'Emitida' ? styles.pendiente : styles.pagada}`}>
                           {deudor.estado === 'Emitida' ? 'Pendiente' : deudor.estado}
                         </span>
+                      </td>
+                      <td>
+                        {deudor.estado === 'Emitida' && (
+                          <button 
+                            className={styles.payBtn}
+                            onClick={() => window.location.href = `/dashboard/caja?estudianteId=${deudor.estudiante_id}&facturaId=${deudor.factura_id}`}
+                          >
+                            Pagar 💸
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))
