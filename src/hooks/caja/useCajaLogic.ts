@@ -59,6 +59,8 @@ export const useCajaLogic = () => {
   const [busquedaBeneficiario, setBusquedaBeneficiario] = useState("");
   const [resultadosBusqueda, setResultadosBusqueda] = useState<any[]>([]);
   const [beneficiarioSeleccionado, setBeneficiarioSeleccionado] = useState<any>(null);
+  const [facturasPendientes, setFacturasPendientes] = useState<any[]>([]);
+  const [facturaIdSeleccionada, setFacturaIdSeleccionada] = useState<string | null>(null);
   
   // Conceptos
   const [busquedaConcepto, setBusquedaConcepto] = useState("");
@@ -165,6 +167,35 @@ export const useCajaLogic = () => {
     if (res.ok) {
       setResultadosBusqueda(await res.json());
       setShowBeneficiarioDropdown(true);
+    }
+  };
+
+  const seleccionarBeneficiario = (b: any) => {
+    setBeneficiarioSeleccionado(b);
+    setBusquedaBeneficiario(`${b.primer_apellido || ''} ${b.primer_nombre || ''}`.trim());
+    setResultadosBusqueda([]);
+    setShowBeneficiarioDropdown(false);
+    setFacturaIdSeleccionada(null); // Reset
+    
+    if (tipo === "INGRESO" && b.id) {
+      cargarFacturasPendientes(b.id);
+    } else {
+      setFacturasPendientes([]);
+    }
+  };
+
+  const cargarFacturasPendientes = async (estudianteId: string) => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API}/caja/estudiantes/${estudianteId}/facturas-pendientes`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFacturasPendientes(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar facturas pendientes:", err);
     }
   };
 
@@ -305,7 +336,8 @@ export const useCajaLogic = () => {
             cuenta_credito_id: av.cuenta_credito_id
           })),
           observaciones: observacion,
-          metodo_pago: "EFECTIVO"
+          metodo_pago: "EFECTIVO",
+          factura_id: facturaIdSeleccionada
         })
       });
 
@@ -363,6 +395,12 @@ export const useCajaLogic = () => {
     sedes,
     sedeSeleccionada,
     setSedeSeleccionada,
+    seleccionarBeneficiario,
+    cargarFacturasPendientes,
+    facturasPendientes,
+    setFacturasPendientes,
+    facturaIdSeleccionada,
+    setFacturaIdSeleccionada,
     buscarBeneficiarios,
     buscarConceptos,
     seleccionarConcepto,

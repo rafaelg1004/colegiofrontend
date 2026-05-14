@@ -38,6 +38,11 @@ export default function CajaPage() {
     sedes,
     sedeSeleccionada,
     setSedeSeleccionada,
+    seleccionarBeneficiario,
+    facturasPendientes,
+    setFacturasPendientes,
+    facturaIdSeleccionada,
+    setFacturaIdSeleccionada,
     buscarBeneficiarios,
     buscarConceptos,
     seleccionarConcepto,
@@ -164,10 +169,7 @@ export default function CajaPage() {
                       className={styles.searchItem} 
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        setBeneficiarioSeleccionado(r);
-                        setBusquedaBeneficiario(`${r.primer_apellido} ${r.primer_nombre}`);
-                        setResultadosBusqueda([]);
-                        setShowBeneficiarioDropdown(false);
+                        seleccionarBeneficiario(r);
                       }}
                     >
                       <strong>{r.primer_apellido} {r.primer_nombre}</strong> {r.cargo ? `(${r.cargo})` : ""}
@@ -181,6 +183,53 @@ export default function CajaPage() {
               ))}
             </div>
           </div>
+
+          {/* Alerta de Facturas Pendientes (Cartera) */}
+          {tipo === "INGRESO" && facturasPendientes.length > 0 && (
+            <div className={styles.alertaCartera} style={{ gridColumn: 'span 2' }}>
+              <div className={styles.alertaHeader}>
+                <span className={styles.alertaIcon}>⚠️</span>
+                <div>
+                  <strong>Atención: Estudiante con deudas pendientes</strong>
+                  <p>Este estudiante tiene {facturasPendientes.length} factura(s) pendiente(s) de pago.</p>
+                </div>
+              </div>
+              <div className={styles.facturasPendientesList}>
+                {facturasPendientes.map(f => (
+                  <div key={f.id} className={`${styles.facturaPendienteItem} ${facturaIdSeleccionada === f.id ? styles.facturaSelected : ''}`}>
+                    <div className={styles.facturaInfo}>
+                      <span className={styles.facturaNumero}>{f.numero_factura}</span>
+                      <span className={styles.facturaDesc}>{f.observaciones || 'Pensión / Cobro'}</span>
+                      <span className={styles.facturaMonto}>{formatMoney(f.total)}</span>
+                    </div>
+                    <button 
+                      className={styles.btnPagarDeuda}
+                      onClick={() => {
+                        setFacturaIdSeleccionada(f.id);
+                        // Cargar automáticamente los detalles al carrito
+                        const detalles = f.factura_detalle.map((d: any) => ({
+                          ...d,
+                          id: d.articulo_inventario_id || d.concepto_cobro_id || d.id,
+                          nombre: d.descripcion,
+                          precio_unitario: d.valor_unitario,
+                          cantidad: d.cantidad,
+                          es_concepto: d.concepto_cobro_id ? true : false,
+                          aplica_iva: d.valor_iva > 0,
+                          porcentaje_iva: d.valor_iva > 0 ? (d.valor_iva / d.valor_unitario) * 100 : 0
+                        }));
+                        setArticulosVenta(detalles);
+                        setMonto(f.total.toString());
+                        setObservacion(`Pago de factura ${f.numero_factura}`);
+                        showToast("Factura cargada al carrito", "info");
+                      }}
+                    >
+                      {facturaIdSeleccionada === f.id ? 'Seleccionada' : 'Cobrar esta factura'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {mostrarSelectorArticulos && (
             <div className={styles.inventarioSelector}>
