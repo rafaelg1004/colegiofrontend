@@ -370,6 +370,7 @@ export const useCajaLogic = () => {
     handleUpdateCantidad,
     updateArticulosYTotal,
     registrarTransaccion,
+    fetchArticulos,
     showConceptDropdown, setShowConceptDropdown,
     showBeneficiarioDropdown, setShowBeneficiarioDropdown
   };
