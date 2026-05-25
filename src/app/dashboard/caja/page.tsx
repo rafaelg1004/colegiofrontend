@@ -300,7 +300,21 @@ export default function CajaPage() {
                             <button onClick={() => handleUpdateCantidad(i, 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ddd', background: '#f8fafc' }}>+</button>
                           </div>
                         </td>
-                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 700 }}>{formatMoney(a.precio_unitario)}</td>
+                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 700 }}>
+                          <input 
+                            type="text" 
+                            value={a.precio_unitario === 0 ? '' : a.precio_unitario} 
+                            onChange={(e) => {
+                              const rawValue = e.target.value.replace(/\D/g, '');
+                              const numValue = parseFloat(rawValue) || 0;
+                              const newItems = [...articulosVenta];
+                              newItems[i].precio_unitario = numValue;
+                              updateArticulosYTotal(newItems);
+                            }}
+                            placeholder="Monto..."
+                            style={{ width: '120px', padding: '4px', border: '1px solid #ddd', borderRadius: '4px' }}
+                          />
+                        </td>
                         <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 800, color: '#4f46e5' }}>{formatMoney(a.precio_unitario * a.cantidad)}</td>
                         <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
                           <button onClick={() => updateArticulosYTotal(articulosVenta.filter((_, idx) => idx !== i))} style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
