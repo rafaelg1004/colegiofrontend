@@ -54,12 +54,12 @@ export const FinanzasDashboard = () => {
       // Filtrar solo los que son servicios (es_servicio: true)
       const opciones = (dataArt || [])
         .filter((a: any) => a.es_servicio === true)
-        .map((a: any) => ({ id: a.id, nombre: a.nombre, tipo: 'articulo' }));
+        .map((a: any) => ({ id: a.id, nombre: String(a.nombre || ''), tipo: 'articulo' }));
 
       setOpcionesFacturacion(opciones);
-      
+
       // Pre-seleccionar pensión si existe
-      const pension = opciones.find(o => o.nombre.toLowerCase().includes('pension') || o.nombre.toLowerCase().includes('pensión'));
+      const pension = opciones.find((o: any) => o.nombre.toLowerCase().includes('pension') || o.nombre.toLowerCase().includes('pensión'));
       if (pension) {
         setIdSeleccionado(pension.id);
         setTipoSeleccionado('articulo');
