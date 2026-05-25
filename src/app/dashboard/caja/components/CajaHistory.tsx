@@ -121,37 +121,38 @@ const CajaHistory: React.FC<Props> = ({
 
       {editingMov && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modalContent} style={{ maxWidth: '400px' }}>
-            <div className={styles.modalHeader}>
-              <h2>Editar Observación</h2>
-              <button className={styles.closeBtn} onClick={() => setEditingMov(null)}>×</button>
+          <div className={styles.modal} style={{ maxWidth: '400px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Editar Observación</h2>
             </div>
-            <div className={styles.modalBody}>
-              <p style={{ marginBottom: '10px', fontSize: '0.9rem', color: '#64748b' }}>
-                Comprobante: {editingMov.numero_comprobante}
+            <div>
+              <p style={{ marginBottom: '15px', fontSize: '0.9rem', color: '#64748b' }}>
+                Comprobante: <strong>{editingMov.numero_comprobante}</strong>
               </p>
               <textarea 
                 value={newObs}
                 onChange={(e) => setNewObs(e.target.value)}
                 rows={4}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'none' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', resize: 'none', marginBottom: '1.5rem', outline: 'none', fontFamily: 'inherit', fontSize: '0.95rem' }}
                 placeholder="Escriba la nueva observación..."
+                onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
               />
             </div>
-            <div className={styles.modalFooter}>
+            <div className={styles.modalActions}>
               <button 
-                className={styles.btnSecondary} 
+                className={styles.btnModalSecondary} 
                 onClick={() => setEditingMov(null)}
                 disabled={savingObs}
               >
                 Cancelar
               </button>
               <button 
-                className={styles.btnPrimary} 
+                className={styles.btnModalPrimary} 
                 onClick={saveObservation}
                 disabled={savingObs}
               >
-                {savingObs ? 'Guardando...' : 'Guardar Cambios'}
+                {savingObs ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
           </div>
