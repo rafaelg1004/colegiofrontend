@@ -246,7 +246,16 @@ export const InventarioList = () => {
           ? `${API_URL}/inventario/articulos/${selectedItem.id}`
           : `${API_URL}/inventario/articulos`;
         method = isEdit ? "PATCH" : "POST";
-        body = formData;
+        
+        // Limpiar tipos numéricos y booleanos para evitar errores de validación de class-validator
+        body = {
+          ...formData,
+          cantidad_stock: formData.cantidad_stock !== undefined && formData.cantidad_stock !== null && formData.cantidad_stock !== "" ? Number(formData.cantidad_stock) : 0,
+          cantidad_minima: formData.cantidad_minima !== undefined && formData.cantidad_minima !== null && formData.cantidad_minima !== "" ? Number(formData.cantidad_minima) : 0,
+          precio_unitario: formData.precio_unitario !== undefined && formData.precio_unitario !== null && formData.precio_unitario !== "" ? Number(formData.precio_unitario) : 0,
+          precio_venta: formData.precio_venta !== undefined && formData.precio_venta !== null && formData.precio_venta !== "" ? Number(formData.precio_venta) : 0,
+          es_servicio: !!formData.es_servicio,
+        };
       }
 
       const res = await fetch(url, {

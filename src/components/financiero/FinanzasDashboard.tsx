@@ -25,6 +25,7 @@ export const FinanzasDashboard = () => {
   const [idSeleccionado, setIdSeleccionado] = useState<string>("");
   const [tipoSeleccionado, setTipoSeleccionado] = useState<'articulo' | 'concepto'>('articulo');
   const [formData, setFormData] = useState<any>({});
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -43,25 +44,28 @@ export const FinanzasDashboard = () => {
       const dataDeudores = await resDeudores.json();
       setDeudores(dataDeudores.deudores || []);
 
-      // Cargar conceptos y servicios para facturación masiva
-      const [resConceptos, resArticulos] = await Promise.all([
-        fetch(`${API_URL}/financiero/conceptos`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/inventario/articulos`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
+      // Cargar solo servicios para facturación masiva
+      const resArticulos = await fetch(`${API_URL}/inventario/articulos`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
       
-      const [dataConc, dataArt] = await Promise.all([resConceptos.json(), resArticulos.json()]);
+      const dataArt = await resArticulos.json();
       
-      const opciones = [
-        ...(dataConc || []).map((c: any) => ({ id: c.id, nombre: c.nombre, tipo: 'concepto' })),
-        ...(dataArt || []).map((a: any) => ({ id: a.id, nombre: a.nombre, tipo: 'articulo' }))
-      ];
+      // Filtrar solo los que son servicios (es_servicio: true)
+      const opciones = (dataArt || [])
+        .filter((a: any) => a.es_servicio === true)
+        .map((a: any) => ({ id: a.id, nombre: a.nombre, tipo: 'articulo' }));
+
       setOpcionesFacturacion(opciones);
       
       // Pre-seleccionar pensión si existe
       const pension = opciones.find(o => o.nombre.toLowerCase().includes('pension') || o.nombre.toLowerCase().includes('pensión'));
       if (pension) {
         setIdSeleccionado(pension.id);
-        setTipoSeleccionado(pension.tipo);
+        setTipoSeleccionado('articulo');
+      } else if (opciones.length > 0) {
+        setIdSeleccionado(opciones[0].id);
+        setTipoSeleccionado('articulo');
       }
     } catch (err) {
       console.error(err);
@@ -80,7 +84,7 @@ export const FinanzasDashboard = () => {
 
   const handleConfirmarFacturacion = () => {
     if (!idSeleccionado) {
-      alert('Por favor selecciona un concepto');
+      setAlertMessage('Por favor selecciona un concepto');
       return;
     }
     // Abrir el modal secundario de confirmación
@@ -112,12 +116,12 @@ export const FinanzasDashboard = () => {
       if (!res.ok) throw new Error("Error al generar facturas");
 
       const data = await res.json();
-      alert(`Proceso completado. ${data.generadas} facturas nuevas generadas.`);
+      setAlertMessage(`Proceso completado. ${data.generadas} facturas nuevas generadas.`);
       setShowConfirmacionExtra(false);
       setShowFacturacion(false);
       fetchData(); // Recargar datos
     } catch (err: any) {
-      alert(err.message);
+      setAlertMessage(err.message);
     } finally {
       setSaving(false);
     }
@@ -161,11 +165,11 @@ export const FinanzasDashboard = () => {
 
       if (!res.ok) throw new Error("Error al registrar pago");
 
-      alert("Pago registrado correctamente");
+      setAlertMessage("Pago registrado correctamente");
       setShowPagar(false);
       window.location.reload();
     } catch (err: any) {
-      alert(err.message);
+      setAlertMessage(err.message);
     } finally {
       setSaving(false);
     }
@@ -392,6 +396,30 @@ export const FinanzasDashboard = () => {
                 disabled={saving}
               >
                 {saving ? "Generando..." : "Sí, generar ahora"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alert Modal */}
+      {alertMessage && (
+        <div className={styles.modalOverlay} style={{ zIndex: 1200 }}>
+          <div className={styles.modalContent} style={{ maxWidth: '400px' }}>
+            <div className={styles.modalHeader}>
+              <h2>Notificación</h2>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '1.1rem', color: '#1e293b', textAlign: 'center' }}>
+                {alertMessage}
+              </p>
+            </div>
+            <div className={styles.modalFooter} style={{ justifyContent: 'center' }}>
+              <button 
+                className={styles.btnPrimary} 
+                onClick={() => setAlertMessage(null)}
+              >
+                Aceptar
               </button>
             </div>
           </div>
