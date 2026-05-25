@@ -303,7 +303,7 @@ export default function CajaPage() {
                         <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 700 }}>
                           <input 
                             type="text" 
-                            value={a.precio_unitario === 0 ? '' : a.precio_unitario} 
+                            value={a.precio_unitario === 0 ? '' : new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 }).format(a.precio_unitario)} 
                             onChange={(e) => {
                               const rawValue = e.target.value.replace(/\D/g, '');
                               const numValue = parseFloat(rawValue) || 0;
@@ -312,7 +312,26 @@ export default function CajaPage() {
                               updateArticulosYTotal(newItems);
                             }}
                             placeholder="Monto..."
-                            style={{ width: '120px', padding: '4px', border: '1px solid #ddd', borderRadius: '4px' }}
+                            style={{ 
+                              width: '120px', 
+                              padding: '8px 12px', 
+                              border: '1.5px solid #cbd5e1', 
+                              borderRadius: '8px', 
+                              fontSize: '0.95rem',
+                              fontWeight: 700,
+                              color: '#1e293b',
+                              outline: 'none',
+                              transition: 'border-color 0.2s, box-shadow 0.2s',
+                              textAlign: 'right'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderColor = '#4f46e5';
+                              e.target.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.1)';
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderColor = '#cbd5e1';
+                              e.target.style.boxShadow = 'none';
+                            }}
                           />
                         </td>
                         <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 800, color: '#4f46e5' }}>{formatMoney(a.precio_unitario * a.cantidad)}</td>
