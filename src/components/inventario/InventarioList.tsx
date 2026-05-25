@@ -26,13 +26,11 @@ export const InventarioList = () => {
 
   const formatCurrency = (val: number | string) => {
     if (val === undefined || val === null || val === "") return "";
-    const num = typeof val === 'string' ? parseFloat(val.replace(/\./g, '').replace(',', '.')) : val;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
     if (isNaN(num)) return "";
-    return new Intl.NumberFormat("de-DE").format(num); // de-DE uses dots for thousands
-  };
-
-  const unformatCurrency = (val: string) => {
-    return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0;
+    return new Intl.NumberFormat("es-CO", {
+      maximumFractionDigits: 0
+    }).format(num);
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,8 +101,8 @@ export const InventarioList = () => {
       cantidad_stock: item.cantidad_stock || 0,
       cantidad_minima: item.cantidad_minima || 0,
       unidad_medida: item.unidad_medida || "und",
-      precio_unitario: item.precio_unitario || 0,
-      precio_venta: item.precio_venta || 0,
+      precio_unitario: Number(item.precio_unitario) || 0,
+      precio_venta: Number(item.precio_venta) || 0,
       ubicacion: item.ubicacion || "Almacén Central",
       categoria_id: item.categoria_id || "",
       es_servicio: item.es_servicio || false,
