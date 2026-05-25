@@ -1,10 +1,22 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { API_URL } from '@/utils/api';
 
 export default function ApiDebug() {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const isLocal = API_URL.includes('localhost');
   const isProduction = !isLocal && (API_URL.includes('vercel') || API_URL.includes('onrender') || API_URL.includes('railway') || !API_URL.includes('localhost'));
+
+  if (!visible) return null;
 
   return (
     <div 

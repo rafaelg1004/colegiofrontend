@@ -104,6 +104,13 @@ const ReceiptPreview: React.FC<Props> = ({
               </div>
             </div>
 
+            {datos.observacion && (
+              <div className="old-dato" style={{ marginBottom: '30px', marginTop: '-15px' }}>
+                <label>Observaciones</label>
+                <span>{datos.observacion}</span>
+              </div>
+            )}
+
             <table className="old-table">
               <thead>
                 <tr>
