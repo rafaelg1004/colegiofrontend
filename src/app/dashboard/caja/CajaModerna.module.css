@@ -1448,3 +1448,360 @@
   background: #059669;
 }
 
+/* ==========================================================================
+   MOBILE POS WIZARD STYLES (100% MOBILE-FIRST DESIGN)
+   ========================================================================== */
+
+.mobileWizard {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.mobileStepsContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 1.25rem;
+}
+
+.mobileStepIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.mobileStepActive {
+  opacity: 1 !important;
+}
+
+.mobileStepNum {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: #cbd5e1;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.mobileStepActive .mobileStepNum {
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+}
+
+.mobileStepLabel {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #475569;
+}
+
+.mobileStepActive .mobileStepLabel {
+  color: #4f46e5;
+}
+
+.mobileStepLine {
+  flex-grow: 1;
+  height: 3px;
+  background: #f1f5f9;
+  margin: 0 0.5rem;
+  margin-top: -1rem;
+  border-radius: 2px;
+}
+
+.mobileStepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobileFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobileFormGroup label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #334155;
+  letter-spacing: -0.01em;
+}
+
+.mobileSelect, .mobileInput {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 600;
+  background: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.mobileSelect:focus, .mobileInput:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.mobileAlertaCartera {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btnWizardNext {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  transition: all 0.2s;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.btnWizardNext:active {
+  transform: scale(0.98);
+  background: #4338ca;
+}
+
+.mobileInventoryBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.articulosGridMobile {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.articuloCardMobile {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.articuloCardMobile:active {
+  transform: scale(0.96);
+  border-color: #4f46e5;
+  background: #e0e7ff;
+}
+
+.articuloHeaderMobile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.articuloNombreMobile {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.articuloFooterMobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.articuloPrecio {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #4f46e5;
+}
+
+.btnAddArtMobile {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.mobileCartSection {
+  background: #f8fafc;
+  border-radius: 20px;
+  padding: 1rem;
+  border: 1.5px dashed #cbd5e1;
+}
+
+.mobileWizardActions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btnWizardBack {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btnWizardBack:active {
+  background: #e2e8f0;
+}
+
+.mobileSummaryBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mobileSummaryBox h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1e293b;
+  border-bottom: 1.5px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.mobileSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.mobileSummaryRow span {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.mobileSummaryRow strong {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.mobileTextarea {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 600;
+  outline: none;
+  font-family: inherit;
+  resize: none;
+}
+
+.mobileTextarea:focus {
+  border-color: #4f46e5;
+}
+
+.mobileTotalBox {
+  background: #e0e7ff;
+  border: 2px solid #c7d2fe;
+  border-radius: 20px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mobileTotalBox span {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #4f46e5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mobileTotalBox strong {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #312e81;
+}
+
+.btnConfirmarRegistroMobile {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 18px;
+  border-radius: 18px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s;
+  text-align: center;
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.btnConfirmarRegistroMobile:active {
+  transform: scale(0.97);
+  background: #059669;
+}
+
+
