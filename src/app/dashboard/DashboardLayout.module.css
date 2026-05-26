@@ -45,6 +45,10 @@
   display: none;
 }
 
+.bottomNav {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .layout {
     flex-direction: column;
@@ -245,8 +249,4 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-}
-
-.bottomNav {
-  display: none;
 }
