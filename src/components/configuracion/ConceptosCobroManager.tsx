@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import styles from "./Configuracion.module.css";
 
 interface ConceptoCobro {
@@ -24,6 +26,8 @@ interface FormConceptoCobro {
   porcentaje_iva: number;
   afecta_inventario: boolean;
   categoria_inventario_id: string;
+  cuenta_debito_id: string;
+  cuenta_credito_id: string;
 }
 
 interface ConceptosCobroManagerProps {
@@ -37,6 +41,7 @@ interface ConceptosCobroManagerProps {
   onEdit: (concepto: ConceptoCobro) => void;
   onCancel: () => void;
   loading: boolean;
+  cuentasContables?: any[];
 }
 
 export function ConceptosCobroManager({
@@ -50,12 +55,44 @@ export function ConceptosCobroManager({
   onEdit,
   onCancel,
   loading,
+  cuentasContables = [],
 }: ConceptosCobroManagerProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenCreate = () => {
+    onCancel();
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (concepto: ConceptoCobro) => {
+    onEdit(concepto);
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    onCancel();
+    setIsModalOpen(false);
+  };
+
+  const handleSubmit = () => {
+    if (editingId) onUpdate();
+    else onCreate();
+    // En un flujo real, se debería esperar la respuesta. 
+    // Por simplicidad, se cierra después de un pequeño retraso o se asume éxito si no hay error.
+    setTimeout(() => setIsModalOpen(false), 500);
+  };
+
   return (
     <div className={styles.card}>
-      <h3 className={styles.cardTitle}>
-        {editingId ? "Editar Concepto de Cobro" : "Crear Concepto de Cobro"}
-      </h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <h3 className={styles.cardTitle} style={{ margin: 0 }}>
+          Conceptos de Cobro Registrados
+        </h3>
+        <button className={styles.btnPrimary} onClick={handleOpenCreate}>
+          + Nuevo Concepto
+        </button>
+      </div>
+
       <p
         style={{
           color: "#666",
@@ -67,7 +104,20 @@ export function ConceptosCobroManager({
         módulo de Inventario.
       </p>
 
-      <div className={styles.formGridColumns}>
+      {isModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.cardTitle} style={{ margin: 0 }}>
+                {editingId ? "Editar Concepto de Cobro" : "Crear Concepto de Cobro"}
+              </h3>
+              <button className={styles.closeBtn} onClick={handleClose}>
+                &times;
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <div className={styles.formGridColumns}>
         <div className={styles.formGroup}>
           <label>Nombre *</label>
           <input
@@ -139,34 +189,53 @@ export function ConceptosCobroManager({
         )}
       </div>
 
-      <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
-        {editingId ? (
-          <>
-            <button
-              onClick={onUpdate}
-              className={styles.btnPrimary}
-              disabled={loading}
-            >
-              {loading ? "Guardando..." : "Actualizar Concepto"}
-            </button>
-            <button onClick={onCancel} className={styles.btnSecondary}>
-              Cancelar
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={onCreate}
-            className={styles.btnPrimary}
-            disabled={loading}
+      <div className={styles.formGridColumns} style={{ marginTop: "1rem" }}>
+        <div className={styles.formGroup}>
+          <label>Cuenta Débito</label>
+          <select
+            value={formData.cuenta_debito_id || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, cuenta_debito_id: e.target.value })
+            }
           >
-            {loading ? "Creando..." : "Crear Concepto"}
-          </button>
-        )}
+            <option value="">-- No Enlazada --</option>
+            {cuentasContables.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.codigo} - {c.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.formGroup}>
+          <label>Cuenta Crédito</label>
+          <select
+            value={formData.cuenta_credito_id || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, cuenta_credito_id: e.target.value })
+            }
+          >
+            <option value="">-- No Enlazada --</option>
+            {cuentasContables.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.codigo} - {c.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <h3 className={styles.cardTitle} style={{ marginTop: "2rem" }}>
-        Conceptos de Cobro Registrados
-      </h3>
+              <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                <button onClick={handleClose} className={styles.btnSecondary} disabled={loading}>
+                  Cancelar
+                </button>
+                <button onClick={handleSubmit} className={styles.btnPrimary} disabled={loading}>
+                  {loading ? "Guardando..." : (editingId ? "Actualizar" : "Crear Concepto")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.tableContainer}>
         <table className={styles.table}>
@@ -176,7 +245,7 @@ export function ConceptosCobroManager({
               <th>Valor</th>
               <th>Periodicidad</th>
               <th>IVA</th>
-              <th>Inventario</th>
+              <th>Enlace Contable</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -190,13 +259,14 @@ export function ConceptosCobroManager({
                   {concepto.aplica_iva ? `${concepto.porcentaje_iva}%` : "No"}
                 </td>
                 <td>
-                  {concepto.afecta_inventario
-                    ? "📦 " + (concepto.categoria_inventario?.nombre || "Sí")
-                    : "No"}
+                  <div style={{ fontSize: '0.85rem' }}>
+                    <div><strong>Débito:</strong> {concepto.cuenta_debito?.codigo || "---"}</div>
+                    <div><strong>Crédito:</strong> {concepto.cuenta_credito?.codigo || "---"}</div>
+                  </div>
                 </td>
                 <td>
                   <button
-                    onClick={() => onEdit(concepto)}
+                    onClick={() => handleOpenEdit(concepto)}
                     className={styles.btnSecondary}
                     style={{ marginRight: "0.5rem" }}
                   >

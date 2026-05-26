@@ -67,6 +67,7 @@ export default function ContabilidadPage() {
   useEffect(() => {
     loadCuentas();
     loadMovimientos();
+    loadBalance();
   }, []);
 
   const loadCuentas = async () => {
@@ -76,7 +77,8 @@ export default function ContabilidadPage() {
       const params = new URLSearchParams();
       if (tipoFiltro) params.append("tipo", tipoFiltro);
 
-      const res = await fetch(`${API}/contabilidad/cuentas?${params}`, {
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API}/contabilidad/cuentas${queryStr}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
@@ -103,7 +105,8 @@ export default function ContabilidadPage() {
       if (fechaDesde) params.append("fecha_desde", fechaDesde);
       if (fechaHasta) params.append("fecha_hasta", fechaHasta);
 
-      const res = await fetch(`${API}/contabilidad/movimientos?${params}`, {
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API}/contabilidad/movimientos${queryStr}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
@@ -130,8 +133,9 @@ export default function ContabilidadPage() {
       if (fechaDesde) params.append("fecha_desde", fechaDesde);
       if (fechaHasta) params.append("fecha_hasta", fechaHasta);
 
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
       const res = await fetch(
-        `${API}/contabilidad/balance-comprobacion?${params}`,
+        `${API}/contabilidad/balance-comprobacion${queryStr}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!res.ok) {
@@ -603,14 +607,49 @@ export default function ContabilidadPage() {
 
   const tabs = [
     { id: "cuentas", label: "Plan de Cuentas (PUC)" },
-    { id: "facturacion", label: "Facturación" },
-    { id: "movimientos", label: "Movimientos" },
+    { id: "movimientos", label: "Libro Diario" },
     { id: "balance", label: "Balance de Comprobación" },
+    { id: "facturacion", label: "Asiento Manual" },
   ];
+
+  // Calcular totales para los widgets
+  const totalActivos = balance?.cuentas?.find((c: any) => c.codigo === '1')?.saldo || 0;
+  const totalPasivos = balance?.cuentas?.find((c: any) => c.codigo === '2')?.saldo || 0;
+  const totalIngresos = balance?.cuentas?.find((c: any) => c.codigo === '4')?.saldo || 0;
+  const totalGastos = balance?.cuentas?.find((c: any) => c.codigo === '5')?.saldo || 0;
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Contabilidad</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Módulo Contable</h1>
+      </div>
+
+      <div className={styles.widgetsContainer}>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Total Activos</span>
+          <span className={`${styles.widgetValue} ${totalActivos >= 0 ? styles.positive : styles.negative}`}>
+            ${totalActivos.toLocaleString('es-CO')}
+          </span>
+        </div>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Total Pasivos</span>
+          <span className={styles.widgetValue}>
+            ${totalPasivos.toLocaleString('es-CO')}
+          </span>
+        </div>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Ingresos</span>
+          <span className={`${styles.widgetValue} ${styles.positive}`}>
+            ${totalIngresos.toLocaleString('es-CO')}
+          </span>
+        </div>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Gastos Operativos</span>
+          <span className={`${styles.widgetValue} ${styles.negative}`}>
+            ${totalGastos.toLocaleString('es-CO')}
+          </span>
+        </div>
+      </div>
 
       <div className={styles.tabsContainer}>
         {tabs.map((tab) => (
@@ -698,13 +737,19 @@ export default function ContabilidadPage() {
 
           <div
             style={{
-              marginTop: "1rem",
+              marginTop: "1.5rem",
               display: "flex",
               gap: "1rem",
               alignItems: "center",
+              background: "#ffffff",
+              padding: "1rem",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
             }}
           >
+            <span style={{ fontWeight: 600, color: "#475569", fontSize: "0.9rem" }}>Filtros:</span>
             <select
+              className={styles.filterInput}
               value={tipoFiltro}
               onChange={(e) => {
                 setTipoFiltro(e.target.value);
@@ -777,7 +822,7 @@ export default function ContabilidadPage() {
 
       {activeTab === "facturacion" && (
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Nueva Factura / Venta</h3>
+          <h3 className={styles.cardTitle}>Registrar Asiento Manual</h3>
           <div className={styles.formGrid}>
             <div className={styles.formGroup} style={{ gridColumn: "1 / -1" }}>
               <label>Buscar Estudiante *</label>
@@ -938,14 +983,28 @@ export default function ContabilidadPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: "1rem", display: "flex", gap: "1rem" }}>
+          <div
+            style={{
+              marginTop: "1.5rem",
+              display: "flex",
+              gap: "1rem",
+              alignItems: "center",
+              background: "#ffffff",
+              padding: "1rem",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#475569", fontSize: "0.9rem" }}>Filtros:</span>
             <input
               type="date"
+              className={styles.filterInput}
               value={fechaDesde}
               onChange={(e) => setFechaDesde(e.target.value)}
             />
             <input
               type="date"
+              className={styles.filterInput}
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
             />
@@ -973,11 +1032,11 @@ export default function ContabilidadPage() {
                     <td>
                       {mov.cuenta?.codigo} - {mov.cuenta?.nombre}
                     </td>
-                    <td style={{ textAlign: "right" }}>
-                      ${mov.debe?.toLocaleString()}
+                    <td className={`${styles.amount} ${styles.amountDebe}`}>
+                      ${Number(mov.debe || 0).toLocaleString('es-CO')}
                     </td>
-                    <td style={{ textAlign: "right" }}>
-                      ${mov.haber?.toLocaleString()}
+                    <td className={`${styles.amount} ${styles.amountHaber}`}>
+                      ${Number(mov.haber || 0).toLocaleString('es-CO')}
                     </td>
                   </tr>
                 ))}
@@ -997,14 +1056,28 @@ export default function ContabilidadPage() {
       {activeTab === "balance" && (
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Balance de Comprobación</h3>
-          <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem" }}>
+          <div
+            style={{
+              marginBottom: "1.5rem",
+              display: "flex",
+              gap: "1rem",
+              alignItems: "center",
+              background: "#ffffff",
+              padding: "1rem",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#475569", fontSize: "0.9rem" }}>Periodo:</span>
             <input
               type="date"
+              className={styles.filterInput}
               value={fechaDesde}
               onChange={(e) => setFechaDesde(e.target.value)}
             />
             <input
               type="date"
+              className={styles.filterInput}
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
             />
@@ -1029,32 +1102,29 @@ export default function ContabilidadPage() {
                     <tr key={c.id}>
                       <td className={styles.mono}>{c.codigo}</td>
                       <td>{c.nombre}</td>
-                      <td style={{ textAlign: "right" }}>
-                        ${c.debe?.toLocaleString()}
+                      <td className={`${styles.amount} ${styles.amountDebe}`}>
+                        ${Number(c.debe || 0).toLocaleString('es-CO')}
                       </td>
-                      <td style={{ textAlign: "right" }}>
-                        ${c.haber?.toLocaleString()}
+                      <td className={`${styles.amount} ${styles.amountHaber}`}>
+                        ${Number(c.haber || 0).toLocaleString('es-CO')}
                       </td>
-                      <td style={{ textAlign: "right", fontWeight: "bold" }}>
-                        ${c.saldo?.toLocaleString()}
+                      <td className={styles.amount} style={{ fontWeight: "bold", color: Number(c.saldo) >= 0 ? "#10b981" : "#ef4444" }}>
+                        ${Math.abs(Number(c.saldo || 0)).toLocaleString('es-CO')}
                       </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={2}>TOTALES</td>
-                    <td style={{ textAlign: "right" }}>
-                      ${balance.totales?.debe?.toLocaleString()}
+                    <td colSpan={2}>TOTALES SUMAS IGUALES</td>
+                    <td className={`${styles.amount} ${styles.amountDebe}`}>
+                      ${Number(balance.totales?.debe || 0).toLocaleString('es-CO')}
                     </td>
-                    <td style={{ textAlign: "right" }}>
-                      ${balance.totales?.haber?.toLocaleString()}
+                    <td className={`${styles.amount} ${styles.amountHaber}`}>
+                      ${Number(balance.totales?.haber || 0).toLocaleString('es-CO')}
                     </td>
-                    <td style={{ textAlign: "right" }}>
-                      $
-                      {(
-                        balance.totales?.debe - balance.totales?.haber
-                      )?.toLocaleString()}
+                    <td className={styles.amount}>
+                      ${(Math.abs(Number(balance.totales?.debe || 0) - Number(balance.totales?.haber || 0))).toLocaleString('es-CO')}
                     </td>
                   </tr>
                 </tfoot>

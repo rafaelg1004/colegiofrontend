@@ -31,6 +31,10 @@ interface ConceptoCobro {
   es_compuesto: boolean;
   categoria_inventario_id?: string;
   categoria_inventario?: { id: string; nombre: string };
+  cuenta_debito_id?: string;
+  cuenta_credito_id?: string;
+  cuenta_debito?: { codigo: string; nombre: string };
+  cuenta_credito?: { codigo: string; nombre: string };
 }
 
 interface Usuario {
@@ -70,6 +74,7 @@ export function ConfiguracionManager() {
 
   // Conceptos de Cobro
   const [conceptosCobro, setConceptosCobro] = useState<ConceptoCobro[]>([]);
+  const [cuentasContables, setCuentasContables] = useState<any[]>([]);
   const [editingConcepto, setEditingConcepto] = useState<string | null>(null);
   const [formConceptoCobro, setFormConceptoCobro] = useState({
     nombre: "",
@@ -79,6 +84,8 @@ export function ConfiguracionManager() {
     porcentaje_iva: 0,
     afecta_inventario: false,
     categoria_inventario_id: "",
+    cuenta_debito_id: "",
+    cuenta_credito_id: "",
   });
 
   // Usuarios
@@ -115,11 +122,14 @@ export function ConfiguracionManager() {
 
     try {
       setLoading(true);
-      const [resInst, resConceptos, resUsuarios] = await Promise.all([
+      const [resInst, resConceptos, resCuentas, resUsuarios] = await Promise.all([
         fetch(`${API}/configuracion/institucion`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`${API}/configuracion/conceptos-cobro`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API}/contabilidad/cuentas?limit=500`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`${API}/auth/users`, {
@@ -147,6 +157,11 @@ export function ConfiguracionManager() {
 
       if (resConceptos.ok) {
         setConceptosCobro(await resConceptos.json());
+      }
+
+      if (resCuentas.ok) {
+        const cuentasRes = await resCuentas.json();
+        setCuentasContables(cuentasRes.data || cuentasRes);
       }
 
       if (resUsuarios.ok) {
@@ -213,6 +228,8 @@ export function ConfiguracionManager() {
         porcentaje_iva: 0,
         afecta_inventario: false,
         categoria_inventario_id: "",
+        cuenta_debito_id: "",
+        cuenta_credito_id: "",
       });
       loadData();
       showToast("Concepto de cobro creado correctamente", "success");
@@ -249,6 +266,8 @@ export function ConfiguracionManager() {
         porcentaje_iva: 0,
         afecta_inventario: false,
         categoria_inventario_id: "",
+        cuenta_debito_id: "",
+        cuenta_credito_id: "",
       });
       loadData();
       showToast("Concepto de cobro actualizado correctamente", "success");
@@ -285,6 +304,8 @@ export function ConfiguracionManager() {
       porcentaje_iva: concepto.porcentaje_iva ?? 0,
       afecta_inventario: concepto.afecta_inventario ?? false,
       categoria_inventario_id: concepto.categoria_inventario_id ?? "",
+      cuenta_debito_id: concepto.cuenta_debito_id ?? "",
+      cuenta_credito_id: concepto.cuenta_credito_id ?? "",
     });
   };
 
@@ -298,6 +319,8 @@ export function ConfiguracionManager() {
       porcentaje_iva: 0,
       afecta_inventario: false,
       categoria_inventario_id: "",
+      cuenta_debito_id: "",
+      cuenta_credito_id: "",
     });
   };
 
@@ -395,6 +418,7 @@ export function ConfiguracionManager() {
         {activeTab === "conceptos-cobro" && (
           <ConceptosCobroManager
             conceptos={conceptosCobro}
+            cuentasContables={cuentasContables}
             formData={formConceptoCobro}
             setFormData={setFormConceptoCobro}
             editingId={editingConcepto}

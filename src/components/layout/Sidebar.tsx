@@ -101,6 +101,12 @@ export const fullMenu = [
     roles: ["admin", "rector", "coordinador", "secretaria"],
   },
   {
+    name: "Contabilidad",
+    path: "/dashboard/contabilidad",
+    icon: "📒",
+    roles: ["admin", "rector", "coordinador", "secretaria"],
+  },
+  {
     name: "Caja",
     path: "/dashboard/caja",
     icon: "💰",

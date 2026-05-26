@@ -392,7 +392,7 @@ export const useCajaLogic = () => {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           tipo,
-          estudiante_id: tipo === "INGRESO" ? beneficiarioSeleccionado?.id : null,
+          estudiante_id: beneficiarioSeleccionado?.id || null,
           empleado_id: tipo === "EGRESO" ? beneficiarioSeleccionado?.id : null,
           estudiante_nombre: nombreCompleto,
           monto: parseFloat(monto), // Enviar monto total
