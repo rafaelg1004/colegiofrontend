@@ -18,9 +18,21 @@ const ReceiptPreview: React.FC<Props> = ({
 }) => {
   if (!datos) return null;
 
-  const fechaStr = new Date(datos.fecha).toLocaleDateString("es-CO", {
-    year: 'numeric', month: 'long', day: 'numeric'
-  });
+  let fechaStr = datos.fecha || '';
+  if (datos.fecha) {
+    const cleanDateStr = datos.fecha.split('T')[0];
+    const parts = cleanDateStr.split('-');
+    if (parts.length === 3) {
+      const localDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      fechaStr = localDate.toLocaleDateString("es-CO", {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+    } else {
+      fechaStr = new Date(datos.fecha).toLocaleDateString("es-CO", {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+  }
 
   const handlePrint = () => {
     window.print();

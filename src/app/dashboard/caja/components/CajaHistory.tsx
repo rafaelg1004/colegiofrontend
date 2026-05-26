@@ -31,8 +31,18 @@ const CajaHistory: React.FC<Props> = ({
   const handleEditClick = (mov: any) => {
     setEditingMov(mov);
     setNewObs(mov.observacion || "");
-    const dateStr = mov.fecha ? new Date(mov.fecha).toISOString().split('T')[0] : "";
+    const dateStr = mov.fecha ? mov.fecha.split('T')[0] : "";
     setNewFecha(dateStr);
+  };
+
+  const formatFechaLocal = (fechaStr: string) => {
+    if (!fechaStr) return "-";
+    const cleanDateStr = fechaStr.split('T')[0];
+    const parts = cleanDateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return cleanDateStr;
   };
 
   const saveObservation = async () => {
@@ -97,7 +107,7 @@ const CajaHistory: React.FC<Props> = ({
           <tbody>
             {resumen?.movimientos.map((mov: any) => (
               <tr key={mov.id}>
-                <td>{new Date(mov.fecha).toLocaleDateString()}</td>
+                <td>{formatFechaLocal(mov.fecha)}</td>
                 <td><span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span></td>
                 <td>{mov.concepto}</td>
                 <td>{mov.estudiante_nombre || "-"}</td>

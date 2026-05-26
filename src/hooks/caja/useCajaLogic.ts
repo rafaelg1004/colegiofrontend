@@ -202,7 +202,7 @@ export const useCajaLogic = () => {
   const cargarResumen = async () => {
     try {
       const token = getAuthToken();
-      const res = await fetch(`${API}/caja/resumen?desde=${fechaDesde}&hasta=${fechaHasta}`, {
+      const res = await fetch(`${API}/caja/resumen?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) setResumen(await res.json());
