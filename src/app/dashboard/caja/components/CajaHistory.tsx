@@ -91,48 +91,77 @@ const CajaHistory: React.FC<Props> = ({
         <button className={styles.btnFiltrar} onClick={cargarResumen}>🔍 Filtrar</button>
       </div>
 
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Tipo</th>
-              <th>Concepto</th>
-              <th>Beneficiario</th>
-              <th>Monto</th>
-              <th>Comprobante</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resumen?.movimientos.map((mov: any) => (
-              <tr key={mov.id}>
-                <td>{formatFechaLocal(mov.fecha)}</td>
-                <td><span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span></td>
-                <td>{mov.concepto}</td>
-                <td>{mov.estudiante_nombre || "-"}</td>
-                <td style={{ fontWeight: 700, color: mov.tipo === 'INGRESO' ? '#059669' : '#dc2626' }}>{formatMoney(mov.monto)}</td>
-                <td>{mov.numero_comprobante}</td>
-                <td>
-                  <button 
-                    onClick={() => imprimirRecibo(mov)} 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', marginRight: '10px' }}
-                    title="Reimprimir Comprobante"
-                  >
-                    🖨️
-                  </button>
-                  <button 
-                    onClick={() => handleEditClick(mov)} 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
-                    title="Editar Observación"
-                  >
-                    ✏️
-                  </button>
-                </td>
+      {/* Vista de escritorio (Tabla) */}
+      <div className={styles.desktopHistoryTable}>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Concepto</th>
+                <th>Beneficiario</th>
+                <th>Monto</th>
+                <th>Comprobante</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {resumen?.movimientos.map((mov: any) => (
+                <tr key={mov.id}>
+                  <td>{formatFechaLocal(mov.fecha)}</td>
+                  <td><span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span></td>
+                  <td>{mov.concepto}</td>
+                  <td>{mov.estudiante_nombre || "-"}</td>
+                  <td style={{ fontWeight: 700, color: mov.tipo === 'INGRESO' ? '#059669' : '#dc2626' }}>{formatMoney(mov.monto)}</td>
+                  <td>{mov.numero_comprobante}</td>
+                  <td>
+                    <button 
+                      onClick={() => imprimirRecibo(mov)} 
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', marginRight: '10px' }}
+                      title="Reimprimir Comprobante"
+                    >
+                      🖨️
+                    </button>
+                    <button 
+                      onClick={() => handleEditClick(mov)} 
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                      title="Editar Observación"
+                    >
+                      ✏️
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Vista de móvil (Cards) */}
+      <div className={styles.mobileHistoryList}>
+        {resumen?.movimientos.map((mov: any) => (
+          <div key={mov.id} className={styles.movCard}>
+            <div className={styles.movCardHeader}>
+              <span className={styles.movCardDate}>{formatFechaLocal(mov.fecha)}</span>
+              <span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span>
+            </div>
+            <div className={styles.movCardBody}>
+              <p><strong>Concepto:</strong> {mov.concepto}</p>
+              <p><strong>Beneficiario:</strong> {mov.estudiante_nombre || "-"}</p>
+              <p><strong>Comprobante:</strong> {mov.numero_comprobante}</p>
+            </div>
+            <div className={styles.movCardFooter}>
+              <span className={styles.movCardAmount} style={{ color: mov.tipo === 'INGRESO' ? '#059669' : '#dc2626' }}>
+                {formatMoney(mov.monto)}
+              </span>
+              <div className={styles.movCardActions}>
+                <button onClick={() => imprimirRecibo(mov)} className={styles.btnMovAction} title="Reimprimir">🖨️ Recibo</button>
+                <button onClick={() => handleEditClick(mov)} className={styles.btnMovAction} title="Editar">✏️ Editar</button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {editingMov && (

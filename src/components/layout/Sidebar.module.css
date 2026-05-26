@@ -93,11 +93,6 @@
 
 @media (max-width: 1024px) {
   .sidebar {
-    transform: translateX(-100%);
-    z-index: 100;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
+    display: none !important;
   }
 }

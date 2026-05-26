@@ -813,9 +813,18 @@
   margin-bottom: 1.5rem;
   display: block;
 }
-
 .fullWidth {
   grid-column: span 2;
+}
+
+.desktopCartTable,
+.desktopHistoryTable {
+  display: block;
+}
+
+.mobileCartCards,
+.mobileHistoryList {
+  display: none;
 }
 
 /* Responsive */
@@ -890,6 +899,225 @@
   .btnConfirmarRegistro {
     font-size: 1.1rem;
     padding: 1rem;
+  }
+
+  .desktopCartTable,
+  .desktopHistoryTable {
+    display: none !important;
+  }
+  
+  .mobileCartCards {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .cartCard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .cartCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #e2e8f0;
+    padding-bottom: 0.5rem;
+  }
+  
+  .cartCardName {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+  }
+  
+  .btnRemoveCartCard {
+    background: #fee2e2;
+    border: none;
+    color: #ef4444;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  
+  .btnRemoveCartCard:hover {
+    background: #fecaca;
+  }
+  
+  .cartCardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .cartCardRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .cartCardRow label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+  
+  .cartCardPriceInput {
+    width: 120px !important;
+    padding: 6px 10px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    text-align: right !important;
+    background: white !important;
+  }
+  
+  .cartCardQuantitySelector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btnQuantity {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #475569;
+    transition: all 0.2s;
+  }
+  
+  .btnQuantity:hover {
+    background: #f1f5f9;
+  }
+  
+  .quantityCount {
+    min-width: 20px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  
+  .cartCardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+    font-size: 0.9rem;
+    color: #64748b;
+  }
+  
+  .cartCardSubtotal {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #4f46e5;
+  }
+
+  .mobileHistoryList {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .movCard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+  }
+  
+  .movCard:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  
+  .movCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #e2e8f0;
+    padding-bottom: 0.5rem;
+  }
+  
+  .movCardDate {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+  
+  .movCardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: #334155;
+  }
+  
+  .movCardBody p {
+    margin: 0;
+  }
+  
+  .movCardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+  }
+  
+  .movCardAmount {
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+  
+  .movCardActions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .btnMovAction {
+    background: white;
+    border: 1px solid #cbd5e1;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.2s;
+  }
+  
+  .btnMovAction:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #94a3b8;
   }
 }
 /* Toast Notifications */

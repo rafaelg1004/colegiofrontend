@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
+import Link from 'next/link';
 import { getAuthToken, clearAuthCookie, isTokenExpired } from '@/utils/auth';
 import styles from './DashboardLayout.module.css';
 
@@ -115,6 +116,45 @@ export default function DashboardLayout({
 
       <div className={styles.mainContent}>
         {children}
+      </div>
+
+      {/* Barra de Navegación Inferior para Móvil/Tablet */}
+      <div className={styles.bottomNav}>
+        <Link 
+          href="/dashboard" 
+          className={`${styles.bottomNavItem} ${pathname === '/dashboard' ? styles.bottomNavItemActive : ''}`}
+        >
+          <span>🏠</span>
+          Inicio
+        </Link>
+        <Link 
+          href="/dashboard/estudiantes" 
+          className={`${styles.bottomNavItem} ${pathname.startsWith('/dashboard/estudiantes') ? styles.bottomNavItemActive : ''}`}
+        >
+          <span>🎓</span>
+          Estudiantes
+        </Link>
+        <Link 
+          href="/dashboard/caja" 
+          className={`${styles.bottomNavItem} ${pathname.startsWith('/dashboard/caja') ? styles.bottomNavItemActive : ''}`}
+        >
+          <span>💰</span>
+          Caja
+        </Link>
+        <Link 
+          href="/dashboard/financiero" 
+          className={`${styles.bottomNavItem} ${pathname.startsWith('/dashboard/financiero') ? styles.bottomNavItemActive : ''}`}
+        >
+          <span>🏦</span>
+          Finanzas
+        </Link>
+        <Link 
+          href="/dashboard/configuracion" 
+          className={`${styles.bottomNavItem} ${pathname.startsWith('/dashboard/configuracion') ? styles.bottomNavItemActive : ''}`}
+        >
+          <span>⚙️</span>
+          Config
+        </Link>
       </div>
     </div>
   );

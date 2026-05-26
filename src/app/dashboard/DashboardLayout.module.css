@@ -53,24 +53,12 @@
   .mainContent {
     margin-left: 0;
     padding: 1rem;
-    padding-bottom: 5rem; /* Space for mobile nav if needed */
-    padding-top: 5rem; /* Space for mobileTopBar */
+    padding-bottom: 6rem !important; /* Space for mobile bottom nav */
+    padding-top: 1rem !important; /* No mobileTopBar space needed */
   }
 
   .mobileTopBar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4rem;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 0 1.5rem;
-    z-index: 90;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: none !important;
   }
 
   .mobileLogo h2 {
@@ -81,27 +69,67 @@
   }
 
   .menuButton {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #475569;
-    cursor: pointer;
-    padding: 0.5rem;
+    display: none !important;
   }
 
   .mobileOverlay {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 95;
-    animation: fadeIn 0.3s ease;
+    display: none !important;
   }
 
   .cajaMainContent {
     padding-top: 1rem !important;
   }
+
+  /* Bottom Navigation Bar for Mobile/Tablet */
+  .bottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4.5rem;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    padding: 0 0.5rem;
+  }
+
+  .bottomNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 700;
+    gap: 3px;
+    transition: all 0.2s ease;
+    flex: 1;
+    height: 100%;
+  }
+
+  .bottomNavItem span {
+    font-size: 1.3rem;
+    transition: transform 0.2s ease;
+  }
+
+  .bottomNavItem:hover {
+    color: #4f46e5;
+  }
+
+  .bottomNavItemActive {
+    color: #4f46e5 !important;
+  }
+
+  .bottomNavItemActive span {
+    transform: translateY(-2px) scale(1.1);
+  }
+}
+
+.bottomNav {
+  display: none;
 }

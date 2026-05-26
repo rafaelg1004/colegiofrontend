@@ -277,75 +277,127 @@ export default function CajaPage() {
           {articulosVenta.length > 0 && (
             <div className={`${styles.cartSection} ${styles.fullWidth}`} style={{ marginTop: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 700, fontSize: '1.1rem' }}>🛒 Detalle de la Transacción</label>
-              <div className={styles.tableWrapper}>
-                <table className={styles.table} style={{ borderSpacing: 0 }}>
-                  <thead>
-                    <tr>
-                      <th style={{ background: '#f8fafc' }}>Concepto / Artículo</th>
-                      <th style={{ background: '#f8fafc' }}>Cant</th>
-                      <th style={{ background: '#f8fafc' }}>Precio Unitario</th>
-                      <th style={{ background: '#f8fafc' }}>Subtotal</th>
-                      <th style={{ background: '#f8fafc' }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {articulosVenta.map((a, i) => (
-                      <tr key={i}>
-                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontWeight: 600 }}>{a.nombre}</span>
-                            {a.es_servicio && <span style={{ fontSize: '0.7rem', color: '#4f46e5', fontWeight: 700 }}>SERVICIO</span>}
-                          </div>
-                        </td>
-                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <button onClick={() => handleUpdateCantidad(i, -1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ddd', background: '#f8fafc' }}>-</button>
-                            <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 700 }}>{a.cantidad}</span>
-                            <button onClick={() => handleUpdateCantidad(i, 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ddd', background: '#f8fafc' }}>+</button>
-                          </div>
-                        </td>
-                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 700 }}>
-                          <input 
-                            type="text" 
-                            value={a.precio_unitario === 0 ? '' : new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 }).format(a.precio_unitario)} 
-                            onChange={(e) => {
-                              const rawValue = e.target.value.replace(/\D/g, '');
-                              const numValue = parseFloat(rawValue) || 0;
-                              const newItems = [...articulosVenta];
-                              newItems[i].precio_unitario = numValue;
-                              updateArticulosYTotal(newItems);
-                            }}
-                            placeholder="Monto..."
-                            style={{ 
-                              width: '120px', 
-                              padding: '8px 12px', 
-                              border: '1.5px solid #cbd5e1', 
-                              borderRadius: '8px', 
-                              fontSize: '0.95rem',
-                              fontWeight: 700,
-                              color: '#1e293b',
-                              outline: 'none',
-                              transition: 'border-color 0.2s, box-shadow 0.2s',
-                              textAlign: 'right'
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = '#4f46e5';
-                              e.target.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.1)';
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = '#cbd5e1';
-                              e.target.style.boxShadow = 'none';
-                            }}
-                          />
-                        </td>
-                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 800, color: '#4f46e5' }}>{formatMoney(a.precio_unitario * a.cantidad)}</td>
-                        <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
-                          <button onClick={() => updateArticulosYTotal(articulosVenta.filter((_, idx) => idx !== i))} style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
-                        </td>
+              
+              {/* Vista de escritorio (Tabla) */}
+              <div className={styles.desktopCartTable}>
+                <div className={styles.tableWrapper}>
+                  <table className={styles.table} style={{ borderSpacing: 0 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ background: '#f8fafc' }}>Concepto / Artículo</th>
+                        <th style={{ background: '#f8fafc' }}>Cant</th>
+                        <th style={{ background: '#f8fafc' }}>Precio Unitario</th>
+                        <th style={{ background: '#f8fafc' }}>Subtotal</th>
+                        <th style={{ background: '#f8fafc' }}></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {articulosVenta.map((a, i) => (
+                        <tr key={i}>
+                          <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontWeight: 600 }}>{a.nombre}</span>
+                              {a.es_servicio && <span style={{ fontSize: '0.7rem', color: '#4f46e5', fontWeight: 700 }}>SERVICIO</span>}
+                            </div>
+                          </td>
+                          <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <button type="button" onClick={() => handleUpdateCantidad(i, -1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ddd', background: '#f8fafc' }}>-</button>
+                              <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 700 }}>{a.cantidad}</span>
+                              <button type="button" onClick={() => handleUpdateCantidad(i, 1)} style={{ padding: '2px 8px', borderRadius: '4px', border: '1px solid #ddd', background: '#f8fafc' }}>+</button>
+                            </div>
+                          </td>
+                          <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 700 }}>
+                            <input 
+                              type="text" 
+                              value={a.precio_unitario === 0 ? '' : new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 }).format(a.precio_unitario)} 
+                              onChange={(e) => {
+                                const rawValue = e.target.value.replace(/\D/g, '');
+                                const numValue = parseFloat(rawValue) || 0;
+                                const newItems = [...articulosVenta];
+                                newItems[i].precio_unitario = numValue;
+                                updateArticulosYTotal(newItems);
+                              }}
+                              placeholder="Monto..."
+                              style={{ 
+                                width: '120px', 
+                                padding: '8px 12px', 
+                                border: '1.5px solid #cbd5e1', 
+                                borderRadius: '8px', 
+                                fontSize: '0.95rem',
+                                fontWeight: 700,
+                                color: '#1e293b',
+                                outline: 'none',
+                                transition: 'border-color 0.2s, box-shadow 0.2s',
+                                textAlign: 'right'
+                              }}
+                              onFocus={(e) => {
+                                e.target.style.borderColor = '#4f46e5';
+                                e.target.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.1)';
+                              }}
+                              onBlur={(e) => {
+                                e.target.style.borderColor = '#cbd5e1';
+                                e.target.style.boxShadow = 'none';
+                              }}
+                            />
+                          </td>
+                          <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9', fontWeight: 800, color: '#4f46e5' }}>{formatMoney(a.precio_unitario * a.cantidad)}</td>
+                          <td style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                            <button type="button" onClick={() => updateArticulosYTotal(articulosVenta.filter((_, idx) => idx !== i))} style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Vista de móvil (Cards) */}
+              <div className={styles.mobileCartCards}>
+                {articulosVenta.map((a, i) => (
+                  <div key={i} className={styles.cartCard}>
+                    <div className={styles.cartCardHeader}>
+                      <span className={styles.cartCardName}>{a.nombre}</span>
+                      <button 
+                        type="button" 
+                        onClick={() => updateArticulosYTotal(articulosVenta.filter((_, idx) => idx !== i))} 
+                        className={styles.btnRemoveCartCard}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className={styles.cartCardBody}>
+                      <div className={styles.cartCardRow}>
+                        <label>Precio Unitario:</label>
+                        <input 
+                          type="text" 
+                          value={a.precio_unitario === 0 ? '' : new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 }).format(a.precio_unitario)} 
+                          onChange={(e) => {
+                            const rawValue = e.target.value.replace(/\D/g, '');
+                            const numValue = parseFloat(rawValue) || 0;
+                            const newItems = [...articulosVenta];
+                            newItems[i].precio_unitario = numValue;
+                            updateArticulosYTotal(newItems);
+                          }}
+                          placeholder="Monto..."
+                          className={styles.cartCardPriceInput}
+                        />
+                      </div>
+                      <div className={styles.cartCardRow}>
+                        <label>Cantidad:</label>
+                        <div className={styles.cartCardQuantitySelector}>
+                          <button type="button" onClick={() => handleUpdateCantidad(i, -1)} className={styles.btnQuantity}>-</button>
+                          <span className={styles.quantityCount}>{a.cantidad}</span>
+                          <button type="button" onClick={() => handleUpdateCantidad(i, 1)} className={styles.btnQuantity}>+</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.cartCardFooter}>
+                      <span>Subtotal:</span>
+                      <strong className={styles.cartCardSubtotal}>{formatMoney(a.precio_unitario * a.cantidad)}</strong>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
