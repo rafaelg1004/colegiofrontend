@@ -483,6 +483,7 @@ export const useCajaLogic = () => {
     registrarTransaccion,
     fetchArticulos,
     showConceptDropdown, setShowConceptDropdown,
-    showBeneficiarioDropdown, setShowBeneficiarioDropdown
+    showBeneficiarioDropdown, setShowBeneficiarioDropdown,
+    conceptoSeleccionado, setConceptoSeleccionado
   };
 };

@@ -53,7 +53,8 @@ export default function CajaPage() {
     updateArticulosYTotal,
     registrarTransaccion,
     showConceptDropdown, setShowConceptDropdown,
-    showBeneficiarioDropdown, setShowBeneficiarioDropdown
+    showBeneficiarioDropdown, setShowBeneficiarioDropdown,
+    conceptoSeleccionado, setConceptoSeleccionado
   } = useCajaLogic();
 
   const [showPreview, setShowPreview] = useState(false);
@@ -150,38 +151,62 @@ export default function CajaPage() {
 
                 <div className={styles.mobileFormGroup}>
                   <label>🏷️ Concepto de Cobro</label>
-                  <div style={{ position: 'relative' }}>
-                    <input 
-                      type="text" 
-                      value={busquedaConcepto} 
-                      onChange={e => { buscarConceptos(e.target.value); setShowConceptDropdown(true); }} 
-                      onFocus={() => { buscarConceptos(""); setShowConceptDropdown(true); }}
-                      onBlur={() => setTimeout(() => setShowConceptDropdown(false), 300)}
-                      placeholder="Seleccionar concepto..." 
-                      className={styles.mobileInput}
-                    />
-                    {showConceptDropdown && (resultadosConceptos.length > 0 ? (
-                      <div className={styles.searchDropdown} style={{ zIndex: 9999 }}>
-                        {resultadosConceptos.map(c => (
-                          <div 
-                            key={c.id} 
-                            className={styles.searchItem} 
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              seleccionarConcepto(c);
-                              setShowConceptDropdown(false);
-                            }}
-                          >
-                            <strong>{c.nombre}</strong>
-                          </div>
-                        ))}
+                  {conceptoSeleccionado ? (
+                    <div className={styles.selectedConceptCard}>
+                      <div className={styles.selectedConceptInfo}>
+                        <span className={styles.selectedConceptIcon}>🏷️</span>
+                        <div>
+                          <strong>{conceptoSeleccionado.nombre}</strong>
+                          <p>{formatMoney(conceptoSeleccionado.valor || 0)}</p>
+                        </div>
                       </div>
-                    ) : busquedaConcepto.length > 0 && (
-                      <div className={styles.searchDropdown} style={{ zIndex: 9999, padding: '15px', textAlign: 'center', color: '#64748b' }}>
-                        No se encontraron conceptos compatibles.
-                      </div>
-                    ))}
-                  </div>
+                      <button 
+                        type="button" 
+                        className={styles.btnClearConcept}
+                        onClick={() => {
+                          setConceptoSeleccionado(null);
+                          setBusquedaConcepto("");
+                          setArticulosVenta([]);
+                          setMonto("0");
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        type="text" 
+                        value={busquedaConcepto} 
+                        onChange={e => { buscarConceptos(e.target.value); setShowConceptDropdown(true); }} 
+                        onFocus={() => { buscarConceptos(""); setShowConceptDropdown(true); }}
+                        onBlur={() => setTimeout(() => setShowConceptDropdown(false), 300)}
+                        placeholder="Seleccionar concepto..." 
+                        className={styles.mobileInput}
+                      />
+                      {showConceptDropdown && (resultadosConceptos.length > 0 ? (
+                        <div className={styles.searchDropdown} style={{ zIndex: 9999 }}>
+                          {resultadosConceptos.map(c => (
+                            <div 
+                              key={c.id} 
+                              className={styles.searchItem} 
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                seleccionarConcepto(c);
+                                setShowConceptDropdown(false);
+                              }}
+                            >
+                              <strong>{c.nombre}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      ) : busquedaConcepto.length > 0 && (
+                        <div className={styles.searchDropdown} style={{ zIndex: 9999, padding: '15px', textAlign: 'center', color: '#64748b' }}>
+                          No se encontraron conceptos compatibles.
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.mobileFormGroup}>
@@ -269,7 +294,7 @@ export default function CajaPage() {
                   type="button" 
                   className={styles.btnWizardNext} 
                   onClick={() => {
-                    if (!busquedaConcepto) return showToast("Por favor, seleccione un concepto de cobro", "error");
+                    if (!conceptoSeleccionado) return showToast("Por favor, seleccione un concepto de cobro", "error");
                     setMobileStep(2);
                   }}
                 >
