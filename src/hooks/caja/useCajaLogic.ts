@@ -409,7 +409,8 @@ export const useCajaLogic = () => {
           })),
           observaciones: observacion,
           metodo_pago: "EFECTIVO",
-          factura_id: facturaIdSeleccionada
+          factura_id: facturaIdSeleccionada,
+          fecha: fecha
         })
       });
 

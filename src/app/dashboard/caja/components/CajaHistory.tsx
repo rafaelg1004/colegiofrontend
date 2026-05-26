@@ -25,11 +25,14 @@ const CajaHistory: React.FC<Props> = ({
 }) => {
   const [editingMov, setEditingMov] = useState<any>(null);
   const [newObs, setNewObs] = useState("");
+  const [newFecha, setNewFecha] = useState("");
   const [savingObs, setSavingObs] = useState(false);
 
   const handleEditClick = (mov: any) => {
     setEditingMov(mov);
     setNewObs(mov.observacion || "");
+    const dateStr = mov.fecha ? new Date(mov.fecha).toISOString().split('T')[0] : "";
+    setNewFecha(dateStr);
   };
 
   const saveObservation = async () => {
@@ -38,24 +41,27 @@ const CajaHistory: React.FC<Props> = ({
     try {
       const token = getAuthToken();
       const API = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${API}/caja/movimientos/${editingMov.id}/observacion`, {
+      const res = await fetch(`${API}/caja/movimientos/${editingMov.id}`, {
         method: "PATCH",
         headers: { 
           Authorization: `Bearer ${token}`, 
           "Content-Type": "application/json" 
         },
-        body: JSON.stringify({ observacion: newObs })
+        body: JSON.stringify({ 
+          observacion: newObs,
+          fecha: newFecha
+        })
       });
       
       if (res.ok) {
         setEditingMov(null);
         cargarResumen();
       } else {
-        alert("Error al actualizar la observación");
+        alert("Error al actualizar el movimiento");
       }
     } catch (err) {
       console.error(err);
-      alert("Error al actualizar la observación");
+      alert("Error al actualizar el movimiento");
     } finally {
       setSavingObs(false);
     }
@@ -121,23 +127,39 @@ const CajaHistory: React.FC<Props> = ({
 
       {editingMov && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal} style={{ maxWidth: '400px', padding: '2rem' }}>
+          <div className={styles.modal} style={{ maxWidth: '450px', padding: '2rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Editar Observación</h2>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>✏️ Editar Transacción</h2>
             </div>
             <div>
               <p style={{ marginBottom: '15px', fontSize: '0.9rem', color: '#64748b' }}>
                 Comprobante: <strong>{editingMov.numero_comprobante}</strong>
               </p>
-              <textarea 
-                value={newObs}
-                onChange={(e) => setNewObs(e.target.value)}
-                rows={4}
-                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', resize: 'none', marginBottom: '1.5rem', outline: 'none', fontFamily: 'inherit', fontSize: '0.95rem' }}
-                placeholder="Escriba la nueva observación..."
-                onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
-                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-              />
+              
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600, fontSize: '0.9rem', color: '#475569' }}>Fecha de Registro</label>
+                <input 
+                  type="date" 
+                  value={newFecha}
+                  onChange={(e) => setNewFecha(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '2px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '0.95rem' }}
+                  onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600, fontSize: '0.9rem', color: '#475569' }}>Observaciones</label>
+                <textarea 
+                  value={newObs}
+                  onChange={(e) => setNewObs(e.target.value)}
+                  rows={3}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '2px solid #e2e8f0', resize: 'none', outline: 'none', fontFamily: 'inherit', fontSize: '0.95rem' }}
+                  placeholder="Escriba la nueva observación..."
+                  onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
             </div>
             <div className={styles.modalActions}>
               <button 

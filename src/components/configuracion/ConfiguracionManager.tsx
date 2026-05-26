@@ -157,8 +157,14 @@ export function ConfiguracionManager() {
     setLoading(true);
     const token = getAuthToken();
     try {
-      const res = await fetch(`${API}/configuracion/institucion`, {
-        method: "POST",
+      const isUpdating = !!institucion;
+      const url = isUpdating && institucion.id 
+        ? `${API}/configuracion/institucion/${institucion.id}` 
+        : `${API}/configuracion/institucion`;
+      const method = isUpdating && institucion.id ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
