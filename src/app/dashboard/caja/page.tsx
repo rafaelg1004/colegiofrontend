@@ -8,6 +8,7 @@ import ConfirmationModal from "./components/ConfirmationModal";
 import CajaHistory from "./components/CajaHistory";
 import ReceiptModal from "./components/ReceiptModal";
 import ReceiptPreview from "./components/ReceiptPreview";
+import Link from "next/link";
 
 export default function CajaPage() {
   const {
@@ -74,6 +75,9 @@ export default function CajaPage() {
         </div>
       )}
       <header className={styles.header}>
+        <Link href="/dashboard" className={styles.backButton}>
+          ← Volver al Dashboard
+        </Link>
         <h1><span className={styles.headerIcon}>🏦</span> Gestión de Caja</h1>
         <p>Administración financiera y contabilidad en tiempo real</p>
       </header>
