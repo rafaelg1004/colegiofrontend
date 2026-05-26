@@ -59,8 +59,8 @@ export const requireAuth = (): boolean => {
 // Logout function
 export const logout = () => {
   clearAuthCookie();
-  localStorage.removeItem("user");
   if (typeof window !== "undefined") {
+    localStorage.removeItem("user");
     window.location.href = "/login";
   }
 };
