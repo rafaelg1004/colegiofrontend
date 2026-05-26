@@ -782,13 +782,53 @@
   display: block;
 }
 
+.fullWidth {
+  grid-column: span 2;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .formContainer {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
   }
-  .btnRegistrar {
-    grid-column: 1;
+  .fullWidth,
+  .inventarioSelector,
+  .btnConfirmarRegistro {
+    grid-column: 1 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  .header h1 {
+    font-size: 1.75rem;
+  }
+  .modal {
+    padding: 1.5rem !important;
+    border-radius: 20px;
+  }
+  .tableSection {
+    padding: 1rem;
+  }
+  .resumenCards {
+    grid-template-columns: 1fr;
+  }
+  .toast {
+    right: 5%;
+    left: 5%;
+    width: 90%;
+    max-width: none;
+    top: 1rem;
+  }
+  .modalActions {
+    flex-direction: column;
+  }
+  .tipoButtons {
+    flex-direction: column;
   }
 }
 /* Toast Notifications */
@@ -797,8 +837,8 @@
   top: 2rem;
   right: 2rem;
   z-index: 2000;
-  min-width: 350px;
-  max-width: 450px;
+  width: 90%;
+  max-width: 400px;
   padding: 1.25rem 1.75rem;
   border-radius: 20px;
   background: white;

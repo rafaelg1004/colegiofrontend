@@ -186,7 +186,7 @@ export default function CajaPage() {
 
           {/* Alerta de Facturas Pendientes (Cartera) */}
           {tipo === "INGRESO" && facturasPendientes.length > 0 && (
-            <div className={styles.alertaCartera} style={{ gridColumn: 'span 2' }}>
+            <div className={`${styles.alertaCartera} ${styles.fullWidth}`}>
               <div className={styles.alertaHeader}>
                 <span className={styles.alertaIcon}>⚠️</span>
                 <div>
@@ -262,7 +262,7 @@ export default function CajaPage() {
                     </div>
                   ))
                 ) : (
-                  <div style={{ gridColumn: 'span 3', padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+                  <div style={{ gridColumn: '1 / -1', padding: '2rem', textAlign: 'center', color: '#64748b' }}>
                     No se encontraron artículos en esta categoría con stock disponible.
                   </div>
                 )}
@@ -271,7 +271,7 @@ export default function CajaPage() {
           )}
 
           {articulosVenta.length > 0 && (
-            <div className={styles.cartSection} style={{ gridColumn: 'span 2', marginTop: '1.5rem' }}>
+            <div className={`${styles.cartSection} ${styles.fullWidth}`} style={{ marginTop: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 700, fontSize: '1.1rem' }}>🛒 Detalle de la Transacción</label>
               <div className={styles.tableWrapper}>
                 <table className={styles.table} style={{ borderSpacing: 0 }}>
@@ -346,12 +346,12 @@ export default function CajaPage() {
             </div>
           )}
 
-          <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
             <label>Observaciones</label>
             <textarea value={observacion} onChange={e => setObservacion(e.target.value)} placeholder="Detalles adicionales del movimiento..." rows={3} />
           </div>
 
-          <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
+          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
             <label>Monto Total (Auto-calculado)</label>
             <input 
               type="text" 

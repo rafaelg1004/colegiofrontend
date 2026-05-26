@@ -89,3 +89,18 @@
   color: #64748b;
   line-height: 1.4;
 }
+
+@media (max-width: 768px) {
+  .welcomeHeader h1 {
+    font-size: 1.75rem;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .welcomeCard {
+    padding: 1.25rem;
+  }
+  .card {
+    padding: 1.25rem;
+  }
+}
