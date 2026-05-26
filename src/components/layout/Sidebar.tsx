@@ -6,6 +6,8 @@ import styles from "./Sidebar.module.css";
 interface SidebarProps {
   onLogout: () => void;
   userRole?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 // Menú completo solo para admin/rector/coordinador
@@ -131,7 +133,7 @@ const fullMenu = [
   },
 ];
 
-export const Sidebar = ({ onLogout, userRole }: SidebarProps) => {
+export const Sidebar = ({ onLogout, userRole, isOpen = false, onClose }: SidebarProps) => {
   const pathname = usePathname();
   const role = userRole || "estudiante";
 
@@ -139,7 +141,7 @@ export const Sidebar = ({ onLogout, userRole }: SidebarProps) => {
   const menuItems = fullMenu.filter((item) => item.roles.includes(role));
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
       <div className={styles.logo}>
         <h2>EduGestion</h2>
         <span>v1.0</span>

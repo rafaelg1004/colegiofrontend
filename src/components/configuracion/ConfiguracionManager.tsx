@@ -97,6 +97,13 @@ export function ConfiguracionManager() {
     { id: "conceptos-cobro", label: "Conceptos de Cobro" },
   ];
 
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   // Cargar datos iniciales
   useEffect(() => {
     loadData();
@@ -173,9 +180,9 @@ export function ConfiguracionManager() {
       });
       if (!res.ok) throw new Error("Error al guardar");
       loadData();
-      alert("Institución guardada correctamente");
+      showToast("Institución guardada correctamente", "success");
     } catch (err: any) {
-      alert(err.message || "Error guardando");
+      showToast(err.message || "Error guardando", "error");
     }
     setLoading(false);
   };
@@ -183,7 +190,7 @@ export function ConfiguracionManager() {
   // Handlers Conceptos de Cobro
   const handleCreateConceptoCobro = async () => {
     if (!formConceptoCobro.nombre) {
-      alert("El nombre es obligatorio");
+      showToast("El nombre es obligatorio", "error");
       return;
     }
     setLoading(true);
@@ -208,9 +215,9 @@ export function ConfiguracionManager() {
         categoria_inventario_id: "",
       });
       loadData();
-      alert("Concepto de cobro creado correctamente");
+      showToast("Concepto de cobro creado correctamente", "success");
     } catch (err: any) {
-      alert(err.message || "Error al crear");
+      showToast(err.message || "Error al crear", "error");
     } finally {
       setLoading(false);
     }
@@ -244,9 +251,9 @@ export function ConfiguracionManager() {
         categoria_inventario_id: "",
       });
       loadData();
-      alert("Concepto de cobro actualizado correctamente");
+      showToast("Concepto de cobro actualizado correctamente", "success");
     } catch (err: any) {
-      alert(err.message || "Error al actualizar");
+      showToast(err.message || "Error al actualizar", "error");
     } finally {
       setLoading(false);
     }
@@ -262,9 +269,9 @@ export function ConfiguracionManager() {
       });
       if (!res.ok) throw new Error("Error al eliminar");
       loadData();
-      alert("Concepto de cobro eliminado correctamente");
+      showToast("Concepto de cobro eliminado correctamente", "success");
     } catch (err: any) {
-      alert(err.message || "Error al eliminar");
+      showToast(err.message || "Error al eliminar", "error");
     }
   };
 
@@ -297,7 +304,7 @@ export function ConfiguracionManager() {
   // Handlers Usuarios
   const handleCreateUsuario = async () => {
     if (!formUsuario.nombre || !formUsuario.email || !formUsuario.password) {
-      alert("Complete todos los campos");
+      showToast("Complete todos los campos", "error");
       return;
     }
     setLoading(true);
@@ -314,9 +321,9 @@ export function ConfiguracionManager() {
       if (!res.ok) throw new Error("Error al crear usuario");
       setFormUsuario({ nombre: "", email: "", password: "", rol: "docente" });
       loadData();
-      alert("Usuario creado correctamente");
+      showToast("Usuario creado correctamente", "success");
     } catch (err: any) {
-      alert(err.message || "Error guardando");
+      showToast(err.message || "Error guardando", "error");
     }
     setLoading(false);
   };
@@ -334,8 +341,9 @@ export function ConfiguracionManager() {
       });
       if (!res.ok) throw new Error("Error al cambiar estado");
       loadData();
+      showToast(`Estado cambiado correctamente`, "success");
     } catch (err: any) {
-      alert(err.message || "Error al cambiar estado");
+      showToast(err.message || "Error al cambiar estado", "error");
     }
   };
 
@@ -399,6 +407,12 @@ export function ConfiguracionManager() {
           />
         )}
       </div>
+      
+      {toast && (
+        <div className={`${styles.toast} ${styles[toast.type]}`}>
+          {toast.type === "success" ? "✅" : "❌"} {toast.msg}
+        </div>
+      )}
     </div>
   );
 }

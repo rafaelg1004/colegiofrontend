@@ -66,6 +66,13 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    // Cerrar el sidebar móvil al cambiar de ruta
+    setIsSidebarOpen(false);
+  }, [pathname]);
+
   if (!isReady) {
     return (
       <div className={styles.loading}>
@@ -77,7 +84,35 @@ export default function DashboardLayout({
 
   return (
     <div className={styles.layout}>
-      <Sidebar onLogout={handleLogout} userRole={user.rol} />
+      {/* Top bar solo visible en móvil */}
+      <div className={styles.mobileTopBar}>
+        <div className={styles.mobileLogo}>
+          <h2>EduGestion</h2>
+        </div>
+        <button 
+          className={styles.menuButton} 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          aria-label="Toggle menu"
+        >
+          {isSidebarOpen ? '✕' : '☰'}
+        </button>
+      </div>
+
+      <Sidebar 
+        onLogout={handleLogout} 
+        userRole={user.rol} 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+      />
+      
+      {/* Overlay para cerrar el menú en móvil tocando fuera */}
+      {isSidebarOpen && (
+        <div 
+          className={styles.mobileOverlay} 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       <div className={styles.mainContent}>
         {children}
       </div>
