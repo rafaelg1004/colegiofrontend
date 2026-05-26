@@ -820,19 +820,6 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .formContainer {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 1.5rem;
-  }
-  .fullWidth,
-  .inventarioSelector,
-  .btnConfirmarRegistro {
-    grid-column: 1 !important;
-  }
-}
-
-@media (max-width: 768px) {
   .container {
     padding: 0;
   }
@@ -866,7 +853,15 @@
   .table {
     min-width: 650px;
   }
-  .inventarioSelector {
+  .formContainer {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+  .fullWidth,
+  .inventarioSelector,
+  .btnConfirmarRegistro {
+    grid-column: 1 !important;
     padding: 1rem !important;
   }
   .alertaHeader {

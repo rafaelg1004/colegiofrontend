@@ -82,34 +82,28 @@ export default function DashboardLayout({
     );
   }
 
-  const isCajaPage = pathname === '/dashboard/caja';
-
   return (
     <div className={styles.layout}>
       {/* Top bar solo visible en móvil */}
-      {!isCajaPage && (
-        <div className={styles.mobileTopBar}>
-          <div className={styles.mobileLogo}>
-            <h2>EduGestion</h2>
-          </div>
-          <button 
-            className={styles.menuButton} 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            aria-label="Toggle menu"
-          >
-            {isSidebarOpen ? '✕' : '☰'}
-          </button>
+      <div className={styles.mobileTopBar}>
+        <div className={styles.mobileLogo}>
+          <h2>EduGestion</h2>
         </div>
-      )}
+        <button 
+          className={styles.menuButton} 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          aria-label="Toggle menu"
+        >
+          {isSidebarOpen ? '✕' : '☰'}
+        </button>
+      </div>
 
-      {(!isCajaPage || isSidebarOpen) && (
-        <Sidebar 
-          onLogout={handleLogout} 
-          userRole={user.rol} 
-          isOpen={isSidebarOpen} 
-          onClose={() => setIsSidebarOpen(false)} 
-        />
-      )}
+      <Sidebar 
+        onLogout={handleLogout} 
+        userRole={user.rol} 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+      />
       
       {/* Overlay para cerrar el menú en móvil tocando fuera */}
       {isSidebarOpen && (
@@ -119,7 +113,7 @@ export default function DashboardLayout({
         />
       )}
 
-      <div className={`${styles.mainContent} ${isCajaPage ? styles.cajaMainContent : ''}`}>
+      <div className={styles.mainContent}>
         {children}
       </div>
     </div>
