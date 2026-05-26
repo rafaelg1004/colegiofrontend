@@ -84,6 +84,15 @@ const ReceiptPreview: React.FC<Props> = ({
             .old-total-value { font-size: 2rem; font-weight: 800; }
             .old-footer { margin-top: 50px; display: flex; justify-content: space-between; }
             .old-firma { border-top: 1px solid #cbd5e1; width: 250px; text-align: center; padding-top: 10px; font-size: 0.9rem; color: #64748b; }
+            @media (max-width: 640px) {
+              .old-template { padding: 15px; border-radius: 10px; }
+              .old-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+              .old-info { text-align: left; }
+              .old-datos { grid-template-columns: 1fr; gap: 10px; }
+              .old-total-inner { width: 100%; padding: 15px; }
+              .old-footer { flex-direction: column; gap: 40px; align-items: center; }
+              .old-firma { width: 100%; max-width: 250px; }
+            }
             @media print {
               .old-template { border: none; padding: 0; }
             }

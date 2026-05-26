@@ -137,7 +137,7 @@ const CajaHistory: React.FC<Props> = ({
 
       {editingMov && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modal} style={{ maxWidth: '450px', padding: '2rem' }}>
+          <div className={styles.modal} style={{ maxWidth: '450px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>✏️ Editar Transacción</h2>
             </div>
