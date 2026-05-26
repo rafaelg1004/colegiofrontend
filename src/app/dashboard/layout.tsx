@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, fullMenu } from '@/components/layout/Sidebar';
 import Link from 'next/link';
 import { getAuthToken, clearAuthCookie, isTokenExpired } from '@/utils/auth';
 import styles from './DashboardLayout.module.css';
@@ -68,11 +68,16 @@ export default function DashboardLayout({
   };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Cerrar el sidebar móvil al cambiar de ruta
+    // Cerrar el sidebar y el menú de módulos al cambiar de ruta
     setIsSidebarOpen(false);
+    setIsMoreMenuOpen(false);
   }, [pathname]);
+
+  const userRole = user?.rol || "estudiante";
+  const userMenuItems = fullMenu.filter((item) => item.roles.includes(userRole));
 
   if (!isReady) {
     return (
@@ -148,14 +153,46 @@ export default function DashboardLayout({
           <span>🏦</span>
           Finanzas
         </Link>
-        <Link 
-          href="/dashboard/configuracion" 
-          className={`${styles.bottomNavItem} ${pathname.startsWith('/dashboard/configuracion') ? styles.bottomNavItemActive : ''}`}
+        <button 
+          onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+          className={`${styles.bottomNavItem} ${isMoreMenuOpen ? styles.bottomNavItemActive : ''}`}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
         >
-          <span>⚙️</span>
-          Config
-        </Link>
+          <span>☰</span>
+          Módulos
+        </button>
       </div>
+
+      {/* Overlay de Todos los Módulos para Móvil */}
+      {isMoreMenuOpen && (
+        <div className={styles.modulesMenuOverlay}>
+          <div className={styles.modulesMenuHeader}>
+            <div>
+              <h3>Panel de Módulos</h3>
+              <span className={styles.userRoleBadge}>{userRole.toUpperCase()}</span>
+            </div>
+            <button 
+              className={styles.closeMenuButton} 
+              onClick={() => setIsMoreMenuOpen(false)}
+            >
+              ✕ Cerrar
+            </button>
+          </div>
+          <div className={styles.modulesGrid}>
+            {userMenuItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={styles.moduleTile}
+                onClick={() => setIsMoreMenuOpen(false)}
+              >
+                <span className={styles.moduleTileIcon}>{item.icon}</span>
+                <span className={styles.moduleTileName}>{item.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

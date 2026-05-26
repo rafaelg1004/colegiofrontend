@@ -128,6 +128,123 @@
   .bottomNavItemActive span {
     transform: translateY(-2px) scale(1.1);
   }
+
+  /* Modules Menu Overlay for Mobile */
+  .modulesMenuOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 4.5rem;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(15px);
+    z-index: 999;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modulesMenuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid #f1f5f9;
+    padding-bottom: 1rem;
+  }
+
+  .modulesMenuHeader h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e293b;
+  }
+
+  .userRoleBadge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    background: #e0e7ff;
+    color: #4f46e5;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-top: 0.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  .closeMenuButton {
+    background: #f1f5f9;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .closeMenuButton:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+
+  .modulesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    padding-bottom: 2rem;
+  }
+
+  .moduleTile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1rem 0.25rem;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    min-height: 85px;
+    text-align: center;
+  }
+
+  .moduleTile:active {
+    transform: scale(0.95);
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  .moduleTileIcon {
+    font-size: 1.6rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .moduleTileName {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #475569;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 .bottomNav {

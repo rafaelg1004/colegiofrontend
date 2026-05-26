@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 // Menú completo solo para admin/rector/coordinador
-const fullMenu = [
+export const fullMenu = [
   {
     name: "Inicio",
     path: "/dashboard",
