@@ -17,7 +17,7 @@ export default function ContabilidadPage() {
         <h1 className={styles.title}>Módulo Contable</h1>
       </div>
 
-      <div className={styles.widgetsGrid}>
+      <div className={styles.widgetsContainer}>
         <div className={styles.widget}>
           <span className={styles.widgetTitle}>Total Activos</span>
           <span className={`${styles.widgetValue} ${state.totalActivos >= 0 ? styles.positive : styles.negative}`}>
