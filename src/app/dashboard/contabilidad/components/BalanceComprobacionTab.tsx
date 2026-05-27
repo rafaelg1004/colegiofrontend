@@ -91,12 +91,17 @@ export default function BalanceComprobacionTab({
               {balance.cuentas?.map((c: any) => (
                 <tr 
                   key={c.id} 
-                  onClick={() => handleRowClick(c)}
-                  style={{ cursor: "pointer" }}
-                  title="Haga clic para ver el Libro Mayor completo de esta cuenta"
+                  onClick={() => c.codigo.length >= 4 ? handleRowClick(c) : null}
+                  style={{ cursor: c.codigo.length >= 4 ? "pointer" : "default" }}
+                  title={c.codigo.length >= 4 ? "Haga clic para ver el Libro Mayor completo de esta cuenta" : "Haga clic en las cuentas de 4 o más dígitos para ver el detalle"}
                 >
-                  <td className={styles.mono}>{c.codigo}</td>
-                  <td style={{ color: "#3b82f6", textDecoration: "underline" }}>{c.nombre}</td>
+                  <td className={styles.mono} style={{ fontWeight: c.codigo.length < 4 ? "bold" : "normal" }}>{c.codigo}</td>
+                  <td style={{ 
+                    color: c.codigo.length >= 4 ? "#3b82f6" : "inherit", 
+                    textDecoration: c.codigo.length >= 4 ? "underline" : "none",
+                    fontWeight: c.codigo.length < 4 ? "bold" : "normal",
+                    paddingLeft: c.codigo.length >= 4 ? "1.5rem" : "1rem"
+                  }}>{c.nombre}</td>
                   <td className={`${styles.amount} ${styles.amountDebe}`}>
                     ${Number(c.debe || 0).toLocaleString('es-CO')}
                   </td>
