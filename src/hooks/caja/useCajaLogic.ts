@@ -392,8 +392,8 @@ export const useCajaLogic = () => {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           tipo,
-          estudiante_id: beneficiarioSeleccionado?.id || null,
-          empleado_id: tipo === "EGRESO" ? beneficiarioSeleccionado?.id : null,
+          estudiante_id: tipo === "INGRESO" ? (beneficiarioSeleccionado?.id || null) : null,
+          empleado_id: tipo === "EGRESO" ? (beneficiarioSeleccionado?.id || null) : null,
           estudiante_nombre: nombreCompleto,
           monto: parseFloat(monto), // Enviar monto total
           concepto: articulosVenta.length > 0 ? articulosVenta[0].nombre + (articulosVenta.length > 1 ? "..." : "") : "Varios", // Enviar concepto descriptivo
