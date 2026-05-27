@@ -1,0 +1,1251 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { getAuthToken } from "@/utils/auth";
+import { API_URL } from "@/utils/api";
+import styles from "./Contabilidad.module.css";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+} from "chart.js";
+import { Bar, Doughnut } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
+
+interface CuentaContable {
+  id: string;
+  codigo: string;
+  nombre: string;
+  tipo: string;
+  naturaleza: string;
+}
+
+interface MovimientoContable {
+  id: string;
+  fecha: string;
+  descripcion: string;
+  debe: number;
+  haber: number;
+  cuenta?: { codigo: string; nombre: string; tipo: string };
+  factura?: { numero_factura: string };
+  nomina?: { periodo_mes: number; periodo_anio: number };
+}
+
+const API = `${API_URL}`;
+
+export default function ContabilidadPage() {
+  const [activeTab, setActiveTab] = useState("cuentas");
+  const [loading, setLoading] = useState(false);
+
+  // Datos
+  const [cuentas, setCuentas] = useState<CuentaContable[]>([]);
+  const [movimientos, setMovimientos] = useState<MovimientoContable[]>([]);
+  const [balance, setBalance] = useState<any>(null);
+  const [metricas, setMetricas] = useState<any>(null);
+
+  // Forms
+  const [formCuenta, setFormCuenta] = useState({
+    codigo: "",
+    nombre: "",
+    tipo: "",
+    naturaleza: "",
+  });
+  const [formMovimiento, setFormMovimiento] = useState({
+    descripcion: "",
+    debe: 0,
+    haber: 0,
+    cuenta_contable_id: "",
+  });
+
+  // Facturación
+  const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [busquedaEstudiante, setBusquedaEstudiante] = useState("");
+  const [estudianteSeleccionado, setEstudianteSeleccionado] =
+    useState<any>(null);
+  const [conceptoFactura, setConceptoFactura] = useState("");
+  const [montoFactura, setMontoFactura] = useState(0);
+  const [facturasRecientes, setFacturasRecientes] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Filtros
+  const [tipoFiltro, setTipoFiltro] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
+
+  useEffect(() => {
+    loadCuentas();
+    loadMovimientos();
+    loadBalance();
+    loadMetricas();
+  }, []);
+
+  const loadCuentas = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+      const params = new URLSearchParams();
+      if (tipoFiltro) params.append("tipo", tipoFiltro);
+
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API}/contabilidad/cuentas${queryStr}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Error cargando cuentas:", err);
+        alert(err.message || "Error al cargar cuentas");
+        setCuentas([]);
+        return;
+      }
+      const data = await res.json();
+      setCuentas(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error cargando cuentas:", err);
+      alert("Error de conexión al cargar cuentas");
+      setCuentas([]);
+    }
+  };
+
+  const loadMovimientos = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+      const params = new URLSearchParams();
+      if (fechaDesde) params.append("fecha_desde", fechaDesde);
+      if (fechaHasta) params.append("fecha_hasta", fechaHasta);
+
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API}/contabilidad/movimientos${queryStr}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Error cargando movimientos:", err);
+        alert(err.message || "Error al cargar movimientos");
+        setMovimientos([]);
+        return;
+      }
+      const data = await res.json();
+      setMovimientos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error cargando movimientos:", err);
+      alert("Error de conexión al cargar movimientos");
+      setMovimientos([]);
+    }
+  };
+
+  const loadBalance = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+      const params = new URLSearchParams();
+      if (fechaDesde) params.append("fecha_desde", fechaDesde);
+      if (fechaHasta) params.append("fecha_hasta", fechaHasta);
+
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(
+        `${API}/contabilidad/balance-comprobacion${queryStr}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Error cargando balance:", err);
+        alert(err.message || "Error al cargar balance");
+        setBalance(null);
+        return;
+      }
+      const data = await res.json();
+      setBalance(data);
+    } catch (err) {
+      console.error("Error cargando balance:", err);
+      alert("Error de conexión al cargar balance");
+      setBalance(null);
+    }
+  };
+
+  const loadMetricas = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+      const res = await fetch(`${API}/contabilidad/metricas`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMetricas(data);
+      }
+    } catch (err) {
+      console.error("Error cargando métricas:", err);
+    }
+  };
+      console.error("Error cargando balance:", err);
+      alert("Error de conexión al cargar balance");
+      setBalance(null);
+    }
+  };
+
+  // Funciones de Facturación
+  const buscarEstudiantes = async (query: string) => {
+    if (query.length < 2) {
+      setEstudiantes([]);
+      setShowDropdown(false);
+      return;
+    }
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`${API}/estudiantes?buscar=${query}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEstudiantes(data.data || []);
+        setShowDropdown(true);
+      }
+    } catch (err) {
+      console.error("Error buscando estudiantes:", err);
+    }
+  };
+
+  const seleccionarEstudiante = (est: any) => {
+    setEstudianteSeleccionado(est);
+    setBusquedaEstudiante(
+      `${est.primer_nombre} ${est.primer_apellido} - ${est.numero_documento}`,
+    );
+    setShowDropdown(false);
+  };
+
+  const crearFactura = async () => {
+    if (!estudianteSeleccionado || !conceptoFactura || montoFactura <= 0) {
+      alert("Seleccione un estudiante, ingrese concepto y monto");
+      return;
+    }
+
+    setLoading(true);
+    const token = getAuthToken();
+
+    // Asegurar que las cuentas estén cargadas
+    if (cuentas.length === 0) {
+      await loadCuentas();
+    }
+
+    // Pequeña demora para que se actualice el estado
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    console.log("Cuentas después de cargar:", cuentas);
+
+    // Buscar cuenta de ingresos según concepto
+    const conceptoLower = conceptoFactura.toLowerCase();
+    let cuentaId = "";
+    const cuentaEncontrada = cuentas.find((c) => {
+      const codigo = c.codigo;
+      if (
+        conceptoLower.includes("matrícula") ||
+        conceptoLower.includes("matricula")
+      )
+        return codigo === "4105";
+      if (conceptoLower.includes("pensión") || conceptoLower.includes("pensio"))
+        return codigo === "4115";
+      if (conceptoLower.includes("merienda"))
+        return codigo === "4130" || codigo === "4135";
+      if (conceptoLower.includes("formulario")) return codigo === "4110";
+      if (conceptoLower.includes("grado")) return codigo === "4120";
+      if (conceptoLower.includes("clausura")) return codigo === "4125";
+      return codigo === "4140";
+    });
+    cuentaId = cuentaEncontrada?.id || "";
+
+    if (!cuentaId) {
+      console.log(
+        "Cuentas disponibles:",
+        cuentas.map((c) => ({ codigo: c.codigo, nombre: c.nombre, id: c.id })),
+      );
+      alert(
+        "Cuenta de ingresos no encontrada. Cree las cuentas primero en la pestaña Plan de Cuentas.",
+      );
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Crear movimiento (crédito = ingreso)
+      console.log("Creando movimiento:", {
+        descripcion: `${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
+        haber: montoFactura,
+        cuenta_contable_id: cuentaId,
+        fecha: new Date().toISOString().split("T")[0],
+      });
+
+      const res = await fetch(`${API}/contabilidad/movimientos`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          descripcion: `${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
+          haber: Number(montoFactura),
+          cuenta_contable_id: cuentaId,
+          fecha: new Date().toISOString().split("T")[0],
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        const msg = Array.isArray(err.message)
+          ? err.message.join(", ")
+          : err.message;
+        throw new Error(msg || "Error al crear movimiento de ingreso");
+      }
+
+      // Recargar cuentas para asegurar que tenemos las más recientes
+      await loadCuentas();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Buscar cuenta de banco/caja
+      const cuentaBancaria = cuentas.find(
+        (c) => c.codigo === "1105" || c.codigo === "1110",
+      );
+      console.log("Cuenta bancaria:", cuentaBancaria);
+
+      if (cuentaBancaria) {
+        // Crear movimiento en banco/caja (débito)
+        const resBanco = await fetch(`${API}/contabilidad/movimientos`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            descripcion: `Cobro ${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
+            debe: Number(montoFactura),
+            cuenta_contable_id: cuentaBancaria.id,
+            fecha: new Date().toISOString().split("T")[0],
+          }),
+        });
+        console.log("Movimiento banco response:", resBanco.status);
+      }
+
+      // Recargar movimientos y balance
+      loadMovimientos();
+      loadBalance();
+
+      alert("Factura registrada correctamente");
+      setEstudianteSeleccionado(null);
+      setBusquedaEstudiante("");
+      setConceptoFactura("");
+      setMontoFactura(0);
+    } catch (err: any) {
+      alert(err.message || "Error al crear factura");
+    }
+    setLoading(false);
+  };
+
+  const conceptosDefault = [
+    "Matrícula",
+    "Pensión Mes de",
+    "Formularios",
+    "Derecho a Grado",
+    "Clausura",
+    "Meriendas",
+    "Meriendas Sodexo",
+    "Uniforme",
+    "Materiales",
+    "Otra",
+  ];
+
+  const handleSaveCuenta = async () => {
+    if (
+      !formCuenta.codigo ||
+      !formCuenta.nombre ||
+      !formCuenta.tipo ||
+      !formCuenta.naturaleza
+    ) {
+      alert("Complete todos los campos");
+      return;
+    }
+    setLoading(true);
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`${API}/contabilidad/cuentas`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formCuenta),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Error al crear cuenta");
+      }
+      setFormCuenta({ codigo: "", nombre: "", tipo: "", naturaleza: "" });
+      loadCuentas();
+    } catch (err: any) {
+      alert(err.message || "Error guardando");
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteCuenta = async (id: string) => {
+    if (!confirm("¿Eliminar cuenta?")) return;
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`${API}/contabilidad/cuentas/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.message || "Error al eliminar");
+        return;
+      }
+      loadCuentas();
+    } catch (err) {
+      alert("Error al eliminar");
+    }
+  };
+
+  // Crear cuentas iniciales del PUC
+  const crearCuentasIniciales = async () => {
+    if (
+      !confirm(
+        "¿Crear plan de cuentas inicial? Esto agregará las cuentas básicas del colegio.",
+      )
+    )
+      return;
+
+    setLoading(true);
+    const token = getAuthToken();
+
+    // Solo cuentas operativas, sin cuentas padre
+    const cuentasIniciales = [
+      // INGRESOS - Dinero que entra (Naturaleza: Crédito)
+      {
+        codigo: "4105",
+        nombre: "Matrículas",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4110",
+        nombre: "Formularios",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4115",
+        nombre: "Pensiones (10 meses)",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4120",
+        nombre: "Derecho a Grado",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4125",
+        nombre: "Clausura",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4130",
+        nombre: "Meriendas",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4135",
+        nombre: "Meriendas Sodexo",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+      {
+        codigo: "4140",
+        nombre: "Otras Actividades",
+        tipo: "Ingreso",
+        naturaleza: "Crédito",
+      },
+
+      // GASTOS - Dinero que sale (Naturaleza: Débito)
+      {
+        codigo: "5105",
+        nombre: "Pagos Docentes",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5110",
+        nombre: "Arriendo",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5115",
+        nombre: "Servicios (Luz, Agua, Internet)",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      { codigo: "5120", nombre: "4x1000", tipo: "Gasto", naturaleza: "Débito" },
+      {
+        codigo: "5125",
+        nombre: "Aportes COOIENEM",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5130",
+        nombre: "Servicios Contadora",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5200",
+        nombre: "Implementos de Aseo",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5205",
+        nombre: "Material Didáctico",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5210",
+        nombre: "Cafetería Docente",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5215",
+        nombre: "Transporte",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5220",
+        nombre: "Mano de Obra",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5225",
+        nombre: "Mantenimiento y Reparación",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5230",
+        nombre: "Papelería Administrativa",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+      {
+        codigo: "5235",
+        nombre: "Bono Cumpleaños",
+        tipo: "Gasto",
+        naturaleza: "Débito",
+      },
+
+      // ACTIVOS - Lo que tiene el colegio (Efectivo/Banco)
+      { codigo: "1105", nombre: "Caja", tipo: "Activo", naturaleza: "Débito" },
+      { codigo: "1110", nombre: "Banco", tipo: "Activo", naturaleza: "Débito" },
+
+      // PASIVOS - Lo que debe el colegio
+      {
+        codigo: "2105",
+        nombre: "Cuentas por Pagar",
+        tipo: "Pasivo",
+        naturaleza: "Crédito",
+      },
+    ];
+
+    try {
+      let creadas = 0;
+      let errores = 0;
+
+      for (const cuenta of cuentasIniciales) {
+        const res = await fetch(`${API}/contabilidad/cuentas`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(cuenta),
+        });
+
+        if (res.ok) {
+          creadas++;
+        } else {
+          errores++;
+        }
+      }
+
+      loadCuentas();
+      alert(`Plan de cuentas creado: ${creadas} cuentas registradas`);
+    } catch (err) {
+      alert("Error al crear cuentas iniciales");
+    }
+    setLoading(false);
+  };
+
+  const handleSaveMovimiento = async () => {
+    if (!formMovimiento.descripcion || !formMovimiento.cuenta_contable_id) {
+      alert("Complete los campos");
+      return;
+    }
+    if (formMovimiento.debe === 0 && formMovimiento.haber === 0) {
+      alert("Ingrese al menos un valor en DÉBITO o CRÉDITO");
+      return;
+    }
+    setLoading(true);
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`${API}/contabilidad/movimientos`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formMovimiento,
+          fecha: new Date().toISOString().split("T")[0],
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Error al crear movimiento");
+      }
+      setFormMovimiento({
+        descripcion: "",
+        debe: 0,
+        haber: 0,
+        cuenta_contable_id: "",
+      });
+      loadMovimientos();
+    } catch (err: any) {
+      alert(err.message || "Error guardando");
+    }
+    setLoading(false);
+  };
+
+  const tipos = ["Activo", "Pasivo", "Patrimonio", "Ingreso", "Gasto", "Costo"];
+  const naturalezas = ["Débito", "Crédito"];
+
+  const tabs = [
+    { id: "metricas", label: "Métricas Financieras" },
+    { id: "cuentas", label: "Plan de Cuentas (PUC)" },
+    { id: "movimientos", label: "Libro Diario" },
+    { id: "balance", label: "Balance de Comprobación" },
+    { id: "facturacion", label: "Asiento Manual" },
+  ];
+
+  // Calcular totales para los widgets
+  const totalActivos = balance?.cuentas?.find((c: any) => c.codigo === '1')?.saldo || 0;
+  const totalPasivos = balance?.cuentas?.find((c: any) => c.codigo === '2')?.saldo || 0;
+  const totalIngresos = balance?.cuentas?.find((c: any) => c.codigo === '4')?.saldo || 0;
+  const totalGastos = balance?.cuentas?.find((c: any) => c.codigo === '5')?.saldo || 0;
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Módulo Contable</h1>
+      </div>
+
+      <div className={styles.widgetsContainer}>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Total Activos</span>
+          <span className={`${styles.widgetValue} ${totalActivos >= 0 ? styles.positive : styles.negative}`}>
+            ${totalActivos.toLocaleString('es-CO')}
+          </span>
+        </div>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Total Pasivos</span>
+          <span className={styles.widgetValue}>
+            ${totalPasivos.toLocaleString('es-CO')}
+          </span>
+        </div>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Ingresos</span>
+          <span className={`${styles.widgetValue} ${styles.positive}`}>
+            ${totalIngresos.toLocaleString('es-CO')}
+          </span>
+        </div>
+        <div className={styles.widget}>
+          <span className={styles.widgetTitle}>Gastos Operativos</span>
+          <span className={`${styles.widgetValue} ${styles.negative}`}>
+            ${totalGastos.toLocaleString('es-CO')}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.tabsContainer}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id);
+              if (tab.id === "balance") loadBalance();
+              if (tab.id === "metricas") loadMetricas();
+              if (tab.id === "facturacion" && cuentas.length === 0)
+                loadCuentas();
+            }}
+            className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ""}`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "metricas" && metricas && (
+        <div className={styles.metricsContainer}>
+          <div className={styles.metricsGrid}>
+            <div className={styles.metricCard}>
+              <h4 style={{ color: "#666", fontSize: "0.9rem", margin: "0 0 0.5rem 0" }}>🏦 Flujo de Efectivo Real</h4>
+              <h2 style={{ color: "#0066cc", margin: 0 }}>
+                {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" }).format(metricas.flujoEfectivo)}
+              </h2>
+            </div>
+            
+            <div className={styles.metricCard}>
+              <h4 style={{ color: "#666", fontSize: "0.9rem", margin: "0 0 0.5rem 0" }}>⚠️ Cartera / Morosidad</h4>
+              <h2 style={{ color: "#e11d48", margin: 0 }}>
+                {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" }).format(metricas.carteraPendiente)}
+              </h2>
+            </div>
+            
+            <div className={styles.metricCard}>
+              <h4 style={{ color: "#666", fontSize: "0.9rem", margin: "0 0 0.5rem 0" }}>🎯 Proyección de Recaudo</h4>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
+                <h2 style={{ color: "#16a34a", margin: 0 }}>{metricas.proyeccion.porcentaje.toFixed(1)}%</h2>
+                <div style={{ paddingBottom: '4px' }}>
+                  de {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP" }).format(metricas.proyeccion.total)}
+                </div>
+              </div>
+              <div style={{ width: '100%', backgroundColor: '#eee', height: '8px', borderRadius: '4px', marginTop: '0.5rem' }}>
+                <div style={{ width: `${Math.min(metricas.proyeccion.porcentaje, 100)}%`, backgroundColor: '#16a34a', height: '100%', borderRadius: '4px' }}></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className={styles.metricsGrid} style={{ gridTemplateColumns: '2fr 1fr' }}>
+            <div className={styles.chartCard}>
+              <h3 style={{ marginTop: 0 }}>Ingresos vs Gastos Mensuales</h3>
+              <div style={{ height: '300px' }}>
+                <Bar 
+                  data={{
+                    labels: metricas.ingresosVsGastos.map((d: any) => d.mes),
+                    datasets: [
+                      { label: 'Ingresos', data: metricas.ingresosVsGastos.map((d: any) => d.ingresos), backgroundColor: '#16a34a' },
+                      { label: 'Gastos', data: metricas.ingresosVsGastos.map((d: any) => d.gastos), backgroundColor: '#e11d48' }
+                    ]
+                  }}
+                  options={{ responsive: true, maintainAspectRatio: false }}
+                />
+              </div>
+            </div>
+            
+            <div className={styles.chartCard}>
+              <h3 style={{ marginTop: 0 }}>Distribución de Gastos</h3>
+              <div style={{ height: '300px' }}>
+                <Doughnut 
+                  data={{
+                    labels: metricas.distribucionGastos.map((d: any) => d.name),
+                    datasets: [{
+                      data: metricas.distribucionGastos.map((d: any) => d.value),
+                      backgroundColor: ['#0ea5e9', '#8b5cf6', '#f59e0b', '#10b981', '#f43f5e', '#64748b']
+                    }]
+                  }}
+                  options={{ responsive: true, maintainAspectRatio: false }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "cuentas" && (
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Plan de Cuentas (PUC)</h3>
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label>Código *</label>
+              <input
+                placeholder="Código de cuenta"
+                value={formCuenta.codigo}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, codigo: e.target.value })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Nombre *</label>
+              <input
+                placeholder="Nombre de cuenta"
+                value={formCuenta.nombre}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, nombre: e.target.value })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Tipo *</label>
+              <select
+                value={formCuenta.tipo}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, tipo: e.target.value })
+                }
+              >
+                <option value="">Seleccionar tipo</option>
+                {tipos.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Naturaleza *</label>
+              <select
+                value={formCuenta.naturaleza}
+                onChange={(e) =>
+                  setFormCuenta({ ...formCuenta, naturaleza: e.target.value })
+                }
+              >
+                <option value="">Seleccionar naturaleza</option>
+                {naturalezas.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <button
+                onClick={handleSaveCuenta}
+                disabled={loading}
+                className={styles.btnPrimary}
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: "1.5rem",
+              display: "flex",
+              gap: "1rem",
+              alignItems: "center",
+              background: "#ffffff",
+              padding: "1rem",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#475569", fontSize: "0.9rem" }}>Filtros:</span>
+            <select
+              className={styles.filterInput}
+              value={tipoFiltro}
+              onChange={(e) => {
+                setTipoFiltro(e.target.value);
+                loadCuentas();
+              }}
+            >
+              <option value="">Todos los tipos</option>
+              {tipos.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={crearCuentasIniciales}
+              disabled={loading}
+              style={{
+                padding: "0.5rem 1rem",
+                background: "#6366f1",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+            >
+              Crear Plan de Cuentas
+            </button>
+          </div>
+
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Tipo</th>
+                  <th>Naturaleza</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cuentas.map((cuenta) => (
+                  <tr key={cuenta.id}>
+                    <td className={styles.mono}>{cuenta.codigo}</td>
+                    <td>{cuenta.nombre}</td>
+                    <td>{cuenta.tipo}</td>
+                    <td>{cuenta.naturaleza}</td>
+                    <td>
+                      <button
+                        onClick={() => handleDeleteCuenta(cuenta.id)}
+                        className={styles.btnDanger}
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {cuentas.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className={styles.empty}>
+                      No hay cuentas
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "facturacion" && (
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Registrar Asiento Manual</h3>
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup} style={{ gridColumn: "1 / -1" }}>
+              <label>Buscar Estudiante *</label>
+              <input
+                placeholder="Nombre o documento del estudiante"
+                value={busquedaEstudiante}
+                onChange={(e) => {
+                  setBusquedaEstudiante(e.target.value);
+                  buscarEstudiantes(e.target.value);
+                }}
+              />
+              {showDropdown && estudiantes.length > 0 && (
+                <div
+                  style={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    maxHeight: "200px",
+                    overflow: "auto",
+                    background: "white",
+                    position: "absolute",
+                    zIndex: 10,
+                    width: "100%",
+                  }}
+                >
+                  {estudiantes.map((est) => (
+                    <div
+                      key={est.id}
+                      onClick={() => seleccionarEstudiante(est)}
+                      style={{
+                        padding: "10px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                      onMouseOver={(e) =>
+                        (e.currentTarget.style.background = "#f8fafc")
+                      }
+                      onMouseOut={(e) =>
+                        (e.currentTarget.style.background = "white")
+                      }
+                    >
+                      {est.primer_nombre} {est.primer_apellido} -{" "}
+                      {est.numero_documento}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className={styles.formGroup}>
+              <label>Concepto *</label>
+              <select
+                value={conceptoFactura}
+                onChange={(e) => setConceptoFactura(e.target.value)}
+              >
+                <option value="">Seleccionar concepto</option>
+                {conceptosDefault.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Monto *</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={montoFactura || ""}
+                onChange={(e) =>
+                  setMontoFactura(parseFloat(e.target.value) || 0)
+                }
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <button
+                onClick={crearFactura}
+                disabled={loading}
+                className={styles.btnPrimary}
+              >
+                {loading ? "Guardando..." : "Registrar Factura"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "movimientos" && (
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Registro de Movimientos</h3>
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label>Cuenta *</label>
+              <select
+                value={formMovimiento.cuenta_contable_id}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    cuenta_contable_id: e.target.value,
+                  })
+                }
+              >
+                <option value="">Seleccionar cuenta</option>
+                {cuentas.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.codigo} - {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Descripción *</label>
+              <input
+                placeholder="Descripción del movimiento"
+                value={formMovimiento.descripcion}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    descripcion: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Débito</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={formMovimiento.debe || ""}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    debe: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Crédito</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={formMovimiento.haber || ""}
+                onChange={(e) =>
+                  setFormMovimiento({
+                    ...formMovimiento,
+                    haber: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <button
+                onClick={handleSaveMovimiento}
+                disabled={loading}
+                className={styles.btnPrimary}
+              >
+                Registrar
+              </button>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: "1.5rem",
+              display: "flex",
+              gap: "1rem",
+              alignItems: "center",
+              background: "#ffffff",
+              padding: "1rem",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#475569", fontSize: "0.9rem" }}>Filtros:</span>
+            <input
+              type="date"
+              className={styles.filterInput}
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+            />
+            <input
+              type="date"
+              className={styles.filterInput}
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+            />
+            <button onClick={loadMovimientos} className={styles.btnFilter}>
+              Filtrar
+            </button>
+          </div>
+
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Descripción</th>
+                  <th>Cuenta</th>
+                  <th style={{ textAlign: "right" }}>Débito</th>
+                  <th style={{ textAlign: "right" }}>Crédito</th>
+                </tr>
+              </thead>
+              <tbody>
+                {movimientos.map((mov) => (
+                  <tr key={mov.id}>
+                    <td>{mov.fecha?.split("T")[0]}</td>
+                    <td>{mov.descripcion}</td>
+                    <td>
+                      {mov.cuenta?.codigo} - {mov.cuenta?.nombre}
+                    </td>
+                    <td className={`${styles.amount} ${styles.amountDebe}`}>
+                      ${Number(mov.debe || 0).toLocaleString('es-CO')}
+                    </td>
+                    <td className={`${styles.amount} ${styles.amountHaber}`}>
+                      ${Number(mov.haber || 0).toLocaleString('es-CO')}
+                    </td>
+                  </tr>
+                ))}
+                {movimientos.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className={styles.empty}>
+                      No hay movimientos
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "balance" && (
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Balance de Comprobación</h3>
+          <div
+            style={{
+              marginBottom: "1.5rem",
+              display: "flex",
+              gap: "1rem",
+              alignItems: "center",
+              background: "#ffffff",
+              padding: "1rem",
+              borderRadius: "12px",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            <span style={{ fontWeight: 600, color: "#475569", fontSize: "0.9rem" }}>Periodo:</span>
+            <input
+              type="date"
+              className={styles.filterInput}
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+            />
+            <input
+              type="date"
+              className={styles.filterInput}
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+            />
+            <button onClick={loadBalance} className={styles.btnFilter}>
+              Generar
+            </button>
+          </div>
+          {balance && (
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Cuenta</th>
+                    <th style={{ textAlign: "right" }}>Débito</th>
+                    <th style={{ textAlign: "right" }}>Crédito</th>
+                    <th style={{ textAlign: "right" }}>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {balance.cuentas?.map((c: any) => (
+                    <tr key={c.id}>
+                      <td className={styles.mono}>{c.codigo}</td>
+                      <td>{c.nombre}</td>
+                      <td className={`${styles.amount} ${styles.amountDebe}`}>
+                        ${Number(c.debe || 0).toLocaleString('es-CO')}
+                      </td>
+                      <td className={`${styles.amount} ${styles.amountHaber}`}>
+                        ${Number(c.haber || 0).toLocaleString('es-CO')}
+                      </td>
+                      <td className={styles.amount} style={{ fontWeight: "bold", color: Number(c.saldo) >= 0 ? "#10b981" : "#ef4444" }}>
+                        ${Math.abs(Number(c.saldo || 0)).toLocaleString('es-CO')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={2}>TOTALES SUMAS IGUALES</td>
+                    <td className={`${styles.amount} ${styles.amountDebe}`}>
+                      ${Number(balance.totales?.debe || 0).toLocaleString('es-CO')}
+                    </td>
+                    <td className={`${styles.amount} ${styles.amountHaber}`}>
+                      ${Number(balance.totales?.haber || 0).toLocaleString('es-CO')}
+                    </td>
+                    <td className={styles.amount}>
+                      ${(Math.abs(Number(balance.totales?.debe || 0) - Number(balance.totales?.haber || 0))).toLocaleString('es-CO')}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

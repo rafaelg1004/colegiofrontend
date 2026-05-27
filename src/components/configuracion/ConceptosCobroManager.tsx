@@ -16,6 +16,10 @@ interface ConceptoCobro {
   es_compuesto: boolean;
   categoria_inventario_id?: string;
   categoria_inventario?: { id: string; nombre: string };
+  cuenta_debito_id?: string;
+  cuenta_credito_id?: string;
+  cuenta_debito?: { codigo: string; nombre: string };
+  cuenta_credito?: { codigo: string; nombre: string };
 }
 
 interface FormConceptoCobro {
