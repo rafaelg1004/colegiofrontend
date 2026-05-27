@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import styles from "../Contabilidad.module.css";
+import { ContabilidadService } from "@/services/contabilidad.service";
 
 interface BalanceComprobacionTabProps {
   balance: any;
@@ -20,6 +21,28 @@ export default function BalanceComprobacionTab({
   setFechaHasta,
   loadBalance
 }: BalanceComprobacionTabProps) {
+  const [selectedCuenta, setSelectedCuenta] = useState<any>(null);
+  const [movimientosCuenta, setMovimientosCuenta] = useState<any[]>([]);
+  const [loadingDetalles, setLoadingDetalles] = useState(false);
+
+  const handleRowClick = async (cuenta: any) => {
+    setSelectedCuenta(cuenta);
+    setLoadingDetalles(true);
+    try {
+      const data = await ContabilidadService.getMovimientos(fechaDesde, fechaHasta, cuenta.id);
+      setMovimientosCuenta(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error cargando detalles de cuenta:", err);
+      alert("Error al cargar movimientos de la cuenta");
+    }
+    setLoadingDetalles(false);
+  };
+
+  const closeModal = () => {
+    setSelectedCuenta(null);
+    setMovimientosCuenta([]);
+  };
+
   return (
     <div className={styles.card}>
       <h3 className={styles.cardTitle}>Balance de Comprobación</h3>
@@ -66,9 +89,14 @@ export default function BalanceComprobacionTab({
             </thead>
             <tbody>
               {balance.cuentas?.map((c: any) => (
-                <tr key={c.id}>
+                <tr 
+                  key={c.id} 
+                  onClick={() => handleRowClick(c)}
+                  style={{ cursor: "pointer" }}
+                  title="Haga clic para ver el Libro Mayor completo de esta cuenta"
+                >
                   <td className={styles.mono}>{c.codigo}</td>
-                  <td>{c.nombre}</td>
+                  <td style={{ color: "#3b82f6", textDecoration: "underline" }}>{c.nombre}</td>
                   <td className={`${styles.amount} ${styles.amountDebe}`}>
                     ${Number(c.debe || 0).toLocaleString('es-CO')}
                   </td>
@@ -96,6 +124,74 @@ export default function BalanceComprobacionTab({
               </tr>
             </tfoot>
           </table>
+        </div>
+      )}
+
+      {/* Modal Libro Mayor */}
+      {selectedCuenta && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+            <h3 className={styles.modalTitle}>
+              Libro Mayor: {selectedCuenta.codigo} - {selectedCuenta.nombre}
+            </h3>
+            {loadingDetalles ? (
+              <p>Cargando movimientos...</p>
+            ) : (
+              <div className={styles.tableContainer} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Concepto</th>
+                      <th>Ref/Comprobante</th>
+                      <th style={{ textAlign: "right" }}>Débito</th>
+                      <th style={{ textAlign: "right" }}>Crédito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movimientosCuenta.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center' }}>No hay movimientos en este periodo</td>
+                      </tr>
+                    ) : (
+                      movimientosCuenta.map((mov: any) => (
+                        <tr key={mov.id}>
+                          <td>{mov.fecha}</td>
+                          <td>{mov.descripcion}</td>
+                          <td className={styles.mono}>
+                            {mov.factura ? `FAC-${mov.factura.numero_factura}` : 
+                             mov.pago ? `PAG-${mov.pago.id.substring(0,8)}` : 
+                             mov.nomina ? `NOM-${mov.nomina.periodo_mes}/${mov.nomina.periodo_anio}` : 
+                             'MANUAL'}
+                          </td>
+                          <td className={`${styles.amount} ${styles.amountDebe}`}>
+                            {Number(mov.debe) > 0 ? `$${Number(mov.debe).toLocaleString('es-CO')}` : '-'}
+                          </td>
+                          <td className={`${styles.amount} ${styles.amountHaber}`}>
+                            {Number(mov.haber) > 0 ? `$${Number(mov.haber).toLocaleString('es-CO')}` : '-'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan={3} style={{ fontWeight: 'bold', textAlign: 'right' }}>Total Movimientos:</td>
+                      <td className={`${styles.amount} ${styles.amountDebe}`}>
+                        ${movimientosCuenta.reduce((s, m) => s + Number(m.debe || 0), 0).toLocaleString('es-CO')}
+                      </td>
+                      <td className={`${styles.amount} ${styles.amountHaber}`}>
+                        ${movimientosCuenta.reduce((s, m) => s + Number(m.haber || 0), 0).toLocaleString('es-CO')}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+            <div className={styles.modalActions}>
+              <button onClick={closeModal} className={styles.btnCancel}>Cerrar</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

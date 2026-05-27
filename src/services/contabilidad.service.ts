@@ -43,10 +43,11 @@ export const ContabilidadService = {
   },
 
   // Movimientos
-  async getMovimientos(fechaDesde?: string, fechaHasta?: string) {
+  async getMovimientos(fechaDesde?: string, fechaHasta?: string, cuentaId?: string) {
     const params = new URLSearchParams();
     if (fechaDesde) params.append("fecha_desde", fechaDesde);
     if (fechaHasta) params.append("fecha_hasta", fechaHasta);
+    if (cuentaId) params.append("cuenta_contable_id", cuentaId);
     const queryStr = params.toString() ? `?${params.toString()}` : "";
 
     const res = await fetch(`${API}/contabilidad/movimientos${queryStr}`, {
