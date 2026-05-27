@@ -156,14 +156,14 @@ export default function BalanceComprobacionTab({
       {/* Modal Libro Mayor */}
       {selectedCuenta && (
         <div className={styles.modalOverlay} onClick={closeModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', width: '95%' }}>
             <h3 className={styles.modalTitle}>
               Libro Mayor: {selectedCuenta.codigo} - {selectedCuenta.nombre}
             </h3>
             {loadingDetalles ? (
               <p>Cargando movimientos...</p>
             ) : (
-              <div className={styles.tableContainer} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <div className={styles.tableContainer} style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'auto' }}>
                 <table className={styles.table}>
                   <thead>
                     <tr>
