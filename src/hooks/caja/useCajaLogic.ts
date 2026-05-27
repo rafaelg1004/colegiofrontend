@@ -340,7 +340,7 @@ export const useCajaLogic = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        setArticulosInventario(data.filter((a: any) => a.es_servicio || a.cantidad_stock > 0));
+        setArticulosInventario(data.filter((a: any) => tipo === "EGRESO" || a.es_servicio || a.cantidad_stock > 0));
       }
     } catch (err) { console.error(err); }
   };
