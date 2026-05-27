@@ -43,6 +43,24 @@ export default function BalanceComprobacionTab({
     setMovimientosCuenta([]);
   };
 
+  const formatReferencia = (mov: any) => {
+    if (mov.factura) return `FAC-${mov.factura.numero_factura}`;
+    if (mov.pago) return `PAG-${mov.pago.id.substring(0,8)}`;
+    if (mov.nomina) return `NOM-${mov.nomina.periodo_mes}/${mov.nomina.periodo_anio}`;
+    
+    const refMatch = mov.descripcion?.match(/\(Ref:\s*([a-zA-Z0-9-]+)\)/);
+    if (refMatch && refMatch[1]) {
+      return `CAJA-${refMatch[1].substring(0,8)}`;
+    }
+    
+    return 'MANUAL';
+  };
+
+  const cleanDescripcion = (desc: string) => {
+    if (!desc) return "";
+    return desc.replace(/\(Ref:\s*[a-zA-Z0-9-]+\)/, '').trim();
+  };
+
   return (
     <div className={styles.card}>
       <h3 className={styles.cardTitle}>Balance de Comprobación</h3>
@@ -92,16 +110,19 @@ export default function BalanceComprobacionTab({
                 <tr 
                   key={c.id} 
                   onClick={() => c.codigo.length >= 4 ? handleRowClick(c) : null}
-                  style={{ cursor: c.codigo.length >= 4 ? "pointer" : "default" }}
-                  title={c.codigo.length >= 4 ? "Haga clic para ver el Libro Mayor completo de esta cuenta" : "Haga clic en las cuentas de 4 o más dígitos para ver el detalle"}
+                  className={c.codigo.length >= 4 ? styles.rowClickable : styles.rowGroup}
+                  title={c.codigo.length >= 4 ? "Haga clic para ver el Libro Mayor completo de esta cuenta" : "Las cuentas principales solo agrupan los saldos"}
                 >
                   <td className={styles.mono} style={{ fontWeight: c.codigo.length < 4 ? "bold" : "normal" }}>{c.codigo}</td>
                   <td style={{ 
-                    color: c.codigo.length >= 4 ? "#3b82f6" : "inherit", 
-                    textDecoration: c.codigo.length >= 4 ? "underline" : "none",
                     fontWeight: c.codigo.length < 4 ? "bold" : "normal",
-                    paddingLeft: c.codigo.length >= 4 ? "1.5rem" : "1rem"
-                  }}>{c.nombre}</td>
+                    paddingLeft: c.codigo.length >= 4 ? "1.5rem" : "0.5rem",
+                    color: c.codigo.length < 4 ? "#1e293b" : "#475569"
+                  }}>
+                    <span className={c.codigo.length >= 4 ? styles.clickableText : ''}>
+                      {c.nombre}
+                    </span>
+                  </td>
                   <td className={`${styles.amount} ${styles.amountDebe}`}>
                     ${Number(c.debe || 0).toLocaleString('es-CO')}
                   </td>
@@ -161,13 +182,10 @@ export default function BalanceComprobacionTab({
                     ) : (
                       movimientosCuenta.map((mov: any) => (
                         <tr key={mov.id}>
-                          <td>{mov.fecha}</td>
-                          <td>{mov.descripcion}</td>
+                          <td>{new Date(mov.fecha).toLocaleDateString('es-CO')}</td>
+                          <td>{cleanDescripcion(mov.descripcion)}</td>
                           <td className={styles.mono}>
-                            {mov.factura ? `FAC-${mov.factura.numero_factura}` : 
-                             mov.pago ? `PAG-${mov.pago.id.substring(0,8)}` : 
-                             mov.nomina ? `NOM-${mov.nomina.periodo_mes}/${mov.nomina.periodo_anio}` : 
-                             'MANUAL'}
+                            {formatReferencia(mov)}
                           </td>
                           <td className={`${styles.amount} ${styles.amountDebe}`}>
                             {Number(mov.debe) > 0 ? `$${Number(mov.debe).toLocaleString('es-CO')}` : '-'}

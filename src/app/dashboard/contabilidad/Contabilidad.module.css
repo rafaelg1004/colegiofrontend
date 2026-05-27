@@ -284,6 +284,35 @@
   border-top: 2px solid #e2e8f0;
 }
 
+/* Balance Table Row Styles */
+.rowGroup {
+  background-color: #f8fafc;
+}
+.rowGroup:hover {
+  background-color: #f1f5f9;
+}
+
+.rowClickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.rowClickable:hover {
+  background-color: #f0fdf4 !important;
+}
+
+.clickableText {
+  color: #475569;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 1px;
+  transition: color 0.2s ease;
+}
+
+.rowClickable:hover .clickableText {
+  color: #10b981;
+  border-bottom: 1px dashed #10b981;
+}
+
 .mono {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.9rem;

@@ -47,6 +47,25 @@ export default function LibroDiarioTab({
   loading,
   handleSaveMovimiento
 }: LibroDiarioTabProps) {
+
+  const formatReferencia = (mov: any) => {
+    if (mov.factura) return `FAC-${mov.factura.numero_factura}`;
+    if (mov.pago) return `PAG-${mov.pago.id.substring(0,8)}`;
+    if (mov.nomina) return `NOM-${mov.nomina.periodo_mes}/${mov.nomina.periodo_anio}`;
+    
+    const refMatch = mov.descripcion?.match(/\(Ref:\s*([a-zA-Z0-9-]+)\)/);
+    if (refMatch && refMatch[1]) {
+      return `CAJA-${refMatch[1].substring(0,8)}`;
+    }
+    
+    return 'MANUAL';
+  };
+
+  const cleanDescripcion = (desc: string) => {
+    if (!desc) return "";
+    return desc.replace(/\(Ref:\s*[a-zA-Z0-9-]+\)/, '').trim();
+  };
+
   return (
     <div className={styles.card}>
       <h3 className={styles.cardTitle}>Registro de Movimientos</h3>
@@ -158,6 +177,7 @@ export default function LibroDiarioTab({
             <tr>
               <th>Fecha</th>
               <th>Descripción</th>
+              <th>Ref/Comp.</th>
               <th>Cuenta</th>
               <th style={{ textAlign: "right" }}>Débito</th>
               <th style={{ textAlign: "right" }}>Crédito</th>
@@ -166,8 +186,9 @@ export default function LibroDiarioTab({
           <tbody>
             {movimientos.map((mov) => (
               <tr key={mov.id}>
-                <td>{mov.fecha?.split("T")[0]}</td>
-                <td>{mov.descripcion}</td>
+                <td>{new Date(mov.fecha).toLocaleDateString('es-CO')}</td>
+                <td>{cleanDescripcion(mov.descripcion)}</td>
+                <td className={styles.mono}>{formatReferencia(mov)}</td>
                 <td>
                   {mov.cuenta?.codigo} - {mov.cuenta?.nombre}
                 </td>
