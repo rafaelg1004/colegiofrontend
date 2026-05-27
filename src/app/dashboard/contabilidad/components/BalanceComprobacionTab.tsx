@@ -47,6 +47,7 @@ export default function BalanceComprobacionTab({
     if (mov.factura) return `FAC-${mov.factura.numero_factura}`;
     if (mov.pago) return `PAG-${mov.pago.id.substring(0,8)}`;
     if (mov.nomina) return `NOM-${mov.nomina.periodo_mes}/${mov.nomina.periodo_anio}`;
+    if (mov.caja) return mov.caja.numero_comprobante;
     
     const facMatch = mov.descripcion?.match(/(FAC-\d+)/);
     if (facMatch && facMatch[1]) return facMatch[1];
