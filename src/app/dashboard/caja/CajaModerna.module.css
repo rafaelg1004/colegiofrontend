@@ -1282,20 +1282,16 @@
 
 @media print {
   /* Ocultar elementos de navegación y UI de Next.js/Dashboard */
-  .tabsContainer, .formContainer, .tableSection, .previewActions {
+  .container header,
+  .container nav,
+  .container footer,
+  .container aside,
+  .container button,
+  .tabsContainer,
+  .formContainer,
+  .tableSection,
+  .previewActions {
     display: none !important;
-  }
-
-  :global {
-    header, nav, footer, aside, button, .no-print {
-      display: none !important;
-    }
-    body, html {
-      background: white !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      height: auto !important;
-    }
   }
 
   .previewOverlay {
