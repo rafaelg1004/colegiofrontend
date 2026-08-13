@@ -159,15 +159,6 @@ export function useContabilidad() {
       return;
     }
 
-    try {
-      // Movimiento ingreso
-      await ContabilidadService.createMovimiento({
-        descripcion: `${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
-        haber: Number(montoFactura),
-        cuenta_contable_id: cuentaId,
-        fecha: new Date().toISOString().split("T")[0],
-      });
-
     const cuentaBancaria = cuentas.find((c) => c.codigo === "1105" || c.codigo === "1110")
       || cuentas.find((c) => c.codigo.startsWith("1105") || c.codigo.startsWith("1110"))
       || cuentas.find((c) => c.codigo.startsWith("11") || c.tipo === "Activo");
