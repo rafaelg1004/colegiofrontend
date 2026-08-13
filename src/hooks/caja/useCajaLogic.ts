@@ -205,7 +205,12 @@ export const useCajaLogic = () => {
       const res = await fetch(`${API}/caja/resumen?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) setResumen(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        if (data && !data.statusCode) {
+          setResumen(data);
+        }
+      }
     } catch (err) { console.error(err); }
   };
 

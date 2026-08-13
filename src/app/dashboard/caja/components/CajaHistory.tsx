@@ -109,7 +109,7 @@ const CajaHistory: React.FC<Props> = ({
               </tr>
             </thead>
             <tbody>
-              {resumen?.movimientos.map((mov: any) => (
+              {(Array.isArray(resumen?.movimientos) ? resumen.movimientos : []).map((mov: any) => (
                 <tr key={mov.id}>
                   <td>{formatFechaLocal(mov.fecha)}</td>
                   <td>
@@ -157,7 +157,7 @@ const CajaHistory: React.FC<Props> = ({
 
       {/* Vista de móvil (Cards) */}
       <div className={styles.mobileHistoryList}>
-        {resumen?.movimientos.map((mov: any) => (
+        {(Array.isArray(resumen?.movimientos) ? resumen.movimientos : []).map((mov: any) => (
           <div key={mov.id} className={styles.movCard}>
             <div className={styles.movCardHeader}>
               <span className={styles.movCardDate}>{formatFechaLocal(mov.fecha)}</span>
