@@ -439,6 +439,30 @@ export const useCajaLogic = () => {
     finally { setLoading(false); }
   };
 
+  const anularMovimiento = async (id: string) => {
+    if (!confirm("¿Está seguro de anular esta transacción? Se revertirá en contabilidad e inventario.")) return;
+    setLoading(true);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API}/caja/movimientos/${id}/anular`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast("Transacción anulada correctamente", "success");
+        cargarResumen();
+      } else {
+        const err = await res.json();
+        showToast(err.message || "Error al anular transacción", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error de conexión", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     activeTab, setActiveTab,
     loading, resumen,
@@ -484,6 +508,7 @@ export const useCajaLogic = () => {
     fetchArticulos,
     showConceptDropdown, setShowConceptDropdown,
     showBeneficiarioDropdown, setShowBeneficiarioDropdown,
-    conceptoSeleccionado, setConceptoSeleccionado
+    conceptoSeleccionado, setConceptoSeleccionado,
+    anularMovimiento
   };
 };

@@ -144,19 +144,50 @@ export default function BalanceComprobacionTab({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={2}>TOTALES SUMAS IGUALES</td>
+                <td colSpan={2} style={{ fontWeight: "bold" }}>TOTALES SUMAS IGUALES</td>
                 <td className={`${styles.amount} ${styles.amountDebe}`}>
                   ${Number(balance.totales?.debe || 0).toLocaleString('es-CO')}
                 </td>
                 <td className={`${styles.amount} ${styles.amountHaber}`}>
                   ${Number(balance.totales?.haber || 0).toLocaleString('es-CO')}
                 </td>
-                <td className={styles.amount}>
+                <td className={styles.amount} style={{ 
+                  fontWeight: "bold",
+                  color: Math.abs(Number(balance.totales?.debe || 0) - Number(balance.totales?.haber || 0)) === 0 ? "#10b981" : "#ef4444" 
+                }}>
                   ${(Math.abs(Number(balance.totales?.debe || 0) - Number(balance.totales?.haber || 0))).toLocaleString('es-CO')}
                 </td>
               </tr>
             </tfoot>
           </table>
+          {Math.abs(Number(balance.totales?.debe || 0) - Number(balance.totales?.haber || 0)) > 0 ? (
+            <div style={{
+              marginTop: "1rem",
+              padding: "0.8rem 1.2rem",
+              backgroundColor: "#fef2f2",
+              border: "1px solid #fca5a5",
+              borderRadius: "8px",
+              color: "#991b1b",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}>
+              <span>⚠️ Descuadre en Contabilidad: La diferencia entre Debe y Haber es de ${(Math.abs(Number(balance.totales?.debe || 0) - Number(balance.totales?.haber || 0))).toLocaleString('es-CO')}</span>
+            </div>
+          ) : (
+            <div style={{
+              marginTop: "1rem",
+              padding: "0.8rem 1.2rem",
+              backgroundColor: "#f0fdf4",
+              border: "1px solid #86efac",
+              borderRadius: "8px",
+              color: "#166534",
+              fontWeight: 600
+            }}>
+              <span>✅ Contabilidad perfectamente cuadrada: Débito y Crédito suman exactamente lo mismo.</span>
+            </div>
+          )}
         </div>
       )}
 

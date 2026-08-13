@@ -11,6 +11,7 @@ interface Props {
   cargarResumen: () => void;
   formatMoney: (val: number) => string;
   imprimirRecibo: (datos: any) => void;
+  anularMovimiento?: (id: string) => void;
 }
 
 const CajaHistory: React.FC<Props> = ({
@@ -21,7 +22,8 @@ const CajaHistory: React.FC<Props> = ({
   setFechaHasta,
   cargarResumen,
   formatMoney,
-  imprimirRecibo
+  imprimirRecibo,
+  anularMovimiento
 }) => {
   const [editingMov, setEditingMov] = useState<any>(null);
   const [newObs, setNewObs] = useState("");
@@ -110,10 +112,16 @@ const CajaHistory: React.FC<Props> = ({
               {resumen?.movimientos.map((mov: any) => (
                 <tr key={mov.id}>
                   <td>{formatFechaLocal(mov.fecha)}</td>
-                  <td><span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span></td>
+                  <td>
+                    {mov.estado === 'ANULADO' ? (
+                      <span className={styles.badge} style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>ANULADO</span>
+                    ) : (
+                      <span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span>
+                    )}
+                  </td>
                   <td>{mov.concepto}</td>
                   <td>{mov.estudiante_nombre || "-"}</td>
-                  <td style={{ fontWeight: 700, color: mov.tipo === 'INGRESO' ? '#059669' : '#dc2626' }}>{formatMoney(mov.monto)}</td>
+                  <td style={{ fontWeight: 700, color: mov.estado === 'ANULADO' ? '#94a3b8' : (mov.tipo === 'INGRESO' ? '#059669' : '#dc2626'), textDecoration: mov.estado === 'ANULADO' ? 'line-through' : 'none' }}>{formatMoney(mov.monto)}</td>
                   <td>{mov.numero_comprobante}</td>
                   <td>
                     <button 
@@ -130,6 +138,15 @@ const CajaHistory: React.FC<Props> = ({
                     >
                       ✏️
                     </button>
+                    {mov.estado !== 'ANULADO' && anularMovimiento && (
+                      <button 
+                        onClick={() => anularMovimiento(mov.id)} 
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', marginLeft: '10px' }}
+                        title="Anular Transacción"
+                      >
+                        🚫
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -144,7 +161,11 @@ const CajaHistory: React.FC<Props> = ({
           <div key={mov.id} className={styles.movCard}>
             <div className={styles.movCardHeader}>
               <span className={styles.movCardDate}>{formatFechaLocal(mov.fecha)}</span>
-              <span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span>
+              {mov.estado === 'ANULADO' ? (
+                <span className={styles.badge} style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>ANULADO</span>
+              ) : (
+                <span className={`${styles.badge} ${mov.tipo === 'INGRESO' ? styles.badgeIngreso : styles.badgeEgreso}`}>{mov.tipo}</span>
+              )}
             </div>
             <div className={styles.movCardBody}>
               <p><strong>Concepto:</strong> {mov.concepto}</p>
@@ -152,12 +173,15 @@ const CajaHistory: React.FC<Props> = ({
               <p><strong>Comprobante:</strong> {mov.numero_comprobante}</p>
             </div>
             <div className={styles.movCardFooter}>
-              <span className={styles.movCardAmount} style={{ color: mov.tipo === 'INGRESO' ? '#059669' : '#dc2626' }}>
+              <span className={styles.movCardAmount} style={{ color: mov.estado === 'ANULADO' ? '#94a3b8' : (mov.tipo === 'INGRESO' ? '#059669' : '#dc2626'), textDecoration: mov.estado === 'ANULADO' ? 'line-through' : 'none' }}>
                 {formatMoney(mov.monto)}
               </span>
               <div className={styles.movCardActions}>
                 <button onClick={() => imprimirRecibo(mov)} className={styles.btnMovAction} title="Reimprimir">🖨️ Recibo</button>
                 <button onClick={() => handleEditClick(mov)} className={styles.btnMovAction} title="Editar">✏️ Editar</button>
+                {mov.estado !== 'ANULADO' && anularMovimiento && (
+                  <button onClick={() => anularMovimiento(mov.id)} className={styles.btnMovAction} title="Anular">🚫 Anular</button>
+                )}
               </div>
             </div>
           </div>

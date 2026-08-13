@@ -209,7 +209,7 @@ export default function LibroDiarioTab({
             ))}
             {movimientos.length === 0 && (
               <tr>
-                <td colSpan={5} className={styles.empty}>
+                <td colSpan={6} className={styles.empty}>
                   No hay movimientos
                 </td>
               </tr>

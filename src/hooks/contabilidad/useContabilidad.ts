@@ -168,23 +168,40 @@ export function useContabilidad() {
         fecha: new Date().toISOString().split("T")[0],
       });
 
+    const cuentaBancaria = cuentas.find((c) => c.codigo === "1105" || c.codigo === "1110")
+      || cuentas.find((c) => c.codigo.startsWith("1105") || c.codigo.startsWith("1110"))
+      || cuentas.find((c) => c.codigo.startsWith("11") || c.tipo === "Activo");
+
+    if (!cuentaBancaria) {
+      alert("No se encontró una cuenta contable de Caja o Banco (Activo). Por favor cree una cuenta 1105 en el Plan de Cuentas antes de registrar la factura.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // 1. Movimiento ingreso (Haber)
+      await ContabilidadService.createMovimiento({
+        descripcion: `${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
+        haber: Number(montoFactura),
+        debe: 0,
+        cuenta_contable_id: cuentaId,
+        fecha: new Date().toISOString().split("T")[0],
+      });
+
+      // 2. Movimiento caja/banco (Debe)
+      await ContabilidadService.createMovimiento({
+        descripcion: `Cobro ${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
+        debe: Number(montoFactura),
+        haber: 0,
+        cuenta_contable_id: cuentaBancaria.id,
+        fecha: new Date().toISOString().split("T")[0],
+      });
+
       await loadCuentas();
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const cuentaBancaria = cuentas.find((c) => c.codigo === "1105" || c.codigo === "1110");
-      if (cuentaBancaria) {
-        await ContabilidadService.createMovimiento({
-          descripcion: `Cobro ${conceptoFactura} - ${estudianteSeleccionado.primer_nombre} ${estudianteSeleccionado.primer_apellido}`,
-          debe: Number(montoFactura),
-          cuenta_contable_id: cuentaBancaria.id,
-          fecha: new Date().toISOString().split("T")[0],
-        });
-      }
-
       loadMovimientos();
       loadBalance();
 
-      alert("Factura registrada correctamente");
+      alert("Factura registrada correctamente (Asiento de Partida Doble verificado)");
       setEstudianteSeleccionado(null);
       setBusquedaEstudiante("");
       setConceptoFactura("");
@@ -318,10 +335,22 @@ export function useContabilidad() {
     { id: "facturacion", label: "Asiento Manual" },
   ];
 
-  const totalActivos = balance?.cuentas?.find((c: any) => c.codigo === '1')?.saldo || 0;
-  const totalPasivos = balance?.cuentas?.find((c: any) => c.codigo === '2')?.saldo || 0;
-  const totalIngresos = balance?.cuentas?.find((c: any) => c.codigo === '4')?.saldo || 0;
-  const totalGastos = balance?.cuentas?.find((c: any) => c.codigo === '5')?.saldo || 0;
+  const getSaldoTotalTipo = (codigoRaiz: string, tipoNombre: string) => {
+    if (!balance?.cuentas) return 0;
+    const cuentaRaiz = balance.cuentas.find((c: any) => c.codigo === codigoRaiz);
+    if (cuentaRaiz && cuentaRaiz.saldo !== undefined && cuentaRaiz.saldo !== null) {
+      return Number(cuentaRaiz.saldo);
+    }
+    // Fallback: sumar subcuentas de 4 dígitos si no hay cuenta raíz de 1 dígito
+    return balance.cuentas
+      .filter((c: any) => c.codigo.length === 4 && (c.tipo === tipoNombre || c.codigo.startsWith(codigoRaiz)))
+      .reduce((sum: number, c: any) => sum + Number(c.saldo || 0), 0);
+  };
+
+  const totalActivos = getSaldoTotalTipo('1', 'Activo');
+  const totalPasivos = getSaldoTotalTipo('2', 'Pasivo');
+  const totalIngresos = getSaldoTotalTipo('4', 'Ingreso');
+  const totalGastos = getSaldoTotalTipo('5', 'Gasto');
 
   return {
     state: {

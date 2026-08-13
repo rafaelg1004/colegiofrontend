@@ -54,7 +54,8 @@ export default function CajaPage() {
     registrarTransaccion,
     showConceptDropdown, setShowConceptDropdown,
     showBeneficiarioDropdown, setShowBeneficiarioDropdown,
-    conceptoSeleccionado, setConceptoSeleccionado
+    conceptoSeleccionado, setConceptoSeleccionado,
+    anularMovimiento
   } = useCajaLogic();
 
   const [showPreview, setShowPreview] = useState(false);
@@ -815,6 +816,7 @@ export default function CajaPage() {
             cargarResumen={cargarResumen}
             formatMoney={formatMoney}
             imprimirRecibo={imprimirRecibo}
+            anularMovimiento={anularMovimiento}
           />
         </>
       )}
