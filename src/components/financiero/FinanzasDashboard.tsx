@@ -370,7 +370,7 @@ export const FinanzasDashboard = () => {
               >
                 <option value="Todos">Todos los Estados</option>
                 <option value="Debe">Quiénes Deben (Pendientes)</option>
-                <option value="Al día">Quiénes Están al Día</option>
+                <option value="Al dia">Quiénes Están al Día</option>
                 <option value="Sin Factura">Sin Factura Generada</option>
               </select>
 
