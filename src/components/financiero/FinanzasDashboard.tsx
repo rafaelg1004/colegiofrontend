@@ -184,8 +184,16 @@ export const FinanzasDashboard = () => {
   });
 
   // Estadísticas del listado filtrado
-  const cantAldia = filteredDeudores.filter(d => d.estado === 'Al día').length;
-  const cantDebe = filteredDeudores.filter(d => d.estado === 'Debe' || d.estado === 'En mora').length;
+  const cantAldia = filteredDeudores.filter(d => {
+    const st = (d.estado || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    return st === 'al dia';
+  }).length;
+
+  const cantDebe = filteredDeudores.filter(d => {
+    const st = (d.estado || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    return st === 'debe' || st === 'en mora' || st === 'sin factura';
+  }).length;
+
   const totalDeudaFiltrada = filteredDeudores.reduce((sum, d) => sum + Number(d.deuda || 0), 0);
 
   // Exportar a Excel (CSV con formato BOM UTF-8)
