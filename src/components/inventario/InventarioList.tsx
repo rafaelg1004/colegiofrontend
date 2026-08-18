@@ -85,7 +85,7 @@ export const InventarioList = () => {
       precio_unitario: 0,
       precio_venta: 0,
       ubicacion: "Almacén Central",
-      categoria_id: "",
+      categoria_id: categorias.length > 0 ? categorias[0].id : "",
       es_servicio: false,
     });
     setModalMode("create");
