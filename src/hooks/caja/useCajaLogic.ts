@@ -212,7 +212,25 @@ export const useCajaLogic = () => {
                   .replace(/[\u0300-\u036f]/g, "")
                   .replace(/[^a-z0-9]/g, "");
 
-                // Filtrar solo ítems de servicio excluyendo Matrícula, Formulario o Uniformes
+                // Normalizar abreviaturas del colegio (PJ -> Pre-Jardín, J -> Jardín, T -> Transición, M -> Maternal)
+                const rawGrad = (grado || '').toUpperCase().trim();
+                let targetGradeKey = '';
+
+                if (rawGrad.startsWith('PJ') || rawGrad.includes('PREJ') || rawGrad.includes('PRE-J') || rawGrad.includes('PRE J')) {
+                  targetGradeKey = 'prejardin';
+                } else if (rawGrad.startsWith('J') || rawGrad.includes('JARDIN') || rawGrad.includes('JARDÍN')) {
+                  targetGradeKey = 'jardin';
+                } else if (rawGrad.startsWith('T') || rawGrad.includes('TRANSIC')) {
+                  targetGradeKey = 'transicion';
+                } else if (rawGrad.startsWith('M') || rawGrad.includes('MATERN')) {
+                  targetGradeKey = 'maternal';
+                } else if (rawGrad.startsWith('P') || rawGrad.includes('PARVUL')) {
+                  targetGradeKey = 'parvulos';
+                } else {
+                  targetGradeKey = rawGrad.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+                }
+
+                // Filtrar estrictamente solo ítems de servicio excluyendo Matrícula, Formulario o Uniformes
                 const serviciosPension = articulos.filter((a: any) => {
                   if (!a.es_servicio) return false;
                   const nameLower = (a.nombre || '').toLowerCase();
@@ -224,35 +242,40 @@ export const useCajaLogic = () => {
 
                 let pencionMatch = null;
 
-                if (cleanGrade) {
-                  // 1. Buscar en servicios de pensión que contenga exactamente el nombre del grado
-                  pencionMatch = serviciosPension.find((a: any) => {
-                    const artName = (a.nombre || '')
-                      .toLowerCase()
-                      .normalize("NFD")
-                      .replace(/[\u0300-\u036f]/g, "")
-                      .replace(/[^a-z0-9]/g, "");
-                    return artName.includes(cleanGrade);
-                  });
-                }
-
-                // 2. Coincidencias específicas si es Jardín (sin Pre), Pre-Jardín, Transición, Maternal, etc.
-                if (!pencionMatch && cleanGrade) {
+                // 1. Buscar servicio por clave de grado normalizada
+                if (targetGradeKey) {
                   pencionMatch = serviciosPension.find((a: any) => {
                     const artName = (a.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    if (cleanGrade.includes('prejardin') && (artName.includes('prejardin') || artName.includes('pre-jardin') || artName.includes('pre jardin'))) return true;
-                    if (cleanGrade.includes('jardin') && !cleanGrade.includes('pre') && artName.includes('jardin') && !artName.includes('pre')) return true;
-                    if (cleanGrade.includes('maternal') && artName.includes('maternal')) return true;
-                    if (cleanGrade.includes('transic') && artName.includes('transic')) return true;
-                    return false;
+                    if (targetGradeKey === 'prejardin') {
+                      return artName.includes('prej') || artName.includes('pre-j') || artName.includes('pre j') || artName.includes('pj');
+                    }
+                    if (targetGradeKey === 'jardin') {
+                      return (artName.includes('jardin') || artName.endsWith(' j') || artName.includes(' j ')) && !artName.includes('pre');
+                    }
+                    if (targetGradeKey === 'transicion') {
+                      return artName.includes('transic') || artName.includes('trans') || artName.endsWith(' t') || artName.includes(' t ') || artName.includes('t-');
+                    }
+                    if (targetGradeKey === 'maternal') {
+                      return artName.includes('matern') || artName.includes('mat');
+                    }
+                    if (targetGradeKey === 'parvulos') {
+                      return artName.includes('parvul') || artName.includes('parv');
+                    }
+                    return artName.replace(/[^a-z0-9]/g, "").includes(targetGradeKey);
                   });
                 }
 
-                // 3. Fallback a pensión general si no existe ítem con el nombre del grado
+                // 2. Buscar servicio que contenga "Pensión" o "Pension"
                 if (!pencionMatch) {
-                  pencionMatch = serviciosPension.find((a: any) => (a.nombre || '').toLowerCase().includes('pensi'))
-                    || serviciosPension[0]
-                    || articulos[0];
+                  pencionMatch = serviciosPension.find((a: any) => {
+                    const nameLower = (a.nombre || '').toLowerCase();
+                    return nameLower.includes('pension') || nameLower.includes('pensión');
+                  });
+                }
+
+                // 3. Último fallback: tomar el primer servicio que NO sea Matrícula
+                if (!pencionMatch && serviciosPension.length > 0) {
+                  pencionMatch = serviciosPension[0];
                 }
 
                 if (pencionMatch) {
