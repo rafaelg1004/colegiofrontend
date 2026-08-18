@@ -44,7 +44,7 @@ export const FinanzasDashboard = () => {
   // Filtros para la vista de pensiones
   const [mesFiltro, setMesFiltro] = useState<number>(new Date().getMonth() + 1);
   const [anioFiltro, setAnioFiltro] = useState<number>(new Date().getFullYear());
-  const [estadoFiltro, setEstadoFiltro] = useState<string>('Debe');
+  const [estadoFiltro, setEstadoFiltro] = useState<string>('Todos');
   const [grupoFiltro, setGrupoFiltro] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
