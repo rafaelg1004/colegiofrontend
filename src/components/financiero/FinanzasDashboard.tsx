@@ -424,6 +424,7 @@ export const FinanzasDashboard = () => {
                   <th>Estudiante</th>
                   <th>Grado</th>
                   <th>Padre / Acudiente</th>
+                  <th>Mes Evaluado</th>
                   <th>Monto Total</th>
                   <th>Pagado</th>
                   <th>Deuda</th>
@@ -434,7 +435,7 @@ export const FinanzasDashboard = () => {
               <tbody>
                 {filteredDeudores.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: '2rem' }}>
+                    <td colSpan={10} style={{ textAlign: 'center', padding: '2rem' }}>
                       No se encontraron registros para los filtros seleccionados.
                     </td>
                   </tr>
@@ -470,6 +471,19 @@ export const FinanzasDashboard = () => {
                           </div>
                         </div>
                       </td>
+                      <td>
+                        <span style={{ 
+                          fontSize: '0.82rem', 
+                          fontWeight: 600, 
+                          color: '#1e293b', 
+                          backgroundColor: '#f1f5f9', 
+                          padding: '4px 8px', 
+                          borderRadius: '6px', 
+                          display: 'inline-block' 
+                        }}>
+                          📅 {MESES.find(m => m.id === mesFiltro)?.nombre} {anioFiltro}
+                        </span>
+                      </td>
                       <td>{formatMoney(item.monto_total)}</td>
                       <td style={{ color: '#16a34a', fontWeight: 600 }}>{formatMoney(item.monto_pagado)}</td>
                       <td className={styles.amount} style={{ color: item.deuda > 0 ? '#dc2626' : '#16a34a' }}>
@@ -489,14 +503,30 @@ export const FinanzasDashboard = () => {
                         </span>
                       </td>
                       <td>
-                        {(item.estado === 'Debe' || item.estado === 'En mora' || item.estado_factura === 'Emitida') && item.factura_id && (
-                          <button 
-                            className={styles.payBtn}
-                            onClick={() => window.location.href = `/dashboard/caja?estudianteId=${item.estudiante_id}&facturaId=${item.factura_id}`}
-                          >
-                            Pagar 💸
-                          </button>
-                        )}
+                        <button 
+                          className={styles.payBtn}
+                          style={{
+                            backgroundColor: item.estado === 'Al día' ? '#64748b' : '#16a34a',
+                            color: '#ffffff',
+                            fontWeight: 600,
+                            fontSize: '0.82rem',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                          }}
+                          onClick={() => {
+                            const url = `/dashboard/caja?estudianteId=${item.estudiante_id}${item.factura_id ? `&facturaId=${item.factura_id}` : ''}`;
+                            window.location.href = url;
+                          }}
+                          title={`Ir a Caja a cobrar pensión de ${item.estudiante_nombre}`}
+                        >
+                          💳 {item.estado === 'Al día' ? 'Ver en Caja' : 'Ir a Caja 💵'}
+                        </button>
                       </td>
                     </tr>
                   ))
