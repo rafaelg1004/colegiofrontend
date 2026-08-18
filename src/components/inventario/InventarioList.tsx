@@ -21,11 +21,20 @@ export const InventarioList = () => {
   const [showNuevaCategoria, setShowNuevaCategoria] = useState(false);
   const [nuevaCategoriaNombre, setNuevaCategoriaNombre] = useState("");
   const [savingCategoria, setSavingCategoria] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Estados para validación y alertas interactivas sin alert() de navegador
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [modalErrorMessage, setModalErrorMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Estados para filtros avanzados
-  const [tipoFiltro, setTipoFiltro] = useState<string>("todos"); // "todos", "producto", "servicio"
-  const [categoriaFiltro, setCategoriaFiltro] = useState<string>("todas");
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const clearErrors = () => {
+    setFormErrors({});
+    setModalErrorMessage(null);
+  };
 
   const formatCurrency = (val: number | string) => {
     if (val === undefined || val === null || val === "") return "";
@@ -38,9 +47,17 @@ export const InventarioList = () => {
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Solo permitir números y puntos de miles (que el usuario escriba o se formateen)
     const rawValue = value.replace(/\D/g, '');
     const numValue = parseFloat(rawValue) || 0;
+
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+
     setFormData({ ...formData, [name]: numValue });
   };
 
@@ -78,6 +95,7 @@ export const InventarioList = () => {
   }, []);
 
   const openCreate = () => {
+    clearErrors();
     setFormData({
       nombre: "",
       descripcion: "",
@@ -96,6 +114,7 @@ export const InventarioList = () => {
   };
 
   const openEdit = (item: any) => {
+    clearErrors();
     setSelectedItem(item);
     setFormData({
       nombre: item.nombre || "",
@@ -115,6 +134,7 @@ export const InventarioList = () => {
   };
 
   const openMove = (item: any) => {
+    clearErrors();
     setSelectedItem(item);
     setFormData({
       tipo_movimiento: "Entrada",
@@ -126,12 +146,14 @@ export const InventarioList = () => {
   };
 
   const openHistory = (item: any) => {
+    clearErrors();
     setSelectedItem(item);
     setModalMode("history");
     setShowModal(true);
   };
 
   const openGeneralMove = () => {
+    clearErrors();
     setSelectedItem(null);
     setFormData({
       tipo_movimiento: "Entrada",
@@ -163,12 +185,21 @@ export const InventarioList = () => {
       parsedValue = ""; // No guardar el valor especial
     }
 
+    // Limpiar error específico del campo modificado
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+
     setFormData({ ...formData, [name]: parsedValue });
   };
 
   const handleCrearCategoria = async () => {
     if (!nuevaCategoriaNombre.trim()) {
-      alert("Ingrese el nombre de la categoría");
+      setModalErrorMessage("Ingrese el nombre de la nueva categoría");
       return;
     }
 
@@ -194,41 +225,50 @@ export const InventarioList = () => {
       // Actualizar lista de categorías
       await fetchCategorias();
 
-      // Seleccionar la nueva categoría
+      // Seleccionar la nueva categoría y limpiar errores
       setFormData({ ...formData, categoria_id: nuevaCategoria.id });
+      setFormErrors(prev => {
+        const next = { ...prev };
+        delete next.categoria_id;
+        return next;
+      });
 
-      // Limpiar y cerrar
       setNuevaCategoriaNombre("");
       setShowNuevaCategoria(false);
-
-      alert(
-        `Categoría "${nuevaCategoria.nombre}" creada exitosamente. El concepto de cobro se creará automáticamente.`,
-      );
+      showToast(`Categoría "${nuevaCategoria.nombre}" creada exitosamente`, "success");
     } catch (err: any) {
-      alert(err.message || "Error al crear categoría");
+      setModalErrorMessage(err.message || "Error al crear categoría");
     } finally {
       setSavingCategoria(false);
     }
   };
 
   const handleSubmit = async () => {
-    // Validaciones por modo
+    const errors: { [key: string]: string } = {};
+
     if (modalMode === "create" || modalMode === "edit") {
       if (!formData.nombre?.trim()) {
-        alert("El nombre del artículo o servicio es obligatorio");
-        return;
+        errors.nombre = "El nombre es un campo obligatorio.";
       }
       if (!formData.categoria_id || formData.categoria_id.trim() === "" || formData.categoria_id === "nueva_categoria") {
-        alert("Por favor seleccione una categoría para el ítem.");
-        return;
+        errors.categoria_id = "La categoría es un campo obligatorio.";
+      }
+      if (formData.precio_venta === undefined || formData.precio_venta === null || formData.precio_venta === "") {
+        errors.precio_venta = "El precio de venta es obligatorio.";
       }
     } else if (modalMode === "move") {
-      if (!formData.cantidad || formData.cantidad <= 0) {
-        alert("La cantidad debe ser mayor a 0");
-        return;
+      if (!formData.cantidad || Number(formData.cantidad) <= 0) {
+        errors.cantidad = "La cantidad debe ser mayor a 0.";
       }
     }
 
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setModalErrorMessage("Faltan datos obligatorios. Por favor verifique los campos marcados en rojo.");
+      return;
+    }
+
+    clearErrors();
     setSaving(true);
     try {
       const token = getAuthToken();
@@ -252,7 +292,6 @@ export const InventarioList = () => {
           : `${API_URL}/inventario/articulos`;
         method = isEdit ? "PATCH" : "POST";
         
-        // Limpiar tipos numéricos, booleanos y campos opcionales vacíos para evitar errores de class-validator
         const cleanBody: any = {
           ...formData,
           cantidad_stock: formData.cantidad_stock !== undefined && formData.cantidad_stock !== null && formData.cantidad_stock !== "" ? Number(formData.cantidad_stock) : 0,
@@ -284,9 +323,10 @@ export const InventarioList = () => {
       }
 
       setShowModal(false);
+      showToast(modalMode === "create" ? "Guardado exitosamente" : "Actualizado exitosamente", "success");
       fetchInventario();
     } catch (err: any) {
-      alert(err.message || "Error en la operación");
+      setModalErrorMessage(err.message || "Error al realizar la operación");
     } finally {
       setSaving(false);
     }
@@ -310,9 +350,10 @@ export const InventarioList = () => {
         throw new Error(err.message || "Error al eliminar artículo");
       }
 
+      showToast(`Artículo "${nombre}" eliminado correctamente`, "success");
       fetchInventario();
     } catch (err: any) {
-      alert(err.message || "Error al eliminar");
+      showToast(err.message || "Error al eliminar artículo", "error");
     } finally {
       setDeletingId(null);
     }
@@ -342,6 +383,28 @@ export const InventarioList = () => {
 
   return (
     <div className={styles.container}>
+      {/* Notificación Toast flotante */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          backgroundColor: toastMessage.type === 'success' ? '#10b981' : '#ef4444',
+          color: '#ffffff',
+          padding: '12px 22px',
+          borderRadius: '10px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
+          zIndex: 99999,
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '0.95rem'
+        }}>
+          <span>{toastMessage.type === 'success' ? '✅' : '❌'} {toastMessage.message}</span>
+        </div>
+      )}
+
       <header className={styles.header}>
         <div className={styles.titleSection}>
           <h1>Inventario Institucional</h1>
@@ -499,16 +562,45 @@ export const InventarioList = () => {
               </button>
             </div>
             <div className={styles.modalBody}>
+              {modalErrorMessage && (
+                <div style={{
+                  backgroundColor: '#fef2f2',
+                  borderLeft: '4px solid #ef4444',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                  color: '#991b1b',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>⚠️ {modalErrorMessage}</span>
+                </div>
+              )}
+
               {(modalMode === "create" || modalMode === "edit") && (
                 <div className={styles.formGrid}>
                   <div className={styles.formGroup}>
-                    <label>Nombre *</label>
+                    <label style={{ color: formErrors.nombre ? '#dc2626' : undefined, fontWeight: formErrors.nombre ? 600 : undefined }}>
+                      Nombre {formErrors.nombre ? '⚠️ *' : '*'}
+                    </label>
                     <input
                       name="nombre"
                       value={formData.nombre || ""}
                       onChange={handleChange}
-                      required
+                      placeholder="Ej. Pensión Mensual, Cuaderno..."
+                      style={{
+                        border: formErrors.nombre ? '2px solid #ef4444' : undefined,
+                        backgroundColor: formErrors.nombre ? '#fef2f2' : undefined,
+                      }}
                     />
+                    {formErrors.nombre && (
+                      <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block', fontWeight: 600 }}>
+                        ⚠️ {formErrors.nombre}
+                      </span>
+                    )}
                   </div>
                   <div className={styles.formGroup}>
                     <label>Tipo de Ítem</label>
@@ -522,12 +614,17 @@ export const InventarioList = () => {
                     </div>
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Categoría *</label>
+                    <label style={{ color: formErrors.categoria_id ? '#dc2626' : undefined, fontWeight: formErrors.categoria_id ? 600 : undefined }}>
+                      Categoría {formErrors.categoria_id ? '⚠️ *' : '*'}
+                    </label>
                     <select
                       name="categoria_id"
                       value={formData.categoria_id || ""}
                       onChange={handleChange}
-                      required
+                      style={{
+                        border: formErrors.categoria_id ? '2px solid #ef4444' : undefined,
+                        backgroundColor: formErrors.categoria_id ? '#fef2f2' : undefined,
+                      }}
                     >
                       <option value="">-- Seleccionar categoría * --</option>
                       {categorias.map((cat) => (
@@ -539,6 +636,11 @@ export const InventarioList = () => {
                         + Crear nueva categoría
                       </option>
                     </select>
+                    {formErrors.categoria_id && (
+                      <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block', fontWeight: 600 }}>
+                        ⚠️ {formErrors.categoria_id}
+                      </span>
+                    )}
 
                     {showNuevaCategoria && (
                       <div className={styles.nuevaCategoriaBox}>
@@ -618,15 +720,25 @@ export const InventarioList = () => {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Precio Venta *</label>
+                    <label style={{ color: formErrors.precio_venta ? '#dc2626' : undefined, fontWeight: formErrors.precio_venta ? 600 : undefined }}>
+                      Precio Venta {formErrors.precio_venta ? '⚠️ *' : '*'}
+                    </label>
                     <input
                       type="text"
                       name="precio_venta"
                       value={formatCurrency(formData.precio_venta)}
                       onChange={handlePriceChange}
-                      required
                       placeholder="0"
+                      style={{
+                        border: formErrors.precio_venta ? '2px solid #ef4444' : undefined,
+                        backgroundColor: formErrors.precio_venta ? '#fef2f2' : undefined,
+                      }}
                     />
+                    {formErrors.precio_venta && (
+                      <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block', fontWeight: 600 }}>
+                        ⚠️ {formErrors.precio_venta}
+                      </span>
+                    )}
                   </div>
                   {!formData.es_servicio && (
                     <div className={styles.formGroup}>
