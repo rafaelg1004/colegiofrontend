@@ -18,11 +18,14 @@ export const InventarioList = () => {
   const [formData, setFormData] = useState<any>({});
   const [saving, setSaving] = useState(false);
 
-  // Estado para crear nueva categoría
   const [showNuevaCategoria, setShowNuevaCategoria] = useState(false);
   const [nuevaCategoriaNombre, setNuevaCategoriaNombre] = useState("");
   const [savingCategoria, setSavingCategoria] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Estados para filtros avanzados
+  const [tipoFiltro, setTipoFiltro] = useState<string>("todos"); // "todos", "producto", "servicio"
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>("todas");
 
   const formatCurrency = (val: number | string) => {
     if (val === undefined || val === null || val === "") return "";
@@ -85,7 +88,7 @@ export const InventarioList = () => {
       precio_unitario: 0,
       precio_venta: 0,
       ubicacion: "Almacén Central",
-      categoria_id: categorias.length > 0 ? categorias[0].id : "",
+      categoria_id: "",
       es_servicio: false,
     });
     setModalMode("create");
@@ -212,7 +215,11 @@ export const InventarioList = () => {
     // Validaciones por modo
     if (modalMode === "create" || modalMode === "edit") {
       if (!formData.nombre?.trim()) {
-        alert("El nombre del artículo es obligatorio");
+        alert("El nombre del artículo o servicio es obligatorio");
+        return;
+      }
+      if (!formData.categoria_id || formData.categoria_id.trim() === "" || formData.categoria_id === "nueva_categoria") {
+        alert("Por favor seleccione una categoría para el ítem.");
         return;
       }
     } else if (modalMode === "move") {
@@ -311,11 +318,27 @@ export const InventarioList = () => {
     }
   };
 
-  const filteredElementos = elementos.filter(
-    (el) =>
+  const filteredElementos = elementos.filter((el) => {
+    // Filtro de búsqueda por texto
+    const matchesSearch =
       el.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      el.codigo?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+      el.codigo_interno?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      el.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      el.descripcion?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filtro por Tipo (Producto / Servicio)
+    let matchesTipo = true;
+    if (tipoFiltro === "servicio") matchesTipo = el.es_servicio === true;
+    if (tipoFiltro === "producto") matchesTipo = !el.es_servicio;
+
+    // Filtro por Categoría
+    let matchesCategoria = true;
+    if (categoriaFiltro && categoriaFiltro !== "todas") {
+      matchesCategoria = el.categoria_id === categoriaFiltro || el.categoria?.id === categoriaFiltro;
+    }
+
+    return matchesSearch && matchesTipo && matchesCategoria;
+  });
 
   return (
     <div className={styles.container}>
@@ -337,13 +360,57 @@ export const InventarioList = () => {
         </div>
       </header>
 
-      <div className={styles.searchBar}>
+      <div className={styles.searchBar} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           type="text"
-          placeholder="Buscar elemento por nombre o código..."
+          placeholder="🔍 Buscar por nombre, código o descripción..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ flex: '2 1 240px' }}
         />
+
+        <select
+          value={tipoFiltro}
+          onChange={(e) => setTipoFiltro(e.target.value)}
+          style={{
+            flex: '1 1 160px',
+            padding: '0.6rem 1rem',
+            borderRadius: '8px',
+            border: '1px solid #cbd5e1',
+            backgroundColor: '#ffffff',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            color: '#334155',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="todos">📦✨ Todos los Tipos</option>
+          <option value="producto">📦 Solo Productos</option>
+          <option value="servicio">✨ Solo Servicios</option>
+        </select>
+
+        <select
+          value={categoriaFiltro}
+          onChange={(e) => setCategoriaFiltro(e.target.value)}
+          style={{
+            flex: '1 1 180px',
+            padding: '0.6rem 1rem',
+            borderRadius: '8px',
+            border: '1px solid #cbd5e1',
+            backgroundColor: '#ffffff',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            color: '#334155',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="todas">🏷️ Todas las Categorías</option>
+          {categorias.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.nombre}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className={styles.grid}>
@@ -354,7 +421,7 @@ export const InventarioList = () => {
             <div key={el.id} className={styles.itemCard}>
               <div className={styles.cardHeader}>
                 <span className={styles.category}>
-                  {el.categoria?.nombre || "General"}
+                  🏷️ {el.categoria?.nombre || (categorias.find(c => c.id === el.categoria_id)?.nombre) || "Sin Categoría"}
                 </span>
                 {el.es_servicio ? (
                   <span className={styles.category} style={{ background: '#e0e7ff', color: '#4338ca' }}>
@@ -455,13 +522,14 @@ export const InventarioList = () => {
                     </div>
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Categoría</label>
+                    <label>Categoría *</label>
                     <select
                       name="categoria_id"
                       value={formData.categoria_id || ""}
                       onChange={handleChange}
+                      required
                     >
-                      <option value="">Seleccionar categoría</option>
+                      <option value="">-- Seleccionar categoría * --</option>
                       {categorias.map((cat) => (
                         <option key={cat.id} value={cat.id}>
                           {cat.nombre}
