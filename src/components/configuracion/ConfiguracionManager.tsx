@@ -211,12 +211,6 @@ export function ConfiguracionManager() {
     setLoading(true);
     const token = getAuthToken();
     try {
-      const res = await fetch(`${API}/configuracion/conceptos-cobro`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
       const payload: any = { ...formConceptoCobro };
       if (!payload.categoria_inventario_id) delete payload.categoria_inventario_id;
       if (!payload.cuenta_debito_id) delete payload.cuenta_debito_id;
