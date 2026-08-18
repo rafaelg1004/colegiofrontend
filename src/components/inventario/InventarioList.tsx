@@ -245,8 +245,8 @@ export const InventarioList = () => {
           : `${API_URL}/inventario/articulos`;
         method = isEdit ? "PATCH" : "POST";
         
-        // Limpiar tipos numéricos y booleanos para evitar errores de validación de class-validator
-        body = {
+        // Limpiar tipos numéricos, booleanos y campos opcionales vacíos para evitar errores de class-validator
+        const cleanBody: any = {
           ...formData,
           cantidad_stock: formData.cantidad_stock !== undefined && formData.cantidad_stock !== null && formData.cantidad_stock !== "" ? Number(formData.cantidad_stock) : 0,
           cantidad_minima: formData.cantidad_minima !== undefined && formData.cantidad_minima !== null && formData.cantidad_minima !== "" ? Number(formData.cantidad_minima) : 0,
@@ -254,6 +254,12 @@ export const InventarioList = () => {
           precio_venta: formData.precio_venta !== undefined && formData.precio_venta !== null && formData.precio_venta !== "" ? Number(formData.precio_venta) : 0,
           es_servicio: !!formData.es_servicio,
         };
+
+        if (!cleanBody.categoria_id || cleanBody.categoria_id === "" || cleanBody.categoria_id === "null" || cleanBody.categoria_id === "nueva_categoria") {
+          delete cleanBody.categoria_id;
+        }
+
+        body = cleanBody;
       }
 
       const res = await fetch(url, {

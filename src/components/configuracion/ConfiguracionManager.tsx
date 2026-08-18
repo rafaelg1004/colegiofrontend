@@ -217,7 +217,18 @@ export function ConfiguracionManager() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formConceptoCobro),
+      const payload: any = { ...formConceptoCobro };
+      if (!payload.categoria_inventario_id) delete payload.categoria_inventario_id;
+      if (!payload.cuenta_debito_id) delete payload.cuenta_debito_id;
+      if (!payload.cuenta_credito_id) delete payload.cuenta_credito_id;
+
+      const res = await fetch(`${API}/configuracion/conceptos-cobro`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Error al crear");
       setFormConceptoCobro({
@@ -245,6 +256,11 @@ export function ConfiguracionManager() {
     setLoading(true);
     const token = getAuthToken();
     try {
+      const payload: any = { ...formConceptoCobro };
+      if (!payload.categoria_inventario_id) delete payload.categoria_inventario_id;
+      if (!payload.cuenta_debito_id) delete payload.cuenta_debito_id;
+      if (!payload.cuenta_credito_id) delete payload.cuenta_credito_id;
+
       const res = await fetch(
         `${API}/configuracion/conceptos-cobro/${editingConcepto}`,
         {
@@ -253,7 +269,7 @@ export function ConfiguracionManager() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formConceptoCobro),
+          body: JSON.stringify(payload),
         },
       );
       if (!res.ok) throw new Error("Error al actualizar");
