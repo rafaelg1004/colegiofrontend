@@ -16,18 +16,10 @@ export const setAuthCookie = (token: string) => {
 export const clearAuthCookie = () => {
   document.cookie =
     "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("token");
-    localStorage.removeItem("token_expiration");
-  }
 };
 
 export const getAuthToken = (): string | null => {
-  let token = getCookie("access_token");
-
-  if (!token && typeof window !== "undefined") {
-    token = localStorage.getItem("token");
-  }
+  const token = getCookie("access_token");
 
   if (!token || token === "undefined" || token === "null") {
     return null;
@@ -69,16 +61,12 @@ export const logout = () => {
   clearAuthCookie();
   if (typeof window !== "undefined") {
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
     window.location.href = "/login";
   }
 };
 
-// Save token with expiration (using cookies & localStorage fallback)
+// Save token with expiration (using cookies exclusively)
 export const saveTokenWithExpiration = (token: string) => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("token", token);
-  }
   try {
     const parts = token.split(".");
     let maxAge = 86400; // 24h default
