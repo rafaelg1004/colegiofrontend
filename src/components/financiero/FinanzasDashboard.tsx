@@ -12,71 +12,132 @@ const formatMoney = (val: number) =>
     minimumFractionDigits: 0,
   }).format(val || 0);
 
+const MESES = [
+  { id: 1, nombre: "Enero" },
+  { id: 2, nombre: "Febrero" },
+  { id: 3, nombre: "Marzo" },
+  { id: 4, nombre: "Abril" },
+  { id: 5, nombre: "Mayo" },
+  { id: 6, nombre: "Junio" },
+  { id: 7, nombre: "Julio" },
+  { id: 8, nombre: "Agosto" },
+  { id: 9, nombre: "Septiembre" },
+  { id: 10, nombre: "Octubre" },
+  { id: 11, nombre: "Noviembre" },
+  { id: 12, nombre: "Diciembre" },
+];
+
 export const FinanzasDashboard = () => {
+  const [activeTab, setActiveTab] = useState<'resumen' | 'pensiones'>('pensiones');
   const [stats, setStats] = useState<any>(null);
   const [deudores, setDeudores] = useState<any[]>([]);
+  const [grupos, setGrupos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [selectedFactura, setSelectedFactura] = useState<any>(null);
-  const [showPagar, setShowPagar] = useState(false);
   const [showFacturacion, setShowFacturacion] = useState(false);
   const [showConfirmacionExtra, setShowConfirmacionExtra] = useState(false);
   const [opcionesFacturacion, setOpcionesFacturacion] = useState<any[]>([]);
   const [idSeleccionado, setIdSeleccionado] = useState<string>("");
   const [tipoSeleccionado, setTipoSeleccionado] = useState<'articulo' | 'concepto'>('articulo');
-  const [formData, setFormData] = useState<any>({});
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  // Filtros para la vista de pensiones
+  const [mesFiltro, setMesFiltro] = useState<number>(new Date().getMonth() + 1);
+  const [anioFiltro, setAnioFiltro] = useState<number>(new Date().getFullYear());
+  const [estadoFiltro, setEstadoFiltro] = useState<string>('Todos');
+  const [grupoFiltro, setGrupoFiltro] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const fetchStats = async () => {
     try {
-      setLoading(true);
       const token = getAuthToken();
-      const [resStats, resDeudores] = await Promise.all([
-        fetch(`${API_URL}/financiero/resumen`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${API_URL}/financiero/deudores`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      setStats(await resStats.json());
-      const dataDeudores = await resDeudores.json();
-      setDeudores(dataDeudores.deudores || []);
-
-      // Cargar solo servicios para facturación masiva
-      const resArticulos = await fetch(`${API_URL}/inventario/articulos`, { 
-        headers: { Authorization: `Bearer ${token}` } 
+      const resStats = await fetch(`${API_URL}/financiero/resumen`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      const dataArt = await resArticulos.json();
-      
-      // Filtrar solo los que son servicios (es_servicio: true)
-      const opciones = (dataArt || [])
-        .filter((a: any) => a.es_servicio === true)
-        .map((a: any) => ({ id: a.id, nombre: String(a.nombre || ''), tipo: 'articulo' }));
-
-      setOpcionesFacturacion(opciones);
-
-      // Pre-seleccionar pensión si existe
-      const pension = opciones.find((o: any) => o.nombre.toLowerCase().includes('pension') || o.nombre.toLowerCase().includes('pensión'));
-      if (pension) {
-        setIdSeleccionado(pension.id);
-        setTipoSeleccionado('articulo');
-      } else if (opciones.length > 0) {
-        setIdSeleccionado(opciones[0].id);
-        setTipoSeleccionado('articulo');
+      if (resStats.ok) {
+        setStats(await resStats.json());
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchGrupos = async () => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_URL}/grupos`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGrupos(data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchDeudores = async () => {
+    try {
+      const token = getAuthToken();
+      const params = new URLSearchParams();
+      if (mesFiltro) params.append('mes', mesFiltro.toString());
+      if (anioFiltro) params.append('anio', anioFiltro.toString());
+      if (estadoFiltro && estadoFiltro !== 'Todos') params.append('estado', estadoFiltro);
+      if (grupoFiltro) params.append('grupo_id', grupoFiltro);
+
+      const res = await fetch(`${API_URL}/financiero/deudores?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDeudores(data.deudores || []);
+      }
+    } catch (err) {
+      console.error("Error cargando deudores:", err);
+    }
+  };
+
+  const fetchOpcionesFacturacion = async () => {
+    try {
+      const token = getAuthToken();
+      const resArticulos = await fetch(`${API_URL}/inventario/articulos`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      if (resArticulos.ok) {
+        const dataArt = await resArticulos.json();
+        const opciones = (dataArt || [])
+          .filter((a: any) => a.es_servicio === true)
+          .map((a: any) => ({ id: a.id, nombre: String(a.nombre || ''), tipo: 'articulo' }));
+
+        setOpcionesFacturacion(opciones);
+
+        const pension = opciones.find((o: any) => o.nombre.toLowerCase().includes('pension') || o.nombre.toLowerCase().includes('pensión'));
+        if (pension) {
+          setIdSeleccionado(pension.id);
+          setTipoSeleccionado('articulo');
+        } else if (opciones.length > 0) {
+          setIdSeleccionado(opciones[0].id);
+          setTipoSeleccionado('articulo');
+        }
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    const initData = async () => {
+      setLoading(true);
+      await Promise.all([fetchStats(), fetchGrupos(), fetchDeudores(), fetchOpcionesFacturacion()]);
+      setLoading(false);
+    };
+    initData();
   }, []);
+
+  useEffect(() => {
+    fetchDeudores();
+  }, [mesFiltro, anioFiltro, estadoFiltro, grupoFiltro]);
 
   const handleFacturacionMasiva = () => {
     setShowFacturacion(true);
@@ -87,15 +148,10 @@ export const FinanzasDashboard = () => {
       setAlertMessage('Por favor selecciona un concepto');
       return;
     }
-    // Abrir el modal secundario de confirmación
     setShowConfirmacionExtra(true);
   };
 
   const ejecutarFacturacionMasiva = async () => {
-
-    const mes = new Date().getMonth() + 1;
-    const anio = new Date().getFullYear();
-
     setSaving(true);
     try {
       const token = getAuthToken();
@@ -106,8 +162,8 @@ export const FinanzasDashboard = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          mes,
-          anio,
+          mes: mesFiltro,
+          anio: anioFiltro,
           articulo_id: tipoSeleccionado === 'articulo' ? idSeleccionado : undefined,
           concepto_cobro_id: tipoSeleccionado === 'concepto' ? idSeleccionado : undefined,
         }),
@@ -119,7 +175,8 @@ export const FinanzasDashboard = () => {
       setAlertMessage(`Proceso completado. ${data.generadas} facturas nuevas generadas.`);
       setShowConfirmacionExtra(false);
       setShowFacturacion(false);
-      fetchData(); // Recargar datos
+      fetchStats();
+      fetchDeudores();
     } catch (err: any) {
       setAlertMessage(err.message);
     } finally {
@@ -127,52 +184,79 @@ export const FinanzasDashboard = () => {
     }
   };
 
-  const handlePagar = (factura: any) => {
-    setSelectedFactura(factura);
-    setFormData({
-      monto: factura.total - (factura.monto_pagado || 0),
-      metodo_pago: "Efectivo",
-      observacion: "",
-    });
-    setShowPagar(true);
-  };
+  // Filtrado local por término de búsqueda
+  const filteredDeudores = deudores.filter((d) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      d.estudiante_nombre?.toLowerCase().includes(q) ||
+      d.estudiante_documento?.toLowerCase().includes(q) ||
+      d.acudiente_nombre?.toLowerCase().includes(q) ||
+      d.acudiente_documento?.toLowerCase().includes(q) ||
+      d.acudiente_celular?.toLowerCase().includes(q) ||
+      d.numero_factura?.toLowerCase().includes(q)
+    );
+  });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const value =
-      e.target.type === "number" ? parseFloat(e.target.value) : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
-  };
+  // Estadísticas del listado filtrado
+  const cantAldia = filteredDeudores.filter(d => d.estado === 'Al día').length;
+  const cantDebe = filteredDeudores.filter(d => d.estado === 'Debe' || d.estado === 'En mora').length;
+  const totalDeudaFiltrada = filteredDeudores.reduce((sum, d) => sum + Number(d.deuda || 0), 0);
 
-  const submitPago = async () => {
-    setSaving(true);
-    try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_URL}/financiero/pagos`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          factura_id: selectedFactura.id,
-          monto: formData.monto,
-          metodo_pago: formData.metodo_pago,
-          observacion: formData.observacion,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Error al registrar pago");
-
-      setAlertMessage("Pago registrado correctamente");
-      setShowPagar(false);
-      window.location.reload();
-    } catch (err: any) {
-      setAlertMessage(err.message);
-    } finally {
-      setSaving(false);
+  // Exportar a Excel (CSV con formato BOM UTF-8)
+  const handleExportExcel = () => {
+    if (!filteredDeudores || filteredDeudores.length === 0) {
+      setAlertMessage("No hay registros en la lista para exportar.");
+      return;
     }
+
+    const headers = [
+      "Estudiante",
+      "Documento Estudiante",
+      "Grado",
+      "Acudiente (Padre)",
+      "Documento Acudiente",
+      "Celular Acudiente",
+      "Correo Acudiente",
+      "N° Factura",
+      "Concepto",
+      "Monto Total (COP)",
+      "Monto Pagado (COP)",
+      "Deuda Pendiente (COP)",
+      "Estado Pago",
+      "Fecha Emisión",
+      "Fecha Último Pago"
+    ];
+
+    const rows = filteredDeudores.map((item) => [
+      `"${(item.estudiante_nombre || '').replace(/"/g, '""')}"`,
+      `"${(item.estudiante_documento || '').replace(/"/g, '""')}"`,
+      `"${(item.grado || '').replace(/"/g, '""')}"`,
+      `"${(item.acudiente_nombre || '').replace(/"/g, '""')}"`,
+      `"${(item.acudiente_documento || '').replace(/"/g, '""')}"`,
+      `"${(item.acudiente_celular || '').replace(/"/g, '""')}"`,
+      `"${(item.acudiente_correo || '').replace(/"/g, '""')}"`,
+      `"${(item.numero_factura || '').replace(/"/g, '""')}"`,
+      `"${(item.concepto || '').replace(/"/g, '""')}"`,
+      item.monto_total || 0,
+      item.monto_pagado || 0,
+      item.deuda || 0,
+      `"${(item.estado || '').replace(/"/g, '""')}"`,
+      `"${item.fecha_emision ? new Date(item.fecha_emision).toLocaleDateString('es-CO') : 'N/A'}"`,
+      `"${item.fecha_pago ? new Date(item.fecha_pago).toLocaleDateString('es-CO') : 'N/A'}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    const mesNombre = MESES.find(m => m.id === Number(mesFiltro))?.nombre || mesFiltro;
+    link.href = url;
+    link.setAttribute('download', `Estado_Pensiones_${mesNombre}_${anioFiltro}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading)
@@ -181,11 +265,28 @@ export const FinanzasDashboard = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>Gestión Financiera</h1>
-        <p>Resumen de facturación, recaudos y deudores</p>
+        <h1>Gestión Financiera & Pensiones</h1>
+        <p>Control de recaudo, facturación masiva y seguimiento de estado por acudiente</p>
       </header>
 
-      {stats && (
+      {/* Pestañas de Navegación */}
+      <nav className={styles.tabsNav}>
+        <button 
+          className={`${styles.tabBtn} ${activeTab === 'pensiones' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('pensiones')}
+        >
+          <span>👨‍👩‍👧</span> Control de Pensiones & Acudientes
+        </button>
+        <button 
+          className={`${styles.tabBtn} ${activeTab === 'resumen' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('resumen')}
+        >
+          <span>📊</span> Resumen Financiero Global
+        </button>
+      </nav>
+
+      {/* TAB 1: RESUMEN FINANCIERO GLOBAL */}
+      {activeTab === 'resumen' && stats && (
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <span className={styles.statLabel}>Total Facturado</span>
@@ -214,10 +315,105 @@ export const FinanzasDashboard = () => {
         </div>
       )}
 
+      {/* TAB 2: CONTROL DE PENSIONES Y ACUDIENTES */}
+      {activeTab === 'pensiones' && (
+        <>
+          {/* Tarjetas resumen del filtro */}
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Total Estudiantes</span>
+              <span className={styles.statValue}>{filteredDeudores.length}</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Al Día (Pagados)</span>
+              <span className={styles.statValue + " " + styles.collected}>{cantAldia}</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Deudores / Pendientes</span>
+              <span className={styles.statValue + " " + styles.pending}>{cantDebe}</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Total Deuda Pendiente</span>
+              <span className={styles.statValue + " " + styles.pending}>
+                {formatMoney(totalDeudaFiltrada)}
+              </span>
+            </div>
+          </div>
+
+          {/* Barra de Filtros */}
+          <div className={styles.filtersBar}>
+            <div className={styles.filterGroup}>
+              <select 
+                value={mesFiltro} 
+                onChange={(e) => setMesFiltro(Number(e.target.value))}
+                className={styles.selectInput}
+              >
+                {MESES.map(m => (
+                  <option key={m.id} value={m.id}>{m.nombre}</option>
+                ))}
+              </select>
+
+              <select 
+                value={anioFiltro} 
+                onChange={(e) => setAnioFiltro(Number(e.target.value))}
+                className={styles.selectInput}
+              >
+                {[2024, 2025, 2026, 2027].map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+
+              <select 
+                value={estadoFiltro} 
+                onChange={(e) => setEstadoFiltro(e.target.value)}
+                className={styles.selectInput}
+              >
+                <option value="Todos">Todos los Estados</option>
+                <option value="Debe">Quiénes Deben (Pendientes)</option>
+                <option value="Al día">Quiénes Están al Día</option>
+                <option value="Sin Factura">Sin Factura Generada</option>
+              </select>
+
+              <select 
+                value={grupoFiltro} 
+                onChange={(e) => setGrupoFiltro(e.target.value)}
+                className={styles.selectInput}
+              >
+                <option value="">Todos los Grados</option>
+                {grupos.map(g => (
+                  <option key={g.id} value={g.id}>{g.nombre}</option>
+                ))}
+              </select>
+
+              <input 
+                type="text"
+                placeholder="🔍 Buscar estudiante o acudiente..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
+
+            <button 
+              className={styles.exportBtn}
+              onClick={handleExportExcel}
+              title="Exportar listado a Excel"
+            >
+              <span>📥</span> Exportar a Excel
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Tabla Principal */}
       <div className={styles.mainGrid}>
         <div className={styles.tableSection}>
           <div className={styles.sectionHeader}>
-            <h3>Estudiantes en Mora / Deudores (Mes Actual)</h3>
+            <h3>
+              {activeTab === 'pensiones' 
+                ? `Listado de Pensiones (${MESES.find(m => m.id === mesFiltro)?.nombre} ${anioFiltro})`
+                : 'Estudiantes en Mora / Deudores (Mes Actual)'}
+            </h3>
             <button
               className={styles.actionBtn}
               onClick={handleFacturacionMasiva}
@@ -226,6 +422,7 @@ export const FinanzasDashboard = () => {
               {saving ? 'Generando...' : 'Facturación Masiva Pensión'}
             </button>
           </div>
+
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
               <thead>
@@ -233,39 +430,76 @@ export const FinanzasDashboard = () => {
                   <th>N° Factura</th>
                   <th>Estudiante</th>
                   <th>Grado</th>
-                  <th>Concepto</th>
+                  <th>Padre / Acudiente</th>
+                  <th>Monto Total</th>
+                  <th>Pagado</th>
                   <th>Deuda</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {deudores.length === 0 ? (
+                {filteredDeudores.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
-                      No hay deudores pendientes para este mes.
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '2rem' }}>
+                      No se encontraron registros para los filtros seleccionados.
                     </td>
                   </tr>
                 ) : (
-                  deudores.map((deudor) => (
-                    <tr key={deudor.factura_id}>
-                      <td>{deudor.numero_factura}</td>
-                      <td>{deudor.estudiante_nombre}</td>
-                      <td>{deudor.grado}</td>
-                      <td style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>{deudor.concepto}</td>
-                      <td className={styles.amount}>
-                        {formatMoney(deudor.deuda)}
+                  filteredDeudores.map((item) => (
+                    <tr key={item.estudiante_id + (item.factura_id || '')}>
+                      <td>
+                        <strong style={{ fontSize: '0.85rem' }}>{item.numero_factura}</strong>
                       </td>
                       <td>
-                        <span className={`${styles.badge} ${deudor.estado === 'Emitida' ? styles.pendiente : styles.pagada}`}>
-                          {deudor.estado === 'Emitida' ? 'Pendiente' : deudor.estado}
+                        <div>
+                          <strong>{item.estudiante_nombre}</strong>
+                          <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Doc: {item.estudiante_documento || 'N/A'}</div>
+                        </div>
+                      </td>
+                      <td>{item.grado}</td>
+                      <td>
+                        <div className={styles.acudienteBox}>
+                          <span className={styles.acudienteName}>{item.acudiente_nombre}</span>
+                          <div className={styles.acudienteSub}>
+                            <span>Doc: {item.acudiente_documento}</span>
+                            {item.acudiente_celular && item.acudiente_celular !== 'N/A' && (
+                              <a 
+                                href={`https://wa.me/57${item.acudiente_celular.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={styles.whatsappLink}
+                                title="Enviar mensaje por WhatsApp"
+                              >
+                                📱 {item.acudiente_celular}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td>{formatMoney(item.monto_total)}</td>
+                      <td style={{ color: '#16a34a', fontWeight: 600 }}>{formatMoney(item.monto_pagado)}</td>
+                      <td className={styles.amount} style={{ color: item.deuda > 0 ? '#dc2626' : '#16a34a' }}>
+                        {formatMoney(item.deuda)}
+                      </td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${
+                          item.estado === 'Al día' 
+                            ? styles.statusAldia 
+                            : item.estado === 'Debe' 
+                            ? styles.statusDebe 
+                            : item.estado === 'En mora'
+                            ? styles.statusEnmora
+                            : styles.statusSinfactura
+                        }`}>
+                          {item.estado === 'Al día' ? '✅ Al día' : item.estado === 'Debe' ? '⏳ Debe' : item.estado === 'En mora' ? '🔴 En mora' : '⚪ Sin Factura'}
                         </span>
                       </td>
                       <td>
-                        {deudor.estado === 'Emitida' && (
+                        {(item.estado === 'Debe' || item.estado === 'En mora' || item.estado_factura === 'Emitida') && item.factura_id && (
                           <button 
                             className={styles.payBtn}
-                            onClick={() => window.location.href = `/dashboard/caja?estudianteId=${deudor.estudiante_id}&facturaId=${deudor.factura_id}`}
+                            onClick={() => window.location.href = `/dashboard/caja?estudianteId=${item.estudiante_id}&facturaId=${item.factura_id}`}
                           >
                             Pagar 💸
                           </button>
@@ -280,6 +514,7 @@ export const FinanzasDashboard = () => {
         </div>
       </div>
 
+      {/* Modal Facturación Masiva */}
       {showFacturacion && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -302,8 +537,7 @@ export const FinanzasDashboard = () => {
                 <div>
                   <strong style={{ color: '#991b1b', display: 'block', marginBottom: '0.25rem', fontSize: '1.1rem' }}>¡ATENCIÓN! OPERACIÓN MASIVA</strong>
                   <p style={{ color: '#b91c1c', fontSize: '0.95rem', margin: 0, fontWeight: 500 }}>
-                    Se generarán facturas para <strong>TODOS</strong> los estudiantes activos. 
-                    Verifica bien el servicio y el mes antes de continuar.
+                    Se generarán facturas para <strong>TODOS</strong> los estudiantes activos para el período <strong>{MESES.find(m => m.id === mesFiltro)?.nombre} / {anioFiltro}</strong>. 
                   </p>
                 </div>
               </div>
@@ -378,7 +612,7 @@ export const FinanzasDashboard = () => {
                 ¿Estás absolutamente seguro de que deseas generar las facturas masivas?
               </p>
               <p style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', marginTop: '1rem' }}>
-                Esta acción creará un registro de deuda para cada estudiante activo y no se puede deshacer de forma automática.
+                Esta acción creará un registro de deuda para cada estudiante activo para el mes de {MESES.find(m => m.id === mesFiltro)?.nombre} {anioFiltro}.
               </p>
             </div>
             <div className={styles.modalFooter} style={{ justifyContent: 'center' }}>
