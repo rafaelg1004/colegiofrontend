@@ -108,13 +108,23 @@ export const useCajaLogic = () => {
     // Auto-selección desde URL (Finanzas)
     const eId = searchParams.get('estudianteId');
     const fId = searchParams.get('facturaId');
+    const grado = searchParams.get('grado');
+    const mesNombre = searchParams.get('mes');
+    const anio = searchParams.get('anio');
+
     if (eId) {
       setTipo("INGRESO"); // Asegurar que es un ingreso
-      handleAutoSeleccion(eId, fId);
+      handleAutoSeleccion(eId, fId, grado, mesNombre, anio);
     }
   }, [searchParams]);
 
-  const handleAutoSeleccion = async (eId: string, fId: string | null) => {
+  const handleAutoSeleccion = async (
+    eId: string, 
+    fId: string | null,
+    grado?: string | null,
+    mesNombre?: string | null,
+    anio?: string | null
+  ) => {
     try {
       const token = getAuthToken();
       console.log("🔍 Iniciando auto-selección para estudiante:", eId);
@@ -126,7 +136,6 @@ export const useCajaLogic = () => {
       
       if (res.ok) {
         const students = await res.json();
-        // El endpoint puede devolver un array o un objeto
         const student = Array.isArray(students) ? students.find((s: any) => s.id === eId) : students;
         
         if (student && student.id) {
@@ -138,6 +147,9 @@ export const useCajaLogic = () => {
           const resF = await fetch(`${API}/caja/estudiantes/${eId}/facturas-pendientes`, {
             headers: { Authorization: `Bearer ${token}` },
           });
+          
+          let facturaEncontrada = false;
+
           if (resF.ok) {
             const dataF = await resF.json();
             const facturas = dataF.data || [];
@@ -146,11 +158,11 @@ export const useCajaLogic = () => {
             if (fId && facturas.length > 0) {
               const fac = facturas.find((f: any) => f.id === fId);
               if (fac) {
+                facturaEncontrada = true;
                 setFacturaIdSeleccionada(fac.id);
                 setMonto(fac.total.toString());
                 setObservacion(`Pago de factura ${fac.numero_factura}`);
                 
-                // CARGAR AL CARRITO AUTOMÁTICAMENTE
                 if (fac.factura_detalle && fac.factura_detalle.length > 0) {
                   const detalles = fac.factura_detalle.map((d: any) => ({
                     ...d,
@@ -164,6 +176,45 @@ export const useCajaLogic = () => {
                   }));
                   setArticulosVenta(detalles);
                   console.log("🛒 Carrito cargado automáticamente con", detalles.length, "items");
+                }
+              }
+            }
+          }
+
+          // 3. Si no hay factura previa, buscar el Servicio / Concepto Académico de Pensión y auto-cargarlo
+          if (!facturaEncontrada) {
+            if (mesNombre && anio) {
+              setObservacion(`PAGO DEL MES DE ${mesNombre.toUpperCase()} ${anio}`);
+            }
+
+            const resArts = await fetch(`${API}/inventario/articulos`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (resArts.ok) {
+              const articulos = await resArts.json();
+              if (Array.isArray(articulos) && articulos.length > 0) {
+                // Buscar el servicio que coincida con el grado o contenga pensión
+                const pencionMatch = articulos.find((a: any) => {
+                  const nameNorm = (a.nombre || '').toLowerCase();
+                  const gradNorm = (grado || '').toLowerCase();
+                  return a.es_servicio && (nameNorm.includes('pensi') || (gradNorm && nameNorm.includes(gradNorm)));
+                }) || articulos.find((a: any) => a.es_servicio) || articulos[0];
+
+                if (pencionMatch) {
+                  const precio = Number(pencionMatch.precio_venta || pencionMatch.precio_unitario || 170000);
+                  const itemCarrito = {
+                    id: pencionMatch.id,
+                    articulo_inventario_id: pencionMatch.id,
+                    nombre: pencionMatch.nombre,
+                    precio_unitario: precio,
+                    cantidad: 1,
+                    es_concepto: false,
+                    aplica_iva: false,
+                    porcentaje_iva: 0
+                  };
+                  setArticulosVenta([itemCarrito]);
+                  setMonto(precio.toString());
+                  console.log("✨ Servicio Académico pre-seleccionado en Caja:", pencionMatch.nombre);
                 }
               }
             }

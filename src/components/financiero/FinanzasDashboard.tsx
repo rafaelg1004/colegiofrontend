@@ -520,8 +520,14 @@ export const FinanzasDashboard = () => {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                           }}
                           onClick={() => {
-                            const url = `/dashboard/caja?estudianteId=${item.estudiante_id}${item.factura_id ? `&facturaId=${item.factura_id}` : ''}`;
-                            window.location.href = url;
+                            const params = new URLSearchParams();
+                            params.set('estudianteId', item.estudiante_id);
+                            if (item.factura_id) params.set('facturaId', item.factura_id);
+                            if (item.grado) params.set('grado', item.grado);
+                            const mesNombre = MESES.find(m => m.id === mesFiltro)?.nombre || '';
+                            if (mesNombre) params.set('mes', mesNombre);
+                            if (anioFiltro) params.set('anio', String(anioFiltro));
+                            window.location.href = `/dashboard/caja?${params.toString()}`;
                           }}
                           title={`Ir a Caja a cobrar pensión de ${item.estudiante_nombre}`}
                         >
