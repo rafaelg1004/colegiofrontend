@@ -44,9 +44,34 @@ export const FinanzasDashboard = () => {
   // Filtros para la vista de pensiones
   const [mesFiltro, setMesFiltro] = useState<number>(new Date().getMonth() + 1);
   const [anioFiltro, setAnioFiltro] = useState<number>(new Date().getFullYear());
+  const [aniosLectivos, setAniosLectivos] = useState<number[]>([]);
   const [estadoFiltro, setEstadoFiltro] = useState<string>('Todos');
   const [grupoFiltro, setGrupoFiltro] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const fetchAniosLectivos = async () => {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_URL}/academico/anios-lectivos`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const listaAnios = (data || [])
+          .map((a: any) => Number(a.anio))
+          .filter((n: number) => !isNaN(n) && n > 0);
+        if (listaAnios.length > 0) {
+          const aniosUnicos = Array.from(new Set<number>(listaAnios)).sort((a, b) => b - a);
+          setAniosLectivos(aniosUnicos);
+          if (!aniosUnicos.includes(anioFiltro)) {
+            setAnioFiltro(aniosUnicos[0]);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error cargando años lectivos:", err);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -129,7 +154,13 @@ export const FinanzasDashboard = () => {
   useEffect(() => {
     const initData = async () => {
       setLoading(true);
-      await Promise.all([fetchStats(), fetchGrupos(), fetchDeudores(), fetchOpcionesFacturacion()]);
+      await Promise.all([
+        fetchStats(), 
+        fetchGrupos(), 
+        fetchDeudores(), 
+        fetchOpcionesFacturacion(),
+        fetchAniosLectivos()
+      ]);
       setLoading(false);
     };
     initData();
@@ -358,7 +389,7 @@ export const FinanzasDashboard = () => {
                 onChange={(e) => setAnioFiltro(Number(e.target.value))}
                 className={styles.selectInput}
               >
-                {[2024, 2025, 2026, 2027].map(a => (
+                {(aniosLectivos.length > 0 ? aniosLectivos : [new Date().getFullYear()]).map(a => (
                   <option key={a} value={a}>{a}</option>
                 ))}
               </select>
