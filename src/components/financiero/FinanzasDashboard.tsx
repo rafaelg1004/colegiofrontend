@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FinancieroService } from "@/services/financiero.service";
+import { useCajaContext } from "@/context/CajaContext";
 import styles from "./FinanzasDashboard.module.css";
 
 const formatMoney = (val: number) =>
@@ -27,6 +29,8 @@ const MESES = [
 ];
 
 export const FinanzasDashboard = () => {
+  const router = useRouter();
+  const { setNavState } = useCajaContext();
   const [activeTab, setActiveTab] = useState<'resumen' | 'pensiones'>('pensiones');
   const [stats, setStats] = useState<any>(null);
   const [deudores, setDeudores] = useState<any[]>([]);
@@ -528,14 +532,15 @@ export const FinanzasDashboard = () => {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                           }}
                           onClick={() => {
-                            const params = new URLSearchParams();
-                            params.set('estudianteId', item.estudiante_id);
-                            if (item.factura_id) params.set('facturaId', item.factura_id);
-                            if (item.grado) params.set('grado', item.grado);
                             const mesNombre = MESES.find(m => m.id === mesFiltro)?.nombre || '';
-                            if (mesNombre) params.set('mes', mesNombre);
-                            if (anioFiltro) params.set('anio', String(anioFiltro));
-                            window.location.href = `/dashboard/caja?${params.toString()}`;
+                            setNavState({
+                              estudianteId: item.estudiante_id,
+                              facturaId: item.factura_id || null,
+                              grado: item.grado || null,
+                              mes: mesNombre || null,
+                              anio: String(anioFiltro),
+                            });
+                            router.push('/dashboard/caja');
                           }}
                           title={`Ir a Caja a cobrar pensión de ${item.estudiante_nombre}`}
                         >

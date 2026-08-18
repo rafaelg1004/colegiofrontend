@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { getAuthToken } from "@/utils/auth";
+import { useCajaContext } from "@/context/CajaContext";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -98,6 +99,7 @@ export const useCajaLogic = () => {
   };
 
   const searchParams = useSearchParams();
+  const { navState, clearNavState } = useCajaContext();
 
   useEffect(() => {
     cargarResumen();
@@ -105,18 +107,23 @@ export const useCajaLogic = () => {
     cargarInstitucion();
     cargarSedes();
     
-    // Auto-selección desde URL (Finanzas)
-    const eId = searchParams.get('estudianteId');
-    const fId = searchParams.get('facturaId');
-    const grado = searchParams.get('grado');
-    const mesNombre = searchParams.get('mes');
-    const anio = searchParams.get('anio');
+    // Prioridad 1: Auto-selección desde React Context en Memoria RAM (URL Limpia)
+    // Prioridad 2: Fallback desde parámetros URL (para links compartidos)
+    const eId = navState.estudianteId || searchParams.get('estudianteId');
+    const fId = navState.facturaId || searchParams.get('facturaId');
+    const grado = navState.grado || searchParams.get('grado');
+    const mesNombre = navState.mes || searchParams.get('mes');
+    const anio = navState.anio || searchParams.get('anio');
 
     if (eId) {
+      console.log("⚡ Auto-selección disparada desde React Context / URL:", { eId, fId, grado, mesNombre, anio });
       setTipo("INGRESO"); // Asegurar que es un ingreso
       handleAutoSeleccion(eId, fId, grado, mesNombre, anio);
+      if (navState.estudianteId) {
+        clearNavState(); // Limpiar el contexto para mantener la memoria volátil libre
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, navState]);
 
   const handleAutoSeleccion = async (
     eId: string, 
