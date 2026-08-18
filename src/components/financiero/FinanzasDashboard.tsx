@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getAuthToken } from "@/utils/auth";
-import { API_URL } from "@/utils/api";
+import { FinancieroService } from "@/services/financiero.service";
 import styles from "./FinanzasDashboard.module.css";
 
 const formatMoney = (val: number) =>
@@ -51,21 +50,15 @@ export const FinanzasDashboard = () => {
 
   const fetchAniosLectivos = async () => {
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_URL}/academico/anios-lectivos`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const listaAnios = (data || [])
-          .map((a: any) => Number(a.anio))
-          .filter((n: number) => !isNaN(n) && n > 0);
-        if (listaAnios.length > 0) {
-          const aniosUnicos = Array.from(new Set<number>(listaAnios)).sort((a, b) => b - a);
-          setAniosLectivos(aniosUnicos);
-          if (!aniosUnicos.includes(anioFiltro)) {
-            setAnioFiltro(aniosUnicos[0]);
-          }
+      const data = await FinancieroService.getAniosLectivos();
+      const listaAnios = (data || [])
+        .map((a: any) => Number(a.anio))
+        .filter((n: number) => !isNaN(n) && n > 0);
+      if (listaAnios.length > 0) {
+        const aniosUnicos = Array.from(new Set<number>(listaAnios)).sort((a, b) => b - a);
+        setAniosLectivos(aniosUnicos);
+        if (!aniosUnicos.includes(anioFiltro)) {
+          setAnioFiltro(aniosUnicos[0]);
         }
       }
     } catch (err) {
@@ -75,49 +68,31 @@ export const FinanzasDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const token = getAuthToken();
-      const resStats = await fetch(`${API_URL}/financiero/resumen`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (resStats.ok) {
-        setStats(await resStats.json());
-      }
+      const data = await FinancieroService.getResumen();
+      setStats(data);
     } catch (err) {
-      console.error(err);
+      console.error("Error cargando resumen:", err);
     }
   };
 
   const fetchGrupos = async () => {
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_URL}/grupos`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setGrupos(data || []);
-      }
+      const data = await FinancieroService.getGrupos();
+      setGrupos(data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Error cargando grupos:", err);
     }
   };
 
   const fetchDeudores = async () => {
     try {
-      const token = getAuthToken();
-      const params = new URLSearchParams();
-      if (mesFiltro) params.append('mes', mesFiltro.toString());
-      if (anioFiltro) params.append('anio', anioFiltro.toString());
-      if (estadoFiltro && estadoFiltro !== 'Todos') params.append('estado', estadoFiltro);
-      if (grupoFiltro) params.append('grupo_id', grupoFiltro);
-
-      const res = await fetch(`${API_URL}/financiero/deudores?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const data = await FinancieroService.getDeudores({
+        mes: mesFiltro,
+        anio: anioFiltro,
+        estado: estadoFiltro,
+        grupo_id: grupoFiltro,
       });
-      if (res.ok) {
-        const data = await res.json();
-        setDeudores(data.deudores || []);
-      }
+      setDeudores(data.deudores || []);
     } catch (err) {
       console.error("Error cargando deudores:", err);
     }
@@ -125,29 +100,19 @@ export const FinanzasDashboard = () => {
 
   const fetchOpcionesFacturacion = async () => {
     try {
-      const token = getAuthToken();
-      const resArticulos = await fetch(`${API_URL}/inventario/articulos`, { 
-        headers: { Authorization: `Bearer ${token}` } 
-      });
-      if (resArticulos.ok) {
-        const dataArt = await resArticulos.json();
-        const opciones = (dataArt || [])
-          .filter((a: any) => a.es_servicio === true)
-          .map((a: any) => ({ id: a.id, nombre: String(a.nombre || ''), tipo: 'articulo' }));
+      const opciones = await FinancieroService.getArticulosServicios();
+      setOpcionesFacturacion(opciones);
 
-        setOpcionesFacturacion(opciones);
-
-        const pension = opciones.find((o: any) => o.nombre.toLowerCase().includes('pension') || o.nombre.toLowerCase().includes('pensión'));
-        if (pension) {
-          setIdSeleccionado(pension.id);
-          setTipoSeleccionado('articulo');
-        } else if (opciones.length > 0) {
-          setIdSeleccionado(opciones[0].id);
-          setTipoSeleccionado('articulo');
-        }
+      const pension = opciones.find((o: any) => o.nombre.toLowerCase().includes('pension') || o.nombre.toLowerCase().includes('pensión'));
+      if (pension) {
+        setIdSeleccionado(pension.id);
+        setTipoSeleccionado('articulo');
+      } else if (opciones.length > 0) {
+        setIdSeleccionado(opciones[0].id);
+        setTipoSeleccionado('articulo');
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error cargando opciones de facturación:", err);
     }
   };
 
@@ -185,31 +150,20 @@ export const FinanzasDashboard = () => {
   const ejecutarFacturacionMasiva = async () => {
     setSaving(true);
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_URL}/financiero/generar-pensiones`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mes: mesFiltro,
-          anio: anioFiltro,
-          articulo_id: tipoSeleccionado === 'articulo' ? idSeleccionado : undefined,
-          concepto_cobro_id: tipoSeleccionado === 'concepto' ? idSeleccionado : undefined,
-        }),
+      const data = await FinancieroService.generarPensionesMasivas({
+        mes: mesFiltro,
+        anio: anioFiltro,
+        articulo_id: tipoSeleccionado === 'articulo' ? idSeleccionado : undefined,
+        concepto_cobro_id: tipoSeleccionado === 'concepto' ? idSeleccionado : undefined,
       });
 
-      if (!res.ok) throw new Error("Error al generar facturas");
-
-      const data = await res.json();
       setAlertMessage(`Proceso completado. ${data.generadas} facturas nuevas generadas.`);
       setShowConfirmacionExtra(false);
       setShowFacturacion(false);
       fetchStats();
       fetchDeudores();
     } catch (err: any) {
-      setAlertMessage(err.message);
+      setAlertMessage(err.message || 'Error al generar facturas');
     } finally {
       setSaving(false);
     }
