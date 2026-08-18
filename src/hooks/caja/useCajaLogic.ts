@@ -212,12 +212,21 @@ export const useCajaLogic = () => {
                   .replace(/[\u0300-\u036f]/g, "")
                   .replace(/[^a-z0-9]/g, "");
 
+                // Filtrar solo ítems de servicio excluyendo Matrícula, Formulario o Uniformes
+                const serviciosPension = articulos.filter((a: any) => {
+                  if (!a.es_servicio) return false;
+                  const nameLower = (a.nombre || '').toLowerCase();
+                  return !nameLower.includes('matricula') && 
+                         !nameLower.includes('matrícula') && 
+                         !nameLower.includes('formulario') && 
+                         !nameLower.includes('uniforme');
+                });
+
                 let pencionMatch = null;
 
                 if (cleanGrade) {
-                  // 1. Buscar servicio que contenga exactamente el nombre del grado
-                  pencionMatch = articulos.find((a: any) => {
-                    if (!a.es_servicio) return false;
+                  // 1. Buscar en servicios de pensión que contenga exactamente el nombre del grado
+                  pencionMatch = serviciosPension.find((a: any) => {
                     const artName = (a.nombre || '')
                       .toLowerCase()
                       .normalize("NFD")
@@ -227,10 +236,9 @@ export const useCajaLogic = () => {
                   });
                 }
 
-                // 2. Coincidencias específicas si es Jardín (sin Pre), Pre-Jardín, Transición, etc.
+                // 2. Coincidencias específicas si es Jardín (sin Pre), Pre-Jardín, Transición, Maternal, etc.
                 if (!pencionMatch && cleanGrade) {
-                  pencionMatch = articulos.find((a: any) => {
-                    if (!a.es_servicio) return false;
+                  pencionMatch = serviciosPension.find((a: any) => {
                     const artName = (a.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     if (cleanGrade.includes('prejardin') && (artName.includes('prejardin') || artName.includes('pre-jardin') || artName.includes('pre jardin'))) return true;
                     if (cleanGrade.includes('jardin') && !cleanGrade.includes('pre') && artName.includes('jardin') && !artName.includes('pre')) return true;
@@ -242,8 +250,8 @@ export const useCajaLogic = () => {
 
                 // 3. Fallback a pensión general si no existe ítem con el nombre del grado
                 if (!pencionMatch) {
-                  pencionMatch = articulos.find((a: any) => a.es_servicio && (a.nombre || '').toLowerCase().includes('pensi'))
-                    || articulos.find((a: any) => a.es_servicio)
+                  pencionMatch = serviciosPension.find((a: any) => (a.nombre || '').toLowerCase().includes('pensi'))
+                    || serviciosPension[0]
                     || articulos[0];
                 }
 

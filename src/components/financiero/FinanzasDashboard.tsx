@@ -117,18 +117,26 @@ export const FinanzasDashboard = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const initData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchStats(), 
-        fetchGrupos(), 
-        fetchDeudores(), 
-        fetchOpcionesFacturacion(),
-        fetchAniosLectivos()
-      ]);
-      setLoading(false);
+      try {
+        await Promise.allSettled([
+          fetchStats(), 
+          fetchGrupos(), 
+          fetchDeudores(), 
+          fetchOpcionesFacturacion(),
+          fetchAniosLectivos()
+        ]);
+      } catch (err) {
+        console.error("Error al inicializar Finanzas:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     };
     initData();
+
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
