@@ -10,6 +10,8 @@ export const InventarioList = () => {
   const [categorias, setCategorias] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [tipoFiltro, setTipoFiltro] = useState<string>("todos");
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>("todas");
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit" | "move" | "history">(
     "create",
