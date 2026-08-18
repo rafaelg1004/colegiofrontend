@@ -28,11 +28,43 @@ export const FinancieroService = {
     if (params?.grupo_id) queryParams.append("grupo_id", params.grupo_id);
 
     const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : "";
-    const res = await fetch(`${API_URL}/financiero/deudores${queryStr}`, {
+    const url = `${API_URL}/financiero/deudores${queryStr}`;
+
+    console.group(`📡 [PETICIÓN FINANZAS] GET /financiero/deudores${queryStr}`);
+    console.log("🔍 Filtros enviados:", params);
+
+    const res = await fetch(url, {
       headers: getHeaders(),
     });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("❌ Error en petición deudores:", errText);
+      console.groupEnd();
+      throw new Error(errText);
+    }
+
+    const data = await res.json();
+    console.log("📦 Respuesta completa del servidor:", data);
+    
+    if (data && Array.isArray(data.deudores)) {
+      console.log(`📊 Total registros devueltos para el mes ${params?.mes || ''}: ${data.deudores.length}`);
+      console.table(
+        data.deudores.map((d: any) => ({
+          Estudiante: d.estudiante_nombre,
+          Grado: d.grado,
+          Factura: d.numero_factura,
+          Monto: d.monto_total,
+          Pagado: d.monto_pagado,
+          Deuda: d.deuda,
+          Estado: d.estado,
+          Mes: d.mes
+        }))
+      );
+    }
+    console.groupEnd();
+
+    return data;
   },
 
   // Generación Masiva de Pensiones

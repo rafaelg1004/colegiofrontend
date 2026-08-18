@@ -187,11 +187,23 @@ export const useCajaLogic = () => {
               setObservacion(`PAGO DEL MES DE ${mesNombre.toUpperCase()} ${anio}`);
             }
 
+            console.group("📡 [PETICIÓN CAJA] GET /inventario/articulos");
             const resArts = await fetch(`${API}/inventario/articulos`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             if (resArts.ok) {
               const articulos = await resArts.json();
+              console.log("📦 Catálogo completo de artículos/servicios devueltos:", articulos);
+              if (Array.isArray(articulos)) {
+                console.table(
+                  articulos.map((a: any) => ({
+                    ID: a.id,
+                    Nombre: a.nombre,
+                    Precio: a.precio_venta || a.precio_unitario,
+                    EsServicio: a.es_servicio
+                  }))
+                );
+              }
               if (Array.isArray(articulos) && articulos.length > 0) {
                 // Normalizar grado del estudiante (ej: "Pre-Jardín" -> "prejardin", "Transición" -> "transicion")
                 const cleanGrade = (grado || '')
@@ -253,6 +265,7 @@ export const useCajaLogic = () => {
                 }
               }
             }
+            console.groupEnd();
           }
         }
       }
