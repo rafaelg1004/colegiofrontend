@@ -193,12 +193,47 @@ export const useCajaLogic = () => {
             if (resArts.ok) {
               const articulos = await resArts.json();
               if (Array.isArray(articulos) && articulos.length > 0) {
-                // Buscar el servicio que coincida con el grado o contenga pensión
-                const pencionMatch = articulos.find((a: any) => {
-                  const nameNorm = (a.nombre || '').toLowerCase();
-                  const gradNorm = (grado || '').toLowerCase();
-                  return a.es_servicio && (nameNorm.includes('pensi') || (gradNorm && nameNorm.includes(gradNorm)));
-                }) || articulos.find((a: any) => a.es_servicio) || articulos[0];
+                // Normalizar grado del estudiante (ej: "Pre-Jardín" -> "prejardin", "Transición" -> "transicion")
+                const cleanGrade = (grado || '')
+                  .toLowerCase()
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "")
+                  .replace(/[^a-z0-9]/g, "");
+
+                let pencionMatch = null;
+
+                if (cleanGrade) {
+                  // 1. Buscar servicio que contenga exactamente el nombre del grado
+                  pencionMatch = articulos.find((a: any) => {
+                    if (!a.es_servicio) return false;
+                    const artName = (a.nombre || '')
+                      .toLowerCase()
+                      .normalize("NFD")
+                      .replace(/[\u0300-\u036f]/g, "")
+                      .replace(/[^a-z0-9]/g, "");
+                    return artName.includes(cleanGrade);
+                  });
+                }
+
+                // 2. Coincidencias específicas si es Jardín (sin Pre), Pre-Jardín, Transición, etc.
+                if (!pencionMatch && cleanGrade) {
+                  pencionMatch = articulos.find((a: any) => {
+                    if (!a.es_servicio) return false;
+                    const artName = (a.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (cleanGrade.includes('prejardin') && (artName.includes('prejardin') || artName.includes('pre-jardin') || artName.includes('pre jardin'))) return true;
+                    if (cleanGrade.includes('jardin') && !cleanGrade.includes('pre') && artName.includes('jardin') && !artName.includes('pre')) return true;
+                    if (cleanGrade.includes('maternal') && artName.includes('maternal')) return true;
+                    if (cleanGrade.includes('transic') && artName.includes('transic')) return true;
+                    return false;
+                  });
+                }
+
+                // 3. Fallback a pensión general si no existe ítem con el nombre del grado
+                if (!pencionMatch) {
+                  pencionMatch = articulos.find((a: any) => a.es_servicio && (a.nombre || '').toLowerCase().includes('pensi'))
+                    || articulos.find((a: any) => a.es_servicio)
+                    || articulos[0];
+                }
 
                 if (pencionMatch) {
                   const precio = Number(pencionMatch.precio_venta || pencionMatch.precio_unitario || 170000);
@@ -214,7 +249,7 @@ export const useCajaLogic = () => {
                   };
                   setArticulosVenta([itemCarrito]);
                   setMonto(precio.toString());
-                  console.log("✨ Servicio Académico pre-seleccionado en Caja:", pencionMatch.nombre);
+                  console.log("✨ Servicio Académico por Grado pre-seleccionado:", pencionMatch.nombre, "para el grado:", grado);
                 }
               }
             }
