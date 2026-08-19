@@ -58,6 +58,8 @@ export const FinanzasDashboard = () => {
   const [showPreviewReceipt, setShowPreviewReceipt] = useState<boolean>(false);
   const activeRequestRef = React.useRef(0);
 
+  const [dataAnualMeses, setDataAnualMeses] = useState<{ [mes: number]: any[] }>({});
+
   const fetchAniosLectivos = async () => {
     try {
       const data = await FinancieroService.getAniosLectivos();
@@ -94,26 +96,32 @@ export const FinanzasDashboard = () => {
     }
   };
 
-  const fetchDeudores = async (
-    mes = mesFiltro,
+  const fetchDeudoresAnualCompleto = async (
     anio = anioFiltro,
-    estado = estadoFiltro,
     grupo = grupoFiltro
   ) => {
     const requestId = ++activeRequestRef.current;
     setLoadingDeudores(true);
     try {
-      const data = await FinancieroService.getDeudores({
-        mes,
-        anio,
-        estado,
-        grupo_id: grupo,
-      });
+      const meses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+      const resultados = await Promise.all(
+        meses.map(m => FinancieroService.getDeudores({
+          mes: m,
+          anio,
+          estado: 'Todos',
+          grupo_id: grupo || undefined,
+        }))
+      );
+
       if (requestId === activeRequestRef.current) {
-        setDeudores(data.deudores || []);
+        const mapa: { [mes: number]: any[] } = {};
+        resultados.forEach((res: any, idx: number) => {
+          mapa[idx + 1] = res?.deudores || [];
+        });
+        setDataAnualMeses(mapa);
       }
     } catch (err) {
-      console.error("Error cargando deudores:", err);
+      console.error("Error cargando pensiones del año:", err);
     } finally {
       if (requestId === activeRequestRef.current) {
         setLoadingDeudores(false);
@@ -147,7 +155,7 @@ export const FinanzasDashboard = () => {
         await Promise.allSettled([
           fetchStats(), 
           fetchGrupos(), 
-          fetchDeudores(mesFiltro, anioFiltro, estadoFiltro, grupoFiltro), 
+          fetchDeudoresAnualCompleto(anioFiltro, grupoFiltro), 
           fetchOpcionesFacturacion(),
           fetchAniosLectivos()
         ]);
@@ -163,8 +171,13 @@ export const FinanzasDashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchDeudores();
-  }, [mesFiltro, anioFiltro, estadoFiltro, grupoFiltro]);
+    fetchDeudoresAnualCompleto(anioFiltro, grupoFiltro);
+  }, [anioFiltro, grupoFiltro]);
+
+  useEffect(() => {
+    const listadoMes = dataAnualMeses[mesFiltro] || [];
+    setDeudores(listadoMes);
+  }, [mesFiltro, dataAnualMeses]);
 
   const handleFacturacionMasiva = () => {
     setShowFacturacion(true);
@@ -192,7 +205,7 @@ export const FinanzasDashboard = () => {
       setShowConfirmacionExtra(false);
       setShowFacturacion(false);
       fetchStats();
-      fetchDeudores();
+      fetchDeudoresAnualCompleto(anioFiltro, grupoFiltro);
     } catch (err: any) {
       setAlertMessage(err.message || 'Error al generar facturas');
     } finally {
@@ -200,8 +213,22 @@ export const FinanzasDashboard = () => {
     }
   };
 
-  // Filtrado local por término de búsqueda
+  // Filtrado local instantáneo (0 peticiones HTTP a la base de datos)
   const filteredDeudores = deudores.filter((d) => {
+    if (estadoFiltro && estadoFiltro !== 'Todos') {
+      const efNorm = estadoFiltro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const stNorm = (d.estado || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      if (efNorm === 'debe' && !(stNorm === 'debe' || stNorm === 'en mora' || stNorm === 'sin factura' || Number(d.deuda || 0) > 0)) {
+        return false;
+      }
+      if (efNorm === 'al dia' && stNorm !== 'al dia') {
+        return false;
+      }
+      if (efNorm === 'sin factura' && stNorm !== 'sin factura') {
+        return false;
+      }
+    }
+
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -302,12 +329,56 @@ export const FinanzasDashboard = () => {
   const handleExportExcelAnual = async () => {
     try {
       setExportingAnual(true);
-      const data = await FinancieroService.getDeudoresAnual({
-        anio: anioFiltro,
-        grupo_id: grupoFiltro,
+      const meses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+      const resultadosPorMes = await Promise.all(
+        meses.map(m => FinancieroService.getDeudores({
+          mes: m,
+          anio: anioFiltro,
+          estado: 'Todos',
+          grupo_id: grupoFiltro,
+        }))
+      );
+
+      const reporteAnualMap = new Map<string, any>();
+
+      resultadosPorMes.forEach((res: any, index: number) => {
+        const mesNum = index + 1;
+        const deudoresMes = res?.deudores || [];
+
+        deudoresMes.forEach((d: any) => {
+          if (!reporteAnualMap.has(d.estudiante_id)) {
+            reporteAnualMap.set(d.estudiante_id, {
+              estudiante_id: d.estudiante_id,
+              estudiante_nombre: d.estudiante_nombre,
+              estudiante_documento: d.estudiante_documento,
+              grado: d.grado,
+              acudiente_id: d.acudiente_id,
+              acudiente_nombre: d.acudiente_nombre,
+              acudiente_documento: d.acudiente_documento,
+              acudiente_celular: d.acudiente_celular,
+              acudiente_correo: d.acudiente_correo,
+              meses: {},
+              deuda_total_anual: 0
+            });
+          }
+
+          const est = reporteAnualMap.get(d.estudiante_id);
+          est.meses[mesNum] = {
+            factura_id: d.factura_id,
+            numero_factura: d.numero_factura,
+            monto_total: d.monto_total,
+            monto_pagado: d.monto_pagado,
+            deuda: d.deuda,
+            estado: d.estado,
+            fecha_pago: d.fecha_pago
+          };
+
+          est.deuda_total_anual += Number(d.deuda || 0);
+        });
       });
 
-      const lista = data.reporteAnual || [];
+      const lista = Array.from(reporteAnualMap.values());
       if (lista.length === 0) {
         setAlertMessage("No se encontraron registros para exportar el reporte anual.");
         return;
@@ -461,11 +532,7 @@ export const FinanzasDashboard = () => {
             <div className={styles.filterGroup}>
               <select 
                 value={mesFiltro} 
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setMesFiltro(val);
-                  fetchDeudores(val, anioFiltro, estadoFiltro, grupoFiltro);
-                }}
+                onChange={(e) => setMesFiltro(Number(e.target.value))}
                 className={styles.selectInput}
               >
                 {MESES.map(m => (
@@ -475,11 +542,7 @@ export const FinanzasDashboard = () => {
 
               <select 
                 value={anioFiltro} 
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setAnioFiltro(val);
-                  fetchDeudores(mesFiltro, val, estadoFiltro, grupoFiltro);
-                }}
+                onChange={(e) => setAnioFiltro(Number(e.target.value))}
                 className={styles.selectInput}
               >
                 {(aniosLectivos.length > 0 ? aniosLectivos : [new Date().getFullYear()]).map(a => (
@@ -489,11 +552,7 @@ export const FinanzasDashboard = () => {
 
               <select 
                 value={estadoFiltro} 
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setEstadoFiltro(val);
-                  fetchDeudores(mesFiltro, anioFiltro, val, grupoFiltro);
-                }}
+                onChange={(e) => setEstadoFiltro(e.target.value)}
                 className={styles.selectInput}
               >
                 <option value="Todos">Todos los Estados</option>
@@ -504,11 +563,7 @@ export const FinanzasDashboard = () => {
 
               <select 
                 value={grupoFiltro} 
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setGrupoFiltro(val);
-                  fetchDeudores(mesFiltro, anioFiltro, estadoFiltro, val);
-                }}
+                onChange={(e) => setGrupoFiltro(e.target.value)}
                 className={styles.selectInput}
               >
                 <option value="">Todos los Grados</option>
