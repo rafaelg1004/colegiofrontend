@@ -51,6 +51,8 @@ export const FinanzasDashboard = () => {
   const [estadoFiltro, setEstadoFiltro] = useState<string>('Todos');
   const [grupoFiltro, setGrupoFiltro] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loadingDeudores, setLoadingDeudores] = useState<boolean>(false);
+  const activeRequestRef = React.useRef(0);
 
   const fetchAniosLectivos = async () => {
     try {
@@ -88,17 +90,30 @@ export const FinanzasDashboard = () => {
     }
   };
 
-  const fetchDeudores = async () => {
+  const fetchDeudores = async (
+    mes = mesFiltro,
+    anio = anioFiltro,
+    estado = estadoFiltro,
+    grupo = grupoFiltro
+  ) => {
+    const requestId = ++activeRequestRef.current;
+    setLoadingDeudores(true);
     try {
       const data = await FinancieroService.getDeudores({
-        mes: mesFiltro,
-        anio: anioFiltro,
-        estado: estadoFiltro,
-        grupo_id: grupoFiltro,
+        mes,
+        anio,
+        estado,
+        grupo_id: grupo,
       });
-      setDeudores(data.deudores || []);
+      if (requestId === activeRequestRef.current) {
+        setDeudores(data.deudores || []);
+      }
     } catch (err) {
       console.error("Error cargando deudores:", err);
+    } finally {
+      if (requestId === activeRequestRef.current) {
+        setLoadingDeudores(false);
+      }
     }
   };
 
@@ -128,7 +143,7 @@ export const FinanzasDashboard = () => {
         await Promise.allSettled([
           fetchStats(), 
           fetchGrupos(), 
-          fetchDeudores(), 
+          fetchDeudores(mesFiltro, anioFiltro, estadoFiltro, grupoFiltro), 
           fetchOpcionesFacturacion(),
           fetchAniosLectivos()
         ]);
@@ -350,7 +365,11 @@ export const FinanzasDashboard = () => {
             <div className={styles.filterGroup}>
               <select 
                 value={mesFiltro} 
-                onChange={(e) => setMesFiltro(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setMesFiltro(val);
+                  fetchDeudores(val, anioFiltro, estadoFiltro, grupoFiltro);
+                }}
                 className={styles.selectInput}
               >
                 {MESES.map(m => (
@@ -360,7 +379,11 @@ export const FinanzasDashboard = () => {
 
               <select 
                 value={anioFiltro} 
-                onChange={(e) => setAnioFiltro(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setAnioFiltro(val);
+                  fetchDeudores(mesFiltro, val, estadoFiltro, grupoFiltro);
+                }}
                 className={styles.selectInput}
               >
                 {(aniosLectivos.length > 0 ? aniosLectivos : [new Date().getFullYear()]).map(a => (
@@ -370,7 +393,11 @@ export const FinanzasDashboard = () => {
 
               <select 
                 value={estadoFiltro} 
-                onChange={(e) => setEstadoFiltro(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEstadoFiltro(val);
+                  fetchDeudores(mesFiltro, anioFiltro, val, grupoFiltro);
+                }}
                 className={styles.selectInput}
               >
                 <option value="Todos">Todos los Estados</option>
@@ -381,7 +408,11 @@ export const FinanzasDashboard = () => {
 
               <select 
                 value={grupoFiltro} 
-                onChange={(e) => setGrupoFiltro(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGrupoFiltro(val);
+                  fetchDeudores(mesFiltro, anioFiltro, estadoFiltro, val);
+                }}
                 className={styles.selectInput}
               >
                 <option value="">Todos los Grados</option>
@@ -445,7 +476,13 @@ export const FinanzasDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredDeudores.length === 0 ? (
+                {loadingDeudores ? (
+                  <tr>
+                    <td colSpan={10} style={{ textAlign: 'center', padding: '2.5rem', color: '#64748b', fontWeight: 500 }}>
+                      ⏳ Cargando listado de pensiones para {MESES.find(m => m.id === mesFiltro)?.nombre} {anioFiltro}...
+                    </td>
+                  </tr>
+                ) : filteredDeudores.length === 0 ? (
                   <tr>
                     <td colSpan={10} style={{ textAlign: 'center', padding: '2rem' }}>
                       No se encontraron registros para los filtros seleccionados.
