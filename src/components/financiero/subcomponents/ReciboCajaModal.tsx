@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getAuthToken, API_URL } from '@/utils/auth';
 
 interface ReciboCajaModalProps {
@@ -30,6 +31,11 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
   onClose,
 }) => {
   const [institucion, setInstitucion] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const cargar = async () => {
@@ -52,7 +58,7 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
     if (datos) cargar();
   }, [datos]);
 
-  if (!datos) return null;
+  if (!mounted || !datos) return null;
 
   // Formatear fecha exactamente como en Caja
   const rawFecha = datos.fecha_pago || datos.fecha_emision || '';
@@ -87,7 +93,7 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
   const montoFinal = Number(datos.monto_pagado || datos.monto_total || 0);
   const conceptoGeneralText = datos.concepto || `Pensión ${datos.mesNombre || ''} ${datos.anio || ''}`;
 
-  return (
+  const modalJSX = (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
@@ -100,7 +106,7 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 9999;
+          z-index: 999999;
           padding: 20px;
         }
 
@@ -185,43 +191,75 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
 
         @media print {
           @page {
-            size: auto;
-            margin: 10mm;
+            size: letter portrait;
+            margin: 0;
           }
-          body * {
-            visibility: hidden !important;
-          }
-          #finanzas-printable-receipt, #finanzas-printable-receipt * {
-            visibility: visible !important;
-          }
-          #finanzas-printable-receipt {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+          
+          html, body {
             width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+          }
+
+          body > *:not(.recibo-overlay-bg) {
+            display: none !important;
+            height: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .recibo-overlay-bg {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: #ffffff !important;
             padding: 0 !important;
             margin: 0 !important;
-            background: white !important;
+            display: block !important;
+            z-index: 999999 !important;
+            overflow: hidden !important;
+            backdrop-filter: none !important;
           }
-          .recibo-top-actions, .recibo-overlay-bg {
-            background: none !important;
-            position: static !important;
+
+          .recibo-modal-card {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: 100% !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: #ffffff !important;
+            margin: 0 !important;
             padding: 0 !important;
           }
-          .recibo-modal-card {
-            box-shadow: none !important;
-            max-width: 100% !important;
-            max-height: none !important;
-            border-radius: 0 !important;
+
+          .recibo-top-actions {
+            display: none !important;
           }
+
+          #finanzas-printable-receipt {
+            padding: 20px !important;
+            overflow: visible !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+
           .old-template {
             border: none !important;
             padding: 0 !important;
+            margin: 0 auto !important;
+            max-width: 100% !important;
             page-break-inside: avoid !important;
+            page-break-before: avoid !important;
             page-break-after: avoid !important;
-          }
-          .recibo-top-actions {
-            display: none !important;
           }
         }
       `}} />
@@ -305,4 +343,6 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
       </div>
     </>
   );
+
+  return createPortal(modalJSX, document.body);
 };
