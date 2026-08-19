@@ -91,7 +91,11 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
     : `REC-${(datos.estudiante_nombre || '').substring(0, 3).toUpperCase()}-${datos.anio || new Date().getFullYear()}`;
 
   const montoFinal = Number(datos.monto_pagado || datos.monto_total || 0);
-  const conceptoGeneralText = datos.concepto || `Pensión ${datos.mesNombre || ''} ${datos.anio || ''}`;
+  const conceptoGeneralText = (datos.numero_factura && datos.numero_factura !== 'N/A')
+    ? `Factura ${datos.numero_factura}`
+    : (datos.concepto || `Pensión ${datos.mesNombre || ''} ${datos.anio || ''}`);
+
+  const descripcionTablaText = datos.concepto || `Pensión ${datos.mesNombre || ''} ${datos.anio || ''}`;
 
   const modalJSX = (
     <>
@@ -318,7 +322,7 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{conceptoGeneralText}</td>
+                    <td>{descripcionTablaText}</td>
                     <td>1</td>
                     <td>{formatMoney(montoFinal)}</td>
                     <td>{formatMoney(montoFinal)}</td>
