@@ -505,6 +505,16 @@ export const InventarioList = () => {
               <p className={styles.description}>
                 {el.descripcion || "Sin descripción"}
               </p>
+              <div className={styles.pricesContainer}>
+                <div className={styles.priceTag}>
+                  <span className={styles.priceLabel}>Precio Compra</span>
+                  <span className={styles.priceValueCost}>${formatCurrency(el.precio_unitario || 0)}</span>
+                </div>
+                <div className={styles.priceTag}>
+                  <span className={styles.priceLabel}>Precio Venta</span>
+                  <span className={styles.priceValueSale}>${formatCurrency(el.precio_venta || 0)}</span>
+                </div>
+              </div>
               <div className={styles.cardFooter}>
                 <span className={styles.location}>
                   📍 {el.ubicacion || "Almacén Central"}

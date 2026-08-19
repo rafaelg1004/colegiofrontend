@@ -152,6 +152,45 @@
   height: 2.8rem;
 }
 
+.pricesContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  gap: 0.5rem;
+}
+
+.priceTag {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.priceLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.priceValueCost {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.priceValueSale {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #059669;
+}
+
 .cardFooter {
   display: flex;
   justify-content: space-between;
