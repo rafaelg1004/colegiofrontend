@@ -67,6 +67,27 @@ export const FinancieroService = {
     return data;
   },
 
+  // Listado Anual de Deudores (Todos los Meses)
+  async getDeudoresAnual(params?: { anio?: number; grupo_id?: string }) {
+    const queryParams = new URLSearchParams();
+    if (params?.anio) queryParams.append("anio", params.anio.toString());
+    if (params?.grupo_id) queryParams.append("grupo_id", params.grupo_id);
+
+    const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    const url = `${API_URL}/financiero/deudores-anual${queryStr}`;
+
+    const res = await fetch(url, {
+      headers: getHeaders(),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(errText);
+    }
+
+    return res.json();
+  },
+
   // Generación Masiva de Pensiones
   async generarPensionesMasivas(dto: { mes: number; anio: number; anio_lectivo_id?: string; concepto_cobro_id?: string; articulo_id?: string }) {
     const res = await fetch(`${API_URL}/financiero/generar-pensiones`, {

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FinancieroService } from "@/services/financiero.service";
 import { useCajaContext } from "@/context/CajaContext";
+import ReceiptPreview from "@/app/dashboard/caja/components/ReceiptPreview";
 import styles from "./FinanzasDashboard.module.css";
 
 const formatMoney = (val: number) =>
@@ -52,6 +53,9 @@ export const FinanzasDashboard = () => {
   const [grupoFiltro, setGrupoFiltro] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loadingDeudores, setLoadingDeudores] = useState<boolean>(false);
+  const [exportingAnual, setExportingAnual] = useState<boolean>(false);
+  const [previewDataReceipt, setPreviewDataReceipt] = useState<any>(null);
+  const [showPreviewReceipt, setShowPreviewReceipt] = useState<boolean>(false);
   const activeRequestRef = React.useRef(0);
 
   const fetchAniosLectivos = async () => {
@@ -279,6 +283,98 @@ export const FinanzasDashboard = () => {
     document.body.removeChild(link);
   };
 
+  const handleVerRecibo = (item: any) => {
+    const mesNombre = MESES.find(m => m.id === Number(mesFiltro))?.nombre || mesFiltro;
+    const datosRecibo = {
+      id: item.factura_id,
+      numero_comprobante: item.numero_factura && item.numero_factura !== 'N/A' ? item.numero_factura : `REC-${(item.estudiante_id || '').substring(0, 6)}`,
+      tipo: 'INGRESO',
+      fecha: item.fecha_pago || item.fecha_emision || new Date().toISOString(),
+      estudiante_nombre: item.estudiante_nombre,
+      concepto: item.concepto || `Pensión - ${mesNombre} ${anioFiltro}`,
+      monto: Number(item.monto_pagado || item.monto_total || 0),
+      observacion: `Comprobante de Pago - Pensión ${mesNombre} ${anioFiltro}. Estudiante: ${item.estudiante_nombre} (${item.grado}) - Acudiente: ${item.acudiente_nombre}`
+    };
+    setPreviewDataReceipt(datosRecibo);
+    setShowPreviewReceipt(true);
+  };
+
+  const handleExportExcelAnual = async () => {
+    try {
+      setExportingAnual(true);
+      const data = await FinancieroService.getDeudoresAnual({
+        anio: anioFiltro,
+        grupo_id: grupoFiltro,
+      });
+
+      const lista = data.reporteAnual || [];
+      if (lista.length === 0) {
+        setAlertMessage("No se encontraron registros para exportar el reporte anual.");
+        return;
+      }
+
+      const headers = [
+        "Estudiante",
+        "Documento Estudiante",
+        "Grado",
+        "Acudiente (Padre)",
+        "Documento Acudiente",
+        "Celular Acudiente",
+        "Correo Acudiente",
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+        `Total Deuda ${anioFiltro} (COP)`
+      ];
+
+      const rows = lista.map((est: any) => {
+        const rowMeses = MESES.map((m) => {
+          const infoMes = est.meses?.[m.id];
+          if (!infoMes) return `"Sin Factura"`;
+          if (infoMes.estado === 'Al día') return `"✅ Pagado (${formatMoney(infoMes.monto_pagado || infoMes.monto_total)})"`;
+          if (infoMes.estado === 'Debe') return `"⏳ Debe (${formatMoney(infoMes.deuda)})"`;
+          if (infoMes.estado === 'En mora') return `"🔴 En mora (${formatMoney(infoMes.deuda)})"`;
+          return `"⚪ Sin Factura"`;
+        });
+
+        return [
+          `"${(est.estudiante_nombre || '').replace(/"/g, '""')}"`,
+          `"${(est.estudiante_documento || '').replace(/"/g, '""')}"`,
+          `"${(est.grado || '').replace(/"/g, '""')}"`,
+          `"${(est.acudiente_nombre || '').replace(/"/g, '""')}"`,
+          `"${(est.acudiente_documento || '').replace(/"/g, '""')}"`,
+          `"${(est.acudiente_celular || '').replace(/"/g, '""')}"`,
+          `"${(est.acudiente_correo || '').replace(/"/g, '""')}"`,
+          ...rowMeses,
+          est.deuda_total_anual || 0
+        ];
+      });
+
+      const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((r: any) => r.join(';'))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Reporte_Anual_Pensiones_${anioFiltro}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      setAlertMessage("Error al exportar reporte anual: " + (err.message || 'Error desconocido'));
+    } finally {
+      setExportingAnual(false);
+    }
+  };
+
   if (loading)
     return <div className={styles.loading}>Cargando datos financieros...</div>;
 
@@ -430,13 +526,25 @@ export const FinanzasDashboard = () => {
               />
             </div>
 
-            <button 
-              className={styles.exportBtn}
-              onClick={handleExportExcel}
-              title="Exportar listado a Excel"
-            >
-              <span>📥</span> Exportar a Excel
-            </button>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button 
+                className={styles.exportBtn}
+                onClick={handleExportExcel}
+                title={`Exportar listado de ${MESES.find(m => m.id === mesFiltro)?.nombre} a Excel`}
+              >
+                <span>📥</span> Exportar Mes ({MESES.find(m => m.id === mesFiltro)?.nombre})
+              </button>
+
+              <button 
+                className={styles.exportBtn}
+                style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
+                onClick={handleExportExcelAnual}
+                disabled={exportingAnual}
+                title="Exportar reporte de todos los meses del año a Excel"
+              >
+                <span>📊</span> {exportingAnual ? 'Generando Reporte...' : 'Exportar Todos los Meses'}
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -552,38 +660,65 @@ export const FinanzasDashboard = () => {
                         </span>
                       </td>
                       <td>
-                        <button 
-                          className={styles.payBtn}
-                          style={{
-                            backgroundColor: item.estado === 'Al día' ? '#64748b' : '#16a34a',
-                            color: '#ffffff',
-                            fontWeight: 600,
-                            fontSize: '0.82rem',
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                          }}
-                          onClick={() => {
-                            const mesNombre = MESES.find(m => m.id === mesFiltro)?.nombre || '';
-                            setNavState({
-                              estudianteId: item.estudiante_id,
-                              facturaId: item.factura_id || null,
-                              grado: item.grado || null,
-                              mes: mesNombre || null,
-                              anio: String(anioFiltro),
-                            });
-                            router.push('/dashboard/caja');
-                          }}
-                          title={`Ir a Caja a cobrar pensión de ${item.estudiante_nombre}`}
-                        >
-                          💳 {item.estado === 'Al día' ? 'Ver en Caja' : 'Ir a Caja 💵'}
-                        </button>
+                        {item.estado === 'Al día' ? (
+                          <button 
+                            className={styles.payBtn}
+                            style={{
+                              backgroundColor: '#4f46e5',
+                              color: '#ffffff',
+                              fontWeight: 600,
+                              fontSize: '0.82rem',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}
+                            onClick={() => handleVerRecibo(item)}
+                            title={`Abrir Recibo de Caja de ${item.estudiante_nombre}`}
+                          >
+                            🧾 Ver Recibo
+                          </button>
+                        ) : (
+                          <button 
+                            className={styles.payBtn}
+                            style={{
+                              backgroundColor: '#16a34a',
+                              color: '#ffffff',
+                              fontWeight: 600,
+                              fontSize: '0.82rem',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}
+                            onClick={() => {
+                              const mesNombre = MESES.find(m => m.id === mesFiltro)?.nombre || '';
+                              setNavState({
+                                estudianteId: item.estudiante_id,
+                                facturaId: item.factura_id || null,
+                                grado: item.grado || null,
+                                mes: mesNombre || null,
+                                anio: String(anioFiltro),
+                              });
+                              router.push('/dashboard/caja');
+                            }}
+                            title={`Ir a Caja a registrar pago para ${item.estudiante_nombre}`}
+                          >
+                            💵 Registrar Pago
+                          </button>
+                        )}
                       </td>
+                    </tr>
+                  ))
+                )}
                     </tr>
                   ))
                 )}
@@ -713,6 +848,17 @@ export const FinanzasDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Visor de Recibo de Caja */}
+      {showPreviewReceipt && (
+        <ReceiptPreview 
+          datos={previewDataReceipt}
+          institucion={{ nombre: 'INSTITUCIÓN EDUCATIVA' }}
+          sedeActual={{ nombre: 'Sede Principal' }}
+          formatMoney={formatMoney}
+          onClose={() => setShowPreviewReceipt(false)}
+        />
       )}
 
       {/* Alert Modal */}
