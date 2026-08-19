@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FinancieroService } from "@/services/financiero.service";
 import { useCajaContext } from "@/context/CajaContext";
-import ReceiptPreview from "@/app/dashboard/caja/components/ReceiptPreview";
 import styles from "./FinanzasDashboard.module.css";
+
+import { FinanzasStatsCards } from "./subcomponents/FinanzasStatsCards";
+import { FinanzasFiltersBar } from "./subcomponents/FinanzasFiltersBar";
+import { FinanzasPensionesTable } from "./subcomponents/FinanzasPensionesTable";
+import { ReciboCajaModal } from "./subcomponents/ReciboCajaModal";
+import { FacturacionMasivaModal } from "./subcomponents/FacturacionMasivaModal";
 
 const formatMoney = (val: number) =>
   new Intl.NumberFormat("es-CO", {
@@ -45,7 +50,7 @@ export const FinanzasDashboard = () => {
   const [tipoSeleccionado, setTipoSeleccionado] = useState<'articulo' | 'concepto'>('articulo');
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
-  // Filtros para la vista de pensiones
+  // Filtros
   const [mesFiltro, setMesFiltro] = useState<number>(new Date().getMonth() + 1);
   const [anioFiltro, setAnioFiltro] = useState<number>(new Date().getFullYear());
   const [aniosLectivos, setAniosLectivos] = useState<number[]>([]);
@@ -54,10 +59,12 @@ export const FinanzasDashboard = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loadingDeudores, setLoadingDeudores] = useState<boolean>(false);
   const [exportingAnual, setExportingAnual] = useState<boolean>(false);
+  
+  // Recibo de caja modal state
   const [previewDataReceipt, setPreviewDataReceipt] = useState<any>(null);
   const [showPreviewReceipt, setShowPreviewReceipt] = useState<boolean>(false);
-  const activeRequestRef = React.useRef(0);
-
+  
+  const activeRequestRef = useRef(0);
   const [dataAnualMeses, setDataAnualMeses] = useState<{ [mes: number]: any[] }>({});
 
   const fetchAniosLectivos = async () => {
@@ -103,10 +110,9 @@ export const FinanzasDashboard = () => {
     const requestId = ++activeRequestRef.current;
     setLoadingDeudores(true);
     try {
-      const meses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
       const resultados = await Promise.all(
-        meses.map(m => FinancieroService.getDeudores({
-          mes: m,
+        MESES.map(m => FinancieroService.getDeudores({
+          mes: m.id,
           anio,
           estado: 'Todos',
           grupo_id: grupo || undefined,
@@ -179,10 +185,6 @@ export const FinanzasDashboard = () => {
     setDeudores(listadoMes);
   }, [mesFiltro, dataAnualMeses]);
 
-  const handleFacturacionMasiva = () => {
-    setShowFacturacion(true);
-  };
-
   const handleConfirmarFacturacion = () => {
     if (!idSeleccionado) {
       setAlertMessage('Por favor selecciona un concepto');
@@ -213,7 +215,7 @@ export const FinanzasDashboard = () => {
     }
   };
 
-  // Filtrado local instantáneo (0 peticiones HTTP a la base de datos)
+  // Filtrado instantáneo en memoria
   const filteredDeudores = deudores.filter((d) => {
     if (estadoFiltro && estadoFiltro !== 'Todos') {
       const efNorm = estadoFiltro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -241,7 +243,6 @@ export const FinanzasDashboard = () => {
     );
   });
 
-  // Estadísticas del listado filtrado
   const cantAldia = filteredDeudores.filter(d => {
     const st = (d.estado || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     return st === 'al dia';
@@ -254,7 +255,6 @@ export const FinanzasDashboard = () => {
 
   const totalDeudaFiltrada = filteredDeudores.reduce((sum, d) => sum + Number(d.deuda || 0), 0);
 
-  // Exportar a Excel (CSV con formato BOM UTF-8)
   const handleExportExcel = () => {
     if (!filteredDeudores || filteredDeudores.length === 0) {
       setAlertMessage("No hay registros en la lista para exportar.");
@@ -262,21 +262,10 @@ export const FinanzasDashboard = () => {
     }
 
     const headers = [
-      "Estudiante",
-      "Documento Estudiante",
-      "Grado",
-      "Acudiente (Padre)",
-      "Documento Acudiente",
-      "Celular Acudiente",
-      "Correo Acudiente",
-      "N° Factura",
-      "Concepto",
-      "Monto Total (COP)",
-      "Monto Pagado (COP)",
-      "Deuda Pendiente (COP)",
-      "Estado Pago",
-      "Fecha Emisión",
-      "Fecha Último Pago"
+      "Estudiante", "Documento Estudiante", "Grado", "Acudiente (Padre)", 
+      "Documento Acudiente", "Celular Acudiente", "Correo Acudiente", 
+      "N° Factura", "Concepto", "Monto Total (COP)", "Monto Pagado (COP)", 
+      "Deuda Pendiente (COP)", "Estado Pago", "Fecha Emisión", "Fecha Último Pago"
     ];
 
     const rows = filteredDeudores.map((item) => [
@@ -312,40 +301,33 @@ export const FinanzasDashboard = () => {
 
   const handleVerRecibo = (item: any) => {
     const mesNombre = MESES.find(m => m.id === Number(mesFiltro))?.nombre || mesFiltro;
-    const datosRecibo = {
-      id: item.factura_id,
-      numero_comprobante: item.numero_factura && item.numero_factura !== 'N/A' ? item.numero_factura : `REC-${(item.estudiante_id || '').substring(0, 6)}`,
-      tipo: 'INGRESO',
-      fecha: item.fecha_pago || item.fecha_emision || new Date().toISOString(),
-      estudiante_nombre: item.estudiante_nombre,
-      concepto: item.concepto || `Pensión - ${mesNombre} ${anioFiltro}`,
-      monto: Number(item.monto_pagado || item.monto_total || 0),
-      observacion: `Comprobante de Pago - Pensión ${mesNombre} ${anioFiltro}. Estudiante: ${item.estudiante_nombre} (${item.grado}) - Acudiente: ${item.acudiente_nombre}`
-    };
-    setPreviewDataReceipt(datosRecibo);
+    setPreviewDataReceipt({
+      ...item,
+      mesNombre,
+      anio: anioFiltro,
+    });
     setShowPreviewReceipt(true);
+  };
+
+  const handleRegistrarPago = (item: any) => {
+    const mesNombre = MESES.find(m => m.id === mesFiltro)?.nombre || '';
+    setNavState({
+      estudianteId: item.estudiante_id,
+      facturaId: item.factura_id || null,
+      grado: item.grado || null,
+      mes: mesNombre || null,
+      anio: String(anioFiltro),
+    });
+    router.push('/dashboard/caja');
   };
 
   const handleExportExcelAnual = async () => {
     try {
       setExportingAnual(true);
-      const meses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-
-      const resultadosPorMes = await Promise.all(
-        meses.map(m => FinancieroService.getDeudores({
-          mes: m,
-          anio: anioFiltro,
-          estado: 'Todos',
-          grupo_id: grupoFiltro,
-        }))
-      );
-
       const reporteAnualMap = new Map<string, any>();
 
-      resultadosPorMes.forEach((res: any, index: number) => {
-        const mesNum = index + 1;
-        const deudoresMes = res?.deudores || [];
-
+      MESES.forEach((m) => {
+        const deudoresMes = dataAnualMeses[m.id] || [];
         deudoresMes.forEach((d: any) => {
           if (!reporteAnualMap.has(d.estudiante_id)) {
             reporteAnualMap.set(d.estudiante_id, {
@@ -364,7 +346,7 @@ export const FinanzasDashboard = () => {
           }
 
           const est = reporteAnualMap.get(d.estudiante_id);
-          est.meses[mesNum] = {
+          est.meses[m.id] = {
             factura_id: d.factura_id,
             numero_factura: d.numero_factura,
             monto_total: d.monto_total,
@@ -385,25 +367,10 @@ export const FinanzasDashboard = () => {
       }
 
       const headers = [
-        "Estudiante",
-        "Documento Estudiante",
-        "Grado",
-        "Acudiente (Padre)",
-        "Documento Acudiente",
-        "Celular Acudiente",
-        "Correo Acudiente",
-        "Enero",
-        "Febrero",
-        "Marzo",
-        "Abril",
-        "Mayo",
-        "Junio",
-        "Julio",
-        "Agosto",
-        "Septiembre",
-        "Octubre",
-        "Noviembre",
-        "Diciembre",
+        "Estudiante", "Documento Estudiante", "Grado", "Acudiente (Padre)", 
+        "Documento Acudiente", "Celular Acudiente", "Correo Acudiente", 
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre", 
         `Total Deuda ${anioFiltro} (COP)`
       ];
 
@@ -449,6 +416,8 @@ export const FinanzasDashboard = () => {
   if (loading)
     return <div className={styles.loading}>Cargando datos financieros...</div>;
 
+  const mesNombre = MESES.find(m => m.id === mesFiltro)?.nombre || '';
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -490,13 +459,19 @@ export const FinanzasDashboard = () => {
               <div
                 className={styles.bar}
                 style={{ width: `${stats.porcentaje_recaudo}%` }}
-              ></div>
+              />
             </div>
           </div>
           <div className={styles.statCard}>
-            <span className={styles.statLabel}>Pendiente por Cobrar</span>
+            <span className={styles.statLabel}>Cartera Pendiente</span>
             <span className={styles.statValue + " " + styles.pending}>
-              {formatMoney(stats.total_pendiente)}
+              {formatMoney(stats.total_cartera)}
+            </span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>Porcentaje de Recaudo</span>
+            <span className={styles.statValue}>
+              {stats.porcentaje_recaudo}%
             </span>
           </div>
         </div>
@@ -505,409 +480,71 @@ export const FinanzasDashboard = () => {
       {/* TAB 2: CONTROL DE PENSIONES Y ACUDIENTES */}
       {activeTab === 'pensiones' && (
         <>
-          {/* Tarjetas resumen del filtro */}
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>Total Estudiantes</span>
-              <span className={styles.statValue}>{filteredDeudores.length}</span>
-            </div>
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>Al Día (Pagados)</span>
-              <span className={styles.statValue + " " + styles.collected}>{cantAldia}</span>
-            </div>
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>Deudores / Pendientes</span>
-              <span className={styles.statValue + " " + styles.pending}>{cantDebe}</span>
-            </div>
-            <div className={styles.statCard}>
-              <span className={styles.statLabel}>Total Deuda Pendiente</span>
-              <span className={styles.statValue + " " + styles.pending}>
-                {formatMoney(totalDeudaFiltrada)}
-              </span>
-            </div>
-          </div>
+          <FinanzasStatsCards 
+            totalEstudiantes={filteredDeudores.length}
+            cantAldia={cantAldia}
+            cantDebe={cantDebe}
+            totalDeudaFiltrada={totalDeudaFiltrada}
+            formatMoney={formatMoney}
+          />
 
-          {/* Barra de Filtros */}
-          <div className={styles.filtersBar}>
-            <div className={styles.filterGroup}>
-              <select 
-                value={mesFiltro} 
-                onChange={(e) => setMesFiltro(Number(e.target.value))}
-                className={styles.selectInput}
-              >
-                {MESES.map(m => (
-                  <option key={m.id} value={m.id}>{m.nombre}</option>
-                ))}
-              </select>
-
-              <select 
-                value={anioFiltro} 
-                onChange={(e) => setAnioFiltro(Number(e.target.value))}
-                className={styles.selectInput}
-              >
-                {(aniosLectivos.length > 0 ? aniosLectivos : [new Date().getFullYear()]).map(a => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-
-              <select 
-                value={estadoFiltro} 
-                onChange={(e) => setEstadoFiltro(e.target.value)}
-                className={styles.selectInput}
-              >
-                <option value="Todos">Todos los Estados</option>
-                <option value="Debe">Quiénes Deben (Pendientes)</option>
-                <option value="Al dia">Quiénes Están al Día</option>
-                <option value="Sin Factura">Sin Factura Generada</option>
-              </select>
-
-              <select 
-                value={grupoFiltro} 
-                onChange={(e) => setGrupoFiltro(e.target.value)}
-                className={styles.selectInput}
-              >
-                <option value="">Todos los Grados</option>
-                {grupos.map(g => (
-                  <option key={g.id} value={g.id}>{g.nombre}</option>
-                ))}
-              </select>
-
-              <input 
-                type="text"
-                placeholder="🔍 Buscar estudiante o acudiente..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={styles.searchInput}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button 
-                className={styles.exportBtn}
-                onClick={handleExportExcel}
-                title={`Exportar listado de ${MESES.find(m => m.id === mesFiltro)?.nombre} a Excel`}
-              >
-                <span>📥</span> Exportar Mes ({MESES.find(m => m.id === mesFiltro)?.nombre})
-              </button>
-
-              <button 
-                className={styles.exportBtn}
-                style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}
-                onClick={handleExportExcelAnual}
-                disabled={exportingAnual}
-                title="Exportar reporte de todos los meses del año a Excel"
-              >
-                <span>📊</span> {exportingAnual ? 'Generando Reporte...' : 'Exportar Todos los Meses'}
-              </button>
-            </div>
-          </div>
+          <FinanzasFiltersBar 
+            mesFiltro={mesFiltro}
+            setMesFiltro={setMesFiltro}
+            anioFiltro={anioFiltro}
+            setAnioFiltro={setAnioFiltro}
+            aniosLectivos={aniosLectivos}
+            estadoFiltro={estadoFiltro}
+            setEstadoFiltro={setEstadoFiltro}
+            grupoFiltro={grupoFiltro}
+            setGrupoFiltro={setGrupoFiltro}
+            grupos={grupos}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            meses={MESES}
+            handleExportExcel={handleExportExcel}
+            handleExportExcelAnual={handleExportExcelAnual}
+            exportingAnual={exportingAnual}
+          />
         </>
       )}
 
       {/* Tabla Principal */}
-      <div className={styles.mainGrid}>
-        <div className={styles.tableSection}>
-          <div className={styles.sectionHeader}>
-            <h3>
-              {activeTab === 'pensiones' 
-                ? `Listado de Pensiones (${MESES.find(m => m.id === mesFiltro)?.nombre} ${anioFiltro})`
-                : 'Estudiantes en Mora / Deudores (Mes Actual)'}
-            </h3>
-            <button
-              className={styles.actionBtn}
-              onClick={handleFacturacionMasiva}
-              disabled={saving}
-            >
-              {saving ? 'Generando...' : 'Facturación Masiva Pensión'}
-            </button>
-          </div>
-
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>N° Factura</th>
-                  <th>Estudiante</th>
-                  <th>Grado</th>
-                  <th>Padre / Acudiente</th>
-                  <th>Mes Evaluado</th>
-                  <th>Monto Total</th>
-                  <th>Pagado</th>
-                  <th>Deuda</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingDeudores ? (
-                  <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: '2.5rem', color: '#64748b', fontWeight: 500 }}>
-                      ⏳ Cargando listado de pensiones para {MESES.find(m => m.id === mesFiltro)?.nombre} {anioFiltro}...
-                    </td>
-                  </tr>
-                ) : filteredDeudores.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: '2rem' }}>
-                      No se encontraron registros para los filtros seleccionados.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredDeudores.map((item) => (
-                    <tr key={item.estudiante_id + (item.factura_id || '')}>
-                      <td>
-                        <strong style={{ fontSize: '0.85rem' }}>{item.numero_factura}</strong>
-                      </td>
-                      <td>
-                        <div>
-                          <strong>{item.estudiante_nombre}</strong>
-                          <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Doc: {item.estudiante_documento || 'N/A'}</div>
-                        </div>
-                      </td>
-                      <td>{item.grado}</td>
-                      <td>
-                        <div className={styles.acudienteBox}>
-                          <span className={styles.acudienteName}>{item.acudiente_nombre}</span>
-                          <div className={styles.acudienteSub}>
-                            <span>Doc: {item.acudiente_documento}</span>
-                            {item.acudiente_celular && item.acudiente_celular !== 'N/A' && (
-                              <a 
-                                href={`https://wa.me/57${item.acudiente_celular.replace(/\D/g, '')}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={styles.whatsappLink}
-                                title="Enviar mensaje por WhatsApp"
-                              >
-                                📱 {item.acudiente_celular}
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span style={{ 
-                          fontSize: '0.82rem', 
-                          fontWeight: 600, 
-                          color: '#1e293b', 
-                          backgroundColor: '#f1f5f9', 
-                          padding: '4px 8px', 
-                          borderRadius: '6px', 
-                          display: 'inline-block' 
-                        }}>
-                          📅 {MESES.find(m => m.id === mesFiltro)?.nombre} {anioFiltro}
-                        </span>
-                      </td>
-                      <td>{formatMoney(item.monto_total)}</td>
-                      <td style={{ color: '#16a34a', fontWeight: 600 }}>{formatMoney(item.monto_pagado)}</td>
-                      <td className={styles.amount} style={{ color: item.deuda > 0 ? '#dc2626' : '#16a34a' }}>
-                        {formatMoney(item.deuda)}
-                      </td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${
-                          item.estado === 'Al día' 
-                            ? styles.statusAldia 
-                            : item.estado === 'Debe' 
-                            ? styles.statusDebe 
-                            : item.estado === 'En mora'
-                            ? styles.statusEnmora
-                            : styles.statusSinfactura
-                        }`}>
-                          {item.estado === 'Al día' ? '✅ Al día' : item.estado === 'Debe' ? '⏳ Debe' : item.estado === 'En mora' ? '🔴 En mora' : '⚪ Sin Factura'}
-                        </span>
-                      </td>
-                      <td>
-                        {item.estado === 'Al día' ? (
-                          <button 
-                            className={styles.payBtn}
-                            style={{
-                              backgroundColor: '#4f46e5',
-                              color: '#ffffff',
-                              fontWeight: 600,
-                              fontSize: '0.82rem',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                            }}
-                            onClick={() => handleVerRecibo(item)}
-                            title={`Abrir Recibo de Caja de ${item.estudiante_nombre}`}
-                          >
-                            🧾 Ver Recibo
-                          </button>
-                        ) : (
-                          <button 
-                            className={styles.payBtn}
-                            style={{
-                              backgroundColor: '#16a34a',
-                              color: '#ffffff',
-                              fontWeight: 600,
-                              fontSize: '0.82rem',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                            }}
-                            onClick={() => {
-                              const mesNombre = MESES.find(m => m.id === mesFiltro)?.nombre || '';
-                              setNavState({
-                                estudianteId: item.estudiante_id,
-                                facturaId: item.factura_id || null,
-                                grado: item.grado || null,
-                                mes: mesNombre || null,
-                                anio: String(anioFiltro),
-                              });
-                              router.push('/dashboard/caja');
-                            }}
-                            title={`Ir a Caja a registrar pago para ${item.estudiante_nombre}`}
-                          >
-                            💵 Registrar Pago
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <FinanzasPensionesTable 
+        filteredDeudores={filteredDeudores}
+        loadingDeudores={loadingDeudores}
+        mesFiltro={mesFiltro}
+        anioFiltro={anioFiltro}
+        meses={MESES}
+        formatMoney={formatMoney}
+        handleVerRecibo={handleVerRecibo}
+        onRegistrarPago={handleRegistrarPago}
+        handleFacturacionMasiva={() => setShowFacturacion(true)}
+        saving={saving}
+      />
 
       {/* Modal Facturación Masiva */}
-      {showFacturacion && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h2>Facturación Masiva</h2>
-            </div>
-            <div className={styles.modalBody}>
-              <div style={{ 
-                background: '#fff1f2', 
-                border: '2px solid #ef4444', 
-                padding: '1.5rem', 
-                borderRadius: '16px',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                gap: '1rem',
-                alignItems: 'center',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}>
-                <span style={{ fontSize: '2.5rem' }}>⚠️</span>
-                <div>
-                  <strong style={{ color: '#991b1b', display: 'block', marginBottom: '0.25rem', fontSize: '1.1rem' }}>¡ATENCIÓN! OPERACIÓN MASIVA</strong>
-                  <p style={{ color: '#b91c1c', fontSize: '0.95rem', margin: 0, fontWeight: 500 }}>
-                    Se generarán facturas para <strong>TODOS</strong> los estudiantes activos para el período <strong>{MESES.find(m => m.id === mesFiltro)?.nombre} / {anioFiltro}</strong>. 
-                  </p>
-                </div>
-              </div>
+      <FacturacionMasivaModal 
+        showFacturacion={showFacturacion}
+        setShowFacturacion={setShowFacturacion}
+        opcionesFacturacion={opcionesFacturacion}
+        idSeleccionado={idSeleccionado}
+        setIdSeleccionado={setIdSeleccionado}
+        tipoSeleccionado={tipoSeleccionado}
+        setTipoSeleccionado={setTipoSeleccionado}
+        handleConfirmarFacturacion={handleConfirmarFacturacion}
+        saving={saving}
+        mesNombre={mesNombre}
+        anioFiltro={anioFiltro}
+        showConfirmacionExtra={showConfirmacionExtra}
+        setShowConfirmacionExtra={setShowConfirmacionExtra}
+        ejecutarFacturacionMasiva={ejecutarFacturacionMasiva}
+      />
 
-              <p style={{ marginBottom: '1rem', fontWeight: 600, color: '#0f172a' }}>
-                Selecciona el concepto de cobro:
-              </p>
-              
-              <div className={styles.formGroup}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Servicio / Concepto</label>
-                <select 
-                  value={`${tipoSeleccionado}:${idSeleccionado}`}
-                  onChange={(e) => {
-                    const [tipo, id] = e.target.value.split(':');
-                    setTipoSeleccionado(tipo as any);
-                    setIdSeleccionado(id);
-                  }}
-                  className={styles.modalSelect}
-                  style={{ 
-                    width: '100%', 
-                    padding: '0.75rem', 
-                    borderRadius: '10px', 
-                    border: '1px solid #e2e8f0',
-                    fontSize: '1rem'
-                  }}
-                >
-                  <option value="">Seleccionar...</option>
-                  {opcionesFacturacion.map(opt => (
-                    <option key={`${opt.tipo}:${opt.id}`} value={`${opt.tipo}:${opt.id}`}>
-                      {opt.nombre} ({opt.tipo === 'articulo' ? 'Servicio' : 'Concepto'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <p style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#94a3b8' }}>
-                * El sistema generará una factura pendiente para cada estudiante activo.
-                Se omitirán estudiantes que ya tengan este cobro registrado en el mes.
-              </p>
-            </div>
-            <div className={styles.modalFooter}>
-              <button 
-                className={styles.btnSecondary} 
-                onClick={() => setShowFacturacion(false)}
-                disabled={saving}
-              >
-                Cancelar
-              </button>
-              <button 
-                className={styles.btnPrimary} 
-                onClick={handleConfirmarFacturacion}
-                disabled={saving}
-              >
-                {saving ? "Generando..." : "Confirmar y Generar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Extra de Confirmación */}
-      {showConfirmacionExtra && (
-        <div className={styles.modalOverlay} style={{ zIndex: 1100 }}>
-          <div className={styles.modalContent} style={{ maxWidth: '400px' }}>
-            <div className={styles.modalHeader} style={{ background: '#fee2e2' }}>
-              <h2 style={{ color: '#991b1b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.5rem' }}>❓</span> Confirmación Final
-              </h2>
-            </div>
-            <div className={styles.modalBody}>
-              <p style={{ fontSize: '1.1rem', color: '#1e293b', fontWeight: 500, textAlign: 'center' }}>
-                ¿Estás absolutamente seguro de que deseas generar las facturas masivas?
-              </p>
-              <p style={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center', marginTop: '1rem' }}>
-                Esta acción creará un registro de deuda para cada estudiante activo para el mes de {MESES.find(m => m.id === mesFiltro)?.nombre} {anioFiltro}.
-              </p>
-            </div>
-            <div className={styles.modalFooter} style={{ justifyContent: 'center' }}>
-              <button 
-                className={styles.btnSecondary} 
-                onClick={() => setShowConfirmacionExtra(false)}
-                disabled={saving}
-              >
-                No, cancelar
-              </button>
-              <button 
-                className={styles.btnPrimary} 
-                style={{ background: '#dc2626' }}
-                onClick={ejecutarFacturacionMasiva}
-                disabled={saving}
-              >
-                {saving ? "Generando..." : "Sí, generar ahora"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Visor de Recibo de Caja */}
+      {/* Visor del Recibo de Caja Oficial */}
       {showPreviewReceipt && (
-        <ReceiptPreview 
+        <ReciboCajaModal 
           datos={previewDataReceipt}
-          institucion={{ nombre: 'INSTITUCIÓN EDUCATIVA' }}
-          sedeActual={{ nombre: 'Sede Principal' }}
           formatMoney={formatMoney}
           onClose={() => setShowPreviewReceipt(false)}
         />

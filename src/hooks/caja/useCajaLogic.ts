@@ -540,8 +540,8 @@ export const useCajaLogic = () => {
           monto: parseFloat(monto), // Enviar monto total
           concepto: articulosVenta.length > 0 ? articulosVenta[0].nombre + (articulosVenta.length > 1 ? "..." : "") : "Varios", // Enviar concepto descriptivo
           conceptos: articulosVenta.map(av => ({
-            articulo_inventario_id: av.es_concepto ? null : av.id,
-            concepto_cobro_id: av.es_concepto ? av.id : null,
+            articulo_inventario_id: av.articulo_inventario_id || av.articulo_id || (av.es_concepto ? null : av.id),
+            concepto_cobro_id: av.concepto_cobro_id || av.concepto_id || (av.es_concepto ? av.id : null),
             descripcion: av.nombre,
             cantidad: av.cantidad,
             valor_unitario: av.precio_unitario,
