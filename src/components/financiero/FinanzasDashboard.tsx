@@ -519,26 +519,6 @@ export const FinanzasDashboard = () => {
         formatMoney={formatMoney}
         handleVerRecibo={handleVerRecibo}
         onRegistrarPago={handleRegistrarPago}
-        handleFacturacionMasiva={() => setShowFacturacion(true)}
-        saving={saving}
-      />
-
-      {/* Modal Facturación Masiva */}
-      <FacturacionMasivaModal 
-        showFacturacion={showFacturacion}
-        setShowFacturacion={setShowFacturacion}
-        opcionesFacturacion={opcionesFacturacion}
-        idSeleccionado={idSeleccionado}
-        setIdSeleccionado={setIdSeleccionado}
-        tipoSeleccionado={tipoSeleccionado}
-        setTipoSeleccionado={setTipoSeleccionado}
-        handleConfirmarFacturacion={handleConfirmarFacturacion}
-        saving={saving}
-        mesNombre={mesNombre}
-        anioFiltro={anioFiltro}
-        showConfirmacionExtra={showConfirmacionExtra}
-        setShowConfirmacionExtra={setShowConfirmacionExtra}
-        ejecutarFacturacionMasiva={ejecutarFacturacionMasiva}
       />
 
       {/* Visor del Recibo de Caja Oficial */}

@@ -10,8 +10,6 @@ interface FinanzasPensionesTableProps {
   formatMoney: (val: number) => string;
   handleVerRecibo: (item: any) => void;
   onRegistrarPago: (item: any) => void;
-  handleFacturacionMasiva: () => void;
-  saving: boolean;
 }
 
 export const FinanzasPensionesTable: React.FC<FinanzasPensionesTableProps> = ({
@@ -23,8 +21,6 @@ export const FinanzasPensionesTable: React.FC<FinanzasPensionesTableProps> = ({
   formatMoney,
   handleVerRecibo,
   onRegistrarPago,
-  handleFacturacionMasiva,
-  saving,
 }) => {
   const mesNombre = meses.find(m => m.id === mesFiltro)?.nombre || '';
 
@@ -33,13 +29,6 @@ export const FinanzasPensionesTable: React.FC<FinanzasPensionesTableProps> = ({
       <div className={styles.tableSection}>
         <div className={styles.sectionHeader}>
           <h3>Listado de Pensiones ({mesNombre} {anioFiltro})</h3>
-          <button
-            className={styles.actionBtn}
-            onClick={handleFacturacionMasiva}
-            disabled={saving}
-          >
-            {saving ? 'Generando...' : 'Facturación Masiva Pensión'}
-          </button>
         </div>
 
         <div className={styles.tableWrapper}>
