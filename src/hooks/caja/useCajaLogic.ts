@@ -85,11 +85,10 @@ export const useCajaLogic = () => {
   const [sedes, setSedes] = useState<any[]>([]);
   const [sedeSeleccionada, setSedeSeleccionada] = useState<any>(null);
 
-  // Filtros Historial
+  // Filtros Historial (Desde el 1 de enero del año actual)
   const [fechaDesde, setFechaDesde] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    return d.toISOString().split("T")[0];
+    const year = new Date().getFullYear();
+    return `${year}-01-01`;
   });
   const [fechaHasta, setFechaHasta] = useState(new Date().toISOString().split("T")[0]);
 
