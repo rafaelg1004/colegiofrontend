@@ -216,7 +216,8 @@ export const FinanzasDashboard = () => {
   };
 
   // Filtrado instantáneo en memoria
-  const filteredDeudores = deudores.filter((d) => {
+  const filteredDeudores = (deudores || []).filter((d) => {
+    if (!d) return false;
     if (estadoFiltro && estadoFiltro !== 'Todos') {
       const efNorm = estadoFiltro.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
       const stNorm = (d.estado || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -234,12 +235,12 @@ export const FinanzasDashboard = () => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      d.estudiante_nombre?.toLowerCase().includes(q) ||
-      d.estudiante_documento?.toLowerCase().includes(q) ||
-      d.acudiente_nombre?.toLowerCase().includes(q) ||
-      d.acudiente_documento?.toLowerCase().includes(q) ||
-      d.acudiente_celular?.toLowerCase().includes(q) ||
-      d.numero_factura?.toLowerCase().includes(q)
+      (d.estudiante_nombre || '').toLowerCase().includes(q) ||
+      (d.estudiante_documento || '').toLowerCase().includes(q) ||
+      (d.acudiente_nombre || '').toLowerCase().includes(q) ||
+      (d.acudiente_documento || '').toLowerCase().includes(q) ||
+      (d.acudiente_celular || '').toLowerCase().includes(q) ||
+      (d.numero_factura || '').toLowerCase().includes(q)
     );
   });
 
