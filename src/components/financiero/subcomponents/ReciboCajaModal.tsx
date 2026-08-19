@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getAuthToken, API_URL } from '@/utils/auth';
 
 interface ReciboCajaModalProps {
   datos: {
@@ -33,13 +34,20 @@ export const ReciboCajaModal: React.FC<ReciboCajaModalProps> = ({
   useEffect(() => {
     const cargar = async () => {
       try {
-        const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.colegio.binaria.online/api/v1';
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const res = await fetch(`${API}/configuracion/institucion`, {
+        const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+        const res = await fetch(`${API_URL}/configuracion/institucion`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (res.ok) setInstitucion(await res.json());
-      } catch (e) { /* silencioso */ }
+        if (res.ok) {
+          const json = await res.json();
+          const inst = Array.isArray(json) ? json[0] : (json?.data || json);
+          if (inst && typeof inst === 'object') {
+            setInstitucion(inst);
+          }
+        }
+      } catch (e) {
+        /* silencioso */
+      }
     };
     if (datos) cargar();
   }, [datos]);
