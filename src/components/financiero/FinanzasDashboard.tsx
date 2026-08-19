@@ -719,9 +719,6 @@ export const FinanzasDashboard = () => {
                     </tr>
                   ))
                 )}
-                    </tr>
-                  ))
-                )}
               </tbody>
             </table>
           </div>
